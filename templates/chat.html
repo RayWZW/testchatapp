@@ -3,8 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Chat</title>
+    <title>THUG-CHAT</title>
+
     <style>
+        /* Your CSS styles here */
         body {
             background-color: #121212;
             color: #e0e0e0;
@@ -15,38 +17,67 @@
             height: 100vh;
             flex-direction: row;
         }
+
+        /* CSS for user buttons */
+.userbutton {
+    background-color: #007bff;
+    color: #ffffff;
+    border: none;
+    padding: 10px;
+    border-radius: 5px;
+    cursor: pointer;
+    margin: 5px 0;
+    width: 100%;
+    text-align: left;
+}
+
+.userbutton:hover {
+    background-color: #0056b3;
+}
+
         #sidebar {
-            width: 200px;
+            width: 0px;
             background-color: #1c1c1c;
             padding: 10px;
             overflow-y: auto;
             height: 100%;
             border-right: 1px solid #333;
             transition: width 0.3s;
+            position: relative;
         }
         #sidebar.expanded {
-            width: 300px;
+            width: 170px;
         }
         #toggle-sidebar {
             position: absolute;
-            top: 40px;
-            right: 40px; /* Position the toggle button outside of the sidebar */
-            background-color: #1c184d;
+            top: 10px;
+            left: 100%;
+            margin-left: -30px;
+            background-color: transparent;
             color: #e0e0e0;
             border: none;
             padding: 5px 10px;
             cursor: pointer;
             z-index: 1000;
+            transition: background-color 0.3s, margin-left 0.3s;
+        }
+        #toggle-sidebar:hover {
+            background-color: #007bff;
+            color: #ffffff;
+        }
+        #sidebar.expanded #toggle-sidebar {
+            left: 100%;
+            margin-left: -70px;
         }
         #chat-container {
             flex: 1;
             display: flex;
             flex-direction: column;
-            margin-left: 200px; /* Space for sidebar */
+            margin-left: 50px;
             transition: margin-left 0.3s;
         }
-        #chat-container.expanded {
-            margin-left: 100px; /* Adjust margin when sidebar is expanded */
+        #sidebar.expanded + #chat-container {
+            margin-left: 300px;
         }
         #chat-box {
             flex: 1;
@@ -77,26 +108,44 @@
             color: #e0e0e0;
             cursor: pointer;
             margin-left: 10px;
+
+}
+
         }
         #logout-button {
-            background-color: #e03e3e; /* Different color for logout button */
+            background-color: #e03e3e;
         }
         .message {
-            margin-bottom: 10px;
-            word-wrap: break-word;
-            white-space: pre-wrap;
-        }
-        .message .timestamp {
-            color: #999;
-            font-size: 0.8em;
-        }
-        .message .username {
-            font-weight: bold;
-        }
-        .message img, .message video, .message audio {
-            max-width: 100%;
-            margin-top: 10px;
-        }
+    margin-bottom: 2px; /* Reduce space between messages */
+    padding: 2px 0; /* Minimize padding */
+    word-wrap: break-word;
+    white-space: pre-wrap;
+}
+
+.message .timestamp {
+    color: #999;
+    font-size: 0.8em;
+    display: inline-block; /* Display inline to reduce line breaks */
+    margin-right: 5px; /* Add a small gap between timestamp and username */
+}
+
+.message .username {
+    font-weight: bold;
+    display: inline-block; /* Keep username on the same line */
+    margin-right: 5px; /* Space between username and message */
+}
+
+.message p {
+    display: inline; /* Make sure the message text stays inline */
+    margin: 0; /* Eliminate extra margin */
+    padding: 0; /* Eliminate extra padding */
+}
+
+.message img, .message video, .message audio {
+    max-width: 100%;
+    margin-top: 5px; /* Adjust media margin */
+}
+
         .progress {
             width: 100%;
             background-color: #333;
@@ -119,12 +168,12 @@
             color: #ff6f6f;
         }
         .message a {
-            color: #ADD8E6; /* Light blue color for hyperlinks */
+            color: #ADD8E6;
             text-decoration: none;
         }
         .embed-container {
             position: relative;
-            padding-bottom: 56.25%; /* Aspect ratio for 16:9 */
+            padding-bottom: 56.25%;
             height: 0;
             overflow: hidden;
             max-width: 300px;
@@ -160,6 +209,7 @@
         #sidebar li {
             padding: 5px 0;
             color: #e0e0e0;
+            cursor: pointer;
         }
         #sidebar li:hover {
             background-color: #333;
@@ -184,66 +234,104 @@
             <button id="upload-button" type="button">Upload File</button>
             <a id="logout-button" href="/logout">Logout</a>
         </form>
-        <input id="file-input" type="file" style="display: none;"> <!-- Hidden file input -->
+        <input id="file-input" type="file" style="display: none;">
         <div class="progress">
-            <div class="progress-bar" id="progress-bar"></div> <!-- Progress bar for file uploads -->
+            <div class="progress-bar" id="progress-bar"></div>
         </div>
     </div>
     <script src="https://cdn.socket.io/4.0.1/socket.io.min.js"></script>
+    <script src="userinfo.js"></script>
     <script>
         const socket = io();
 
         document.addEventListener('DOMContentLoaded', function() {
             const chatBox = document.getElementById('chat-box');
             const messageInput = document.getElementById('message-input');
-            const fileInput = document.getElementById('file-input');  // Hidden input
+            const fileInput = document.getElementById('file-input');
             const progressBar = document.getElementById('progress-bar');
             const userList = document.getElementById('user-list');
             const sidebar = document.getElementById('sidebar');
             const chatContainer = document.getElementById('chat-container');
             const toggleSidebar = document.getElementById('toggle-sidebar');
 
-            // Load existing chat messages
-            fetch('/get_messages')
-                .then(response => response.json())
-                .then(messages => {
-                    messages.forEach(msg => {
-                        chatBox.appendChild(createMessageElement(msg));
+            initializeUserList();
+            initializeChat();
+
+            function initializeUserList() {
+
+
+
+                fetch('/get_user_accounts')
+    .then(response => response.json())
+    .then(users => {
+        users.forEach(user => {
+            const li = document.createElement('li');
+            const button = document.createElement('button');
+            button.textContent = user;
+            button.classList.add('userbutton');  // Add the CSS class
+
+            // Add event listener to handle button clicks
+            button.addEventListener('click', () => {
+                window.open(`/userinfo-${user}`, '_blank');  // Open in a new tab
+            });
+
+            li.appendChild(button);
+            userList.appendChild(li);
+        });
+    });
+
+
+
+}
+
+
+            function initializeChat() {
+                fetch('/get_messages')
+                    .then(response => response.json())
+                    .then(messages => {
+                        messages.forEach(msg => {
+                            chatBox.appendChild(createMessageElement(msg));
+                        });
+                        chatBox.scrollTop = chatBox.scrollHeight;
                     });
+
+                socket.on('message', function(msg) {
+                    chatBox.appendChild(createMessageElement(msg));
                     chatBox.scrollTop = chatBox.scrollHeight;
                 });
 
-            // Load user accounts
-            fetch('/get_user_accounts')
-                .then(response => response.json())
-                .then(users => {
-                    users.forEach(user => {
-                        const li = document.createElement('li');
-                        li.textContent = user;
-                        userList.appendChild(li);
-                    });
+                document.getElementById('send-button').addEventListener('click', sendMessage);
+                document.getElementById('message-input').addEventListener('keydown', function(e) {
+                    if (e.key === 'Enter') {
+                        sendMessage();
+                    }
                 });
 
-            document.getElementById('message-input').addEventListener('keydown', function(e) {
-                if (e.key === 'Enter') {
-                    sendMessage();
+                document.getElementById('upload-button').addEventListener('click', function() {
+                    fileInput.click();
+                });
+
+                fileInput.addEventListener('change', function() {
+                    const file = fileInput.files[0];
+                    if (file) {
+                        uploadFile(file);
+                    }
+                });
+
+                toggleSidebar.addEventListener('click', function() {
+                    sidebar.classList.toggle('expanded');
+                    chatContainer.classList.toggle('expanded');
+                });
+            }
+
+            function sendMessage() {
+                const message = messageInput.value.trim();
+                if (message) {
+                    socket.send(convertToLinks(message));
+                    messageInput.value = '';
                 }
-            });
+            }
 
-            document.getElementById('send-button').addEventListener('click', sendMessage);
-
-            document.getElementById('upload-button').addEventListener('click', function() {
-                fileInput.click();  // Opens file input dialog
-            });
-
-            fileInput.addEventListener('change', function() {
-                const file = fileInput.files[0];
-                if (file) {
-                    uploadFile(file);   // Upload file and show preview only after upload
-                }
-            });
-
-            // File upload with progress and socket emit once done
             function uploadFile(file) {
                 const formData = new FormData();
                 formData.append('file', file);
@@ -251,7 +339,6 @@
                 const xhr = new XMLHttpRequest();
                 xhr.open('POST', '/files/upload', true);
 
-                // Progress handler
                 xhr.upload.onprogress = function(e) {
                     if (e.lengthComputable) {
                         const percentComplete = (e.loaded / e.total) * 100;
@@ -263,10 +350,9 @@
                     if (xhr.status === 200) {
                         const response = JSON.parse(xhr.responseText);
                         if (response.file_url) {
-                            // Send media as a message after file is uploaded successfully
                             const message = getMediaMessage(file, response.file_url);
                             socket.send(message);
-                            progressBar.style.width = '0%';  // Reset progress bar after upload
+                            progressBar.style.width = '0%';
                         }
                     }
                 };
@@ -274,33 +360,20 @@
                 xhr.send(formData);
             }
 
-            socket.on('message', function(msg) {
-                chatBox.appendChild(createMessageElement(msg));
-                chatBox.scrollTop = chatBox.scrollHeight;
-            });
-
-            // Send a regular message
-            function sendMessage() {
-                const message = messageInput.value.trim();
-                if (message) {
-                    socket.send(convertToLinks(message));  // Convert to links
-                    messageInput.value = '';
-                }
-            }
-
-            // Create a message element for display
             function createMessageElement(msg) {
                 const div = document.createElement('div');
                 div.className = 'message';
 
-                // Ensure message text is broken into new lines if it exceeds 85 characters
                 const wrappedMessage = wrapLongMessage(msg.message, 85);
+                div.innerHTML = `
+                    <span class="timestamp">${msg.timestamp}</span>
+                    <span class="username">${msg.username}:</span>
+                    ${wrappedMessage}
+                `;
 
-                div.innerHTML = `<span class="timestamp">${msg.timestamp}</span> <span class="username">${msg.username}:</span> ${wrappedMessage}`;
                 return div;
             }
 
-            // Function to wrap long messages
             function wrapLongMessage(text, maxLength) {
                 if (text.length <= maxLength) {
                     return text;
@@ -316,13 +389,11 @@
                 return result;
             }
 
-            // Converts URLs in messages to clickable links
             function convertToLinks(text) {
                 const urlRegex = /(https?:\/\/[^\s]+)/g;
                 const youtubeRegex = /(?:https?:\/\/)?(?:www\.)?youtube\.com\/watch\?v=([^\s&]+)/g;
                 const youtubeShortsRegex = /(?:https?:\/\/)?(?:www\.)?youtube\.com\/shorts\/([^\s&]+)/g;
 
-                // Replace YouTube URLs with embed code
                 text = text.replace(youtubeRegex, (match, p1) => `
                     <div class="embed-container">
                         <iframe src="https://www.youtube.com/embed/${p1}" frameborder="0" allowfullscreen></iframe>
@@ -334,12 +405,10 @@
                         <iframe src="https://www.youtube.com/embed/${p1}" frameborder="0" allowfullscreen></iframe>
                     </div>
                 `);
-                
-                // Replace other URLs with clickable links
+
                 return text.replace(urlRegex, url => `<a href="${url}" target="_blank">${url}</a>`);
             }
 
-            // Generate the media message to be sent and displayed
             function getMediaMessage(file, fileUrl) {
                 const fileType = file.type;
                 let mediaMessage = '';
@@ -356,12 +425,6 @@
 
                 return mediaMessage;
             }
-
-            // Toggle sidebar width
-            toggleSidebar.addEventListener('click', function() {
-                sidebar.classList.toggle('expanded');
-                chatContainer.classList.toggle('expanded');
-            });
         });
     </script>
 </body>
