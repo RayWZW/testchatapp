@@ -10,9 +10,24 @@
             color: #e0e0e0;
             font-family: Arial, sans-serif;
             display: flex;
-            flex-direction: column;
             height: 100vh;
             margin: 0;
+            overflow: hidden;
+        }
+        #sidebar {
+            width: 200px;
+            background-color: #1c1c1c;
+            padding: 10px;
+            overflow-y: auto;
+            height: 100%;
+            border-left: 1px solid #333;
+            position: relative; /* Position relative for the sidebar */
+        }
+        #chat-container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            margin-right: 200px; /* Space for sidebar */
         }
         #chat-box {
             flex: 1;
@@ -33,13 +48,16 @@
             background-color: #333;
             color: #e0e0e0;
         }
-        #send-button, #upload-button {
+        #send-button, #upload-button, #logout-button {
             padding: 10px;
             border: none;
             background-color: #444;
             color: #e0e0e0;
             cursor: pointer;
             margin-left: 10px;
+        }
+        #logout-button {
+            background-color: #e03e3e; /* Different color for logout button */
         }
         .message {
             margin-bottom: 10px;
@@ -65,23 +83,86 @@
             height: 5px;
             background-color: #ec0a0a;
         }
-    .message a {
-        color: #ADD8E6; /* Light blue color for hyperlinks */
-        text-decoration: none;
+        #logout-button {
+            background: none;
+            border: none;
+            color: #e0e0e0;
+            text-decoration: none;
+            font-size: 1em;
+            cursor: pointer;
+        }
+        #logout-button:hover {
+            color: #ff6f6f;
+        }
+        .message a {
+            color: #ADD8E6; /* Light blue color for hyperlinks */
+            text-decoration: none;
+        }
+        .embed-container {
+            position: relative;
+            padding-bottom: 56.25%; /* Aspect ratio for 16:9 */
+            height: 0;
+            overflow: hidden;
+            max-width: 300px;
+            max-height: 300px;
+            margin-top: 10px;
+            background: #000;
+        }
+        .embed-container iframe {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+        }
+        .download-button {
+            display: inline-block;
+            padding: 8px 16px;
+            margin: 8px 0;
+            color: #e0e0e0;
+            background-color: #444;
+            border: none;
+            cursor: pointer;
+            text-decoration: none;
+        }
+        .download-button:hover {
+            background-color: #555;
+        }
+        #sidebar ul {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+        #sidebar li {
+            padding: 5px 0;
+            color: #e0e0e0;
+        }
+        #sidebar li:hover {
+            background-color: #333;
+        }
     </style>
 </head>
 <body>
-    <div id="chat-box">
-        <!-- Messages will be loaded here -->
+    <div id="chat-container">
+        <div id="chat-box">
+            <!-- Messages will be loaded here -->
+        </div>
+        <form id="message-form">
+            <input id="message-input" type="text" placeholder="Type your message..." required>
+            <button id="send-button" type="button">Send</button>
+            <button id="upload-button" type="button">Upload File</button>
+            <a id="logout-button" href="/logout">Logout</a>
+        </form>
+        <input id="file-input" type="file" style="display: none;"> <!-- Hidden file input -->
+        <div class="progress">
+            <div class="progress-bar" id="progress-bar"></div> <!-- Progress bar for file uploads -->
+        </div>
     </div>
-    <form id="message-form">
-        <input id="message-input" type="text" placeholder="Type your message..." required>
-        <button id="send-button" type="button">Send</button>
-        <button id="upload-button" type="button">Upload File</button>
-    </form>
-    <input id="file-input" type="file" style="display: none;"> <!-- Hidden file input -->
-    <div class="progress">
-        <div class="progress-bar" id="progress-bar"></div> <!-- Progress bar for file uploads -->
+    <div id="sidebar">
+        <h3>User Accounts</h3>
+        <ul id="user-list">
+            <!-- User accounts will be loaded here -->
+        </ul>
     </div>
     <script src="https://cdn.socket.io/4.0.1/socket.io.min.js"></script>
     <script>
@@ -92,6 +173,7 @@
             const messageInput = document.getElementById('message-input');
             const fileInput = document.getElementById('file-input');  // Hidden input
             const progressBar = document.getElementById('progress-bar');
+            const userList = document.getElementById('user-list');
 
             // Load existing chat messages
             fetch('/get_messages')
@@ -101,6 +183,17 @@
                         chatBox.appendChild(createMessageElement(msg));
                     });
                     chatBox.scrollTop = chatBox.scrollHeight;
+                });
+
+            // Load user accounts
+            fetch('/get_user_accounts')
+                .then(response => response.json())
+                .then(users => {
+                    users.forEach(user => {
+                        const li = document.createElement('li');
+                        li.textContent = user;
+                        userList.appendChild(li);
+                    });
                 });
 
             document.getElementById('message-input').addEventListener('keydown', function(e) {
@@ -168,16 +261,54 @@
             }
 
             // Create a message element for display
-            function createMessageElement(msg) {
-                const div = document.createElement('div');
-                div.className = 'message';
-                div.innerHTML = `<span class="timestamp">${msg.timestamp}</span> <span class="username">${msg.username}:</span> ${msg.message}`;
-                return div;
-            }
+function createMessageElement(msg) {
+    const div = document.createElement('div');
+    div.className = 'message';
+
+    // Ensure message text is broken into new lines if it exceeds 85 characters
+    const wrappedMessage = wrapLongMessage(msg.message, 85);
+
+    div.innerHTML = `<span class="timestamp">${msg.timestamp}</span> <span class="username">${msg.username}:</span> ${wrappedMessage}`;
+    return div;
+}
+
+// Function to wrap long messages
+function wrapLongMessage(text, maxLength) {
+    if (text.length <= maxLength) {
+        return text;
+    }
+
+    let result = '';
+    while (text.length > maxLength) {
+        result += text.slice(0, maxLength) + '<br>';
+        text = text.slice(maxLength);
+    }
+    result += text;
+
+    return result;
+}
+
 
             // Converts URLs in messages to clickable links
             function convertToLinks(text) {
                 const urlRegex = /(https?:\/\/[^\s]+)/g;
+                const youtubeRegex = /(?:https?:\/\/)?(?:www\.)?youtube\.com\/watch\?v=([^\s&]+)/g;
+                const youtubeShortsRegex = /(?:https?:\/\/)?(?:www\.)?youtube\.com\/shorts\/([^\s&]+)/g;
+
+                // Replace YouTube URLs with embed code
+                text = text.replace(youtubeRegex, (match, p1) => `
+                    <div class="embed-container">
+                        <iframe src="https://www.youtube.com/embed/${p1}" frameborder="0" allowfullscreen></iframe>
+                    </div>
+                `);
+
+                text = text.replace(youtubeShortsRegex, (match, p1) => `
+                    <div class="embed-container">
+                        <iframe src="https://www.youtube.com/embed/${p1}" frameborder="0" allowfullscreen></iframe>
+                    </div>
+                `);
+                
+                // Replace other URLs with clickable links
                 return text.replace(urlRegex, url => `<a href="${url}" target="_blank">${url}</a>`);
             }
 
@@ -187,13 +318,13 @@
                 let mediaMessage = '';
 
                 if (fileType.startsWith('image/')) {
-                    mediaMessage = `<img src="${fileUrl}" alt="${file.name}">`;
+                    mediaMessage = `<img src="${fileUrl}" alt="Uploaded image">`;
                 } else if (fileType.startsWith('video/')) {
                     mediaMessage = `<video src="${fileUrl}" controls>Your browser does not support video playback.</video>`;
                 } else if (fileType.startsWith('audio/')) {
                     mediaMessage = `<audio src="${fileUrl}" controls>Your browser does not support audio playback.</audio>`;
                 } else {
-                    mediaMessage = `<a href="${fileUrl}" target="_blank">${file.name}</a>`;
+                    mediaMessage = `<a href="${fileUrl}" download class="download-button">Download File</a>`;
                 }
 
                 return mediaMessage;
