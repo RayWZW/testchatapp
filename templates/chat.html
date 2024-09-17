@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chat</title>
+    <style>
+        body {
+            background-color: #121212;
+            color: #e0e0e0;
+            font-family: Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            margin: 0;
+        }
+        #chat-box {
+            flex: 1;
+            overflow-y: scroll;
+            padding: 10px;
+            border-bottom: 1px solid #333;
+        }
+        #message-form {
+            display: flex;
+            background-color: #222;
+            padding: 10px;
+            border-top: 1px solid #333;
+        }
+        #message-input {
+            flex: 1;
+            padding: 10px;
+            border: 1px solid #555;
+            background-color: #333;
+            color: #e0e0e0;
+        }
+        #send-button, #upload-button {
+            padding: 10px;
+            border: none;
+            background-color: #444;
+            color: #e0e0e0;
+            cursor: pointer;
+            margin-left: 10px;
+        }
+        .message {
+            margin-bottom: 10px;
+        }
+        .message .timestamp {
+            color: #999;
+            font-size: 0.8em;
+        }
+        .message .username {
+            font-weight: bold;
+        }
+        .message img, .message video, .message audio {
+            max-width: 100%;
+            margin-top: 10px;
+        }
+        .progress {
+            width: 100%;
+            background-color: #333;
+            margin-top: 10px;
+        }
+        .progress-bar {
+            width: 0;
+            height: 5px;
+            background-color: #ec0a0a;
+        }
+    .message a {
+        color: #ADD8E6; /* Light blue color for hyperlinks */
+        text-decoration: none;
+    </style>
+</head>
+<body>
+    <div id="chat-box">
+        <!-- Messages will be loaded here -->
+    </div>
+    <form id="message-form">
+        <input id="message-input" type="text" placeholder="Type your message..." required>
+        <button id="send-button" type="button">Send</button>
+        <button id="upload-button" type="button">Upload File</button>
+    </form>
+    <input id="file-input" type="file" style="display: none;"> <!-- Hidden file input -->
+    <div class="progress">
+        <div class="progress-bar" id="progress-bar"></div> <!-- Progress bar for file uploads -->
+    </div>
+    <script src="https://cdn.socket.io/4.0.1/socket.io.min.js"></script>
+    <script>
+        const socket = io();
+
+        document.addEventListener('DOMContentLoaded', function() {
+            const chatBox = document.getElementById('chat-box');
+            const messageInput = document.getElementById('message-input');
+            const fileInput = document.getElementById('file-input');  // Hidden input
+            const progressBar = document.getElementById('progress-bar');
+
+            // Load existing chat messages
+            fetch('/get_messages')
+                .then(response => response.json())
+                .then(messages => {
+                    messages.forEach(msg => {
+                        chatBox.appendChild(createMessageElement(msg));
+                    });
+                    chatBox.scrollTop = chatBox.scrollHeight;
+                });
+
+            document.getElementById('message-input').addEventListener('keydown', function(e) {
+                if (e.key === 'Enter') {
+                    sendMessage();
+                }
+            });
+
+            document.getElementById('send-button').addEventListener('click', sendMessage);
+
+            document.getElementById('upload-button').addEventListener('click', function() {
+                fileInput.click();  // Opens file input dialog
+            });
+
+            fileInput.addEventListener('change', function() {
+                const file = fileInput.files[0];
+                if (file) {
+                    uploadFile(file);   // Upload file and show preview only after upload
+                }
+            });
+
+            // File upload with progress and socket emit once done
+            function uploadFile(file) {
+                const formData = new FormData();
+                formData.append('file', file);
+
+                const xhr = new XMLHttpRequest();
+                xhr.open('POST', '/files/upload', true);
+
+                // Progress handler
+                xhr.upload.onprogress = function(e) {
+                    if (e.lengthComputable) {
+                        const percentComplete = (e.loaded / e.total) * 100;
+                        progressBar.style.width = percentComplete + '%';
+                    }
+                };
+
+                xhr.onload = function() {
+                    if (xhr.status === 200) {
+                        const response = JSON.parse(xhr.responseText);
+                        if (response.file_url) {
+                            // Send media as a message after file is uploaded successfully
+                            const message = getMediaMessage(file, response.file_url);
+                            socket.send(message);
+                            progressBar.style.width = '0%';  // Reset progress bar after upload
+                        }
+                    }
+                };
+
+                xhr.send(formData);
+            }
+
+            socket.on('message', function(msg) {
+                chatBox.appendChild(createMessageElement(msg));
+                chatBox.scrollTop = chatBox.scrollHeight;
+            });
+
+            // Send a regular message
+            function sendMessage() {
+                const message = messageInput.value.trim();
+                if (message) {
+                    socket.send(convertToLinks(message));  // Convert to links
+                    messageInput.value = '';
+                }
+            }
+
+            // Create a message element for display
+            function createMessageElement(msg) {
+                const div = document.createElement('div');
+                div.className = 'message';
+                div.innerHTML = `<span class="timestamp">${msg.timestamp}</span> <span class="username">${msg.username}:</span> ${msg.message}`;
+                return div;
+            }
+
+            // Converts URLs in messages to clickable links
+            function convertToLinks(text) {
+                const urlRegex = /(https?:\/\/[^\s]+)/g;
+                return text.replace(urlRegex, url => `<a href="${url}" target="_blank">${url}</a>`);
+            }
+
+            // Generate the media message to be sent and displayed
+            function getMediaMessage(file, fileUrl) {
+                const fileType = file.type;
+                let mediaMessage = '';
+
+                if (fileType.startsWith('image/')) {
+                    mediaMessage = `<img src="${fileUrl}" alt="${file.name}">`;
+                } else if (fileType.startsWith('video/')) {
+                    mediaMessage = `<video src="${fileUrl}" controls>Your browser does not support video playback.</video>`;
+                } else if (fileType.startsWith('audio/')) {
+                    mediaMessage = `<audio src="${fileUrl}" controls>Your browser does not support audio playback.</audio>`;
+                } else {
+                    mediaMessage = `<a href="${fileUrl}" target="_blank">${file.name}</a>`;
+                }
+
+                return mediaMessage;
+            }
+        });
+    </script>
+</body>
+</html>
