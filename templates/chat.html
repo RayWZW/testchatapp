@@ -9,10 +9,11 @@
             background-color: #121212;
             color: #e0e0e0;
             font-family: Arial, sans-serif;
-            display: flex;
-            height: 100vh;
             margin: 0;
             overflow: hidden;
+            display: flex;
+            height: 100vh;
+            flex-direction: row;
         }
         #sidebar {
             width: 200px;
@@ -20,20 +21,41 @@
             padding: 10px;
             overflow-y: auto;
             height: 100%;
-            border-left: 1px solid #333;
-            position: relative; /* Position relative for the sidebar */
+            border-right: 1px solid #333;
+            transition: width 0.3s;
+        }
+        #sidebar.expanded {
+            width: 300px;
+        }
+        #toggle-sidebar {
+            position: absolute;
+            top: 40px;
+            right: 40px; /* Position the toggle button outside of the sidebar */
+            background-color: #1c184d;
+            color: #e0e0e0;
+            border: none;
+            padding: 5px 10px;
+            cursor: pointer;
+            z-index: 1000;
         }
         #chat-container {
             flex: 1;
             display: flex;
             flex-direction: column;
-            margin-right: 200px; /* Space for sidebar */
+            margin-left: 200px; /* Space for sidebar */
+            transition: margin-left 0.3s;
+        }
+        #chat-container.expanded {
+            margin-left: 100px; /* Adjust margin when sidebar is expanded */
         }
         #chat-box {
             flex: 1;
-            overflow-y: scroll;
+            overflow-y: auto;
             padding: 10px;
+            padding-left: 15px;
             border-bottom: 1px solid #333;
+            word-wrap: break-word;
+            white-space: pre-wrap;
         }
         #message-form {
             display: flex;
@@ -61,6 +83,8 @@
         }
         .message {
             margin-bottom: 10px;
+            word-wrap: break-word;
+            white-space: pre-wrap;
         }
         .message .timestamp {
             color: #999;
@@ -143,6 +167,13 @@
     </style>
 </head>
 <body>
+    <div id="sidebar">
+        <button id="toggle-sidebar">☰</button>
+        <h3>Users List</h3>
+        <ul id="user-list">
+            <!-- User accounts will be loaded here -->
+        </ul>
+    </div>
     <div id="chat-container">
         <div id="chat-box">
             <!-- Messages will be loaded here -->
@@ -158,12 +189,6 @@
             <div class="progress-bar" id="progress-bar"></div> <!-- Progress bar for file uploads -->
         </div>
     </div>
-    <div id="sidebar">
-        <h3>User Accounts</h3>
-        <ul id="user-list">
-            <!-- User accounts will be loaded here -->
-        </ul>
-    </div>
     <script src="https://cdn.socket.io/4.0.1/socket.io.min.js"></script>
     <script>
         const socket = io();
@@ -174,6 +199,9 @@
             const fileInput = document.getElementById('file-input');  // Hidden input
             const progressBar = document.getElementById('progress-bar');
             const userList = document.getElementById('user-list');
+            const sidebar = document.getElementById('sidebar');
+            const chatContainer = document.getElementById('chat-container');
+            const toggleSidebar = document.getElementById('toggle-sidebar');
 
             // Load existing chat messages
             fetch('/get_messages')
@@ -261,33 +289,32 @@
             }
 
             // Create a message element for display
-function createMessageElement(msg) {
-    const div = document.createElement('div');
-    div.className = 'message';
+            function createMessageElement(msg) {
+                const div = document.createElement('div');
+                div.className = 'message';
 
-    // Ensure message text is broken into new lines if it exceeds 85 characters
-    const wrappedMessage = wrapLongMessage(msg.message, 85);
+                // Ensure message text is broken into new lines if it exceeds 85 characters
+                const wrappedMessage = wrapLongMessage(msg.message, 85);
 
-    div.innerHTML = `<span class="timestamp">${msg.timestamp}</span> <span class="username">${msg.username}:</span> ${wrappedMessage}`;
-    return div;
-}
+                div.innerHTML = `<span class="timestamp">${msg.timestamp}</span> <span class="username">${msg.username}:</span> ${wrappedMessage}`;
+                return div;
+            }
 
-// Function to wrap long messages
-function wrapLongMessage(text, maxLength) {
-    if (text.length <= maxLength) {
-        return text;
-    }
+            // Function to wrap long messages
+            function wrapLongMessage(text, maxLength) {
+                if (text.length <= maxLength) {
+                    return text;
+                }
 
-    let result = '';
-    while (text.length > maxLength) {
-        result += text.slice(0, maxLength) + '<br>';
-        text = text.slice(maxLength);
-    }
-    result += text;
+                let result = '';
+                while (text.length > maxLength) {
+                    result += text.slice(0, maxLength) + '<br>';
+                    text = text.slice(maxLength);
+                }
+                result += text;
 
-    return result;
-}
-
+                return result;
+            }
 
             // Converts URLs in messages to clickable links
             function convertToLinks(text) {
@@ -329,6 +356,12 @@ function wrapLongMessage(text, maxLength) {
 
                 return mediaMessage;
             }
+
+            // Toggle sidebar width
+            toggleSidebar.addEventListener('click', function() {
+                sidebar.classList.toggle('expanded');
+                chatContainer.classList.toggle('expanded');
+            });
         });
     </script>
 </body>
