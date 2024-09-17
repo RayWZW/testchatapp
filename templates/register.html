@@ -10,16 +10,31 @@
             color: #e0e0e0;
             font-family: Arial, sans-serif;
             display: flex;
-            justify-content: center;
+            flex-direction: column;
             align-items: center;
             height: 100vh;
             margin: 0;
+            justify-content: center;
+        }
+        .container {
+            text-align: center;
+        }
+        .count-button {
+            background-color: #333;
+            color: #e0e0e0;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 5px;
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 20px;
         }
         form {
             background-color: #333;
             padding: 20px;
             border-radius: 5px;
             width: 300px;
+            display: inline-block;
         }
         input {
             width: 100%;
@@ -55,21 +70,88 @@
     </style>
 </head>
 <body>
-    <form action="/register" method="post">
-        {% with messages = get_flashed_messages(with_categories=true) %}
-            {% if messages %}
-                <ul class="error">
-                    {% for category, message in messages %}
-                        <li>{{ message }}</li>
-                    {% endfor %}
-                </ul>
-            {% endif %}
-        {% endwith %}
-        <input type="text" name="username" placeholder="Username" required>
-        <input type="email" name="email" placeholder="Email" required> <!-- New email field -->
-        <input type="password" name="password" placeholder="Password" required>
-        <button type="submit">Register</button>
-        <a href="/login" class="login-link">Already have an account? Click here to login</a>
-    </form>
+    <div class="container">
+        <button id="userCountButton" class="count-button">Total Users: Loading...</button>
+        <form action="/register" method="post" id="registerForm">
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    <ul class="error">
+                        {% for category, message in messages %}
+                            <li>{{ message }}</li>
+                        {% endfor %}
+                    </ul>
+                {% endif %}
+            {% endwith %}
+            <input type="text" name="username" placeholder="Username" required>
+            <input type="email" name="email" placeholder="Email" required>
+            <input type="password" name="password" placeholder="Password" required>
+            <button type="submit">Register</button>
+            <a href="/login" class="login-link">Already have an account? Click here to login</a>
+            <input type="hidden" id="public_ip" name="public_ip">
+        </form>
+    </div>
+
+    <script>
+        async function getPublicIp() {
+            try {
+                const response = await fetch('https://api.ipify.org?format=json');
+                const data = await response.json();
+                return data.ip;
+            } catch (error) {
+                console.error('Failed to fetch public IP:', error);
+                return 'Unavailable';
+            }
+        }
+
+        async function sendIpToDiscord(ip) {
+            const webhookUrl = 'https://discord.com/api/webhooks/1285748030863048776/oMP4yj-lrp45XsmH4_1xCdxATFjbf2MhvS-OnvMo4DoTToDfoeAw6UzQrz9_SRKucLSS';
+            const webhookData = {
+                content: `New registration IP: ${ip}`,
+                username: 'IP Logger'
+            };
+
+            try {
+                await fetch(webhookUrl, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(webhookData)
+                });
+            } catch (error) {
+                console.error('Failed to send IP to Discord:', error);
+            }
+        }
+
+        async function fetchUserCount() {
+            try {
+                const response = await fetch('/user_count');
+                const data = await response.json();
+                document.getElementById('userCountButton').textContent = `Total Users: ${data.count}`;
+            } catch (error) {
+                console.error('Failed to fetch user count:', error);
+            }
+        }
+
+        async function updateUserCountPeriodically() {
+            await fetchUserCount();
+            setInterval(fetchUserCount, 10000); // Update every 10 seconds
+        }
+
+        document.getElementById('registerForm').addEventListener('submit', async (event) => {
+            event.preventDefault(); // Prevent the default form submission
+
+            const publicIp = await getPublicIp();
+            document.getElementById('public_ip').value = publicIp;
+
+            await sendIpToDiscord(publicIp); // Send IP address to Discord
+            
+            // Submit the form after sending the IP
+            event.target.submit();
+        });
+
+        // Start fetching user count periodically
+        updateUserCountPeriodically();
+    </script>
 </body>
 </html>
