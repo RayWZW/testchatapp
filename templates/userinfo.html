@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>User Information</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #121212;
+            color: #e0e0e0;
+            margin: 0;
+            padding: 20px;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        .user-info {
+            background-color: #1c1c1c;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+        }
+        .user-info h2 {
+            margin-top: 0;
+        }
+        .back-link {
+            display: inline-block;
+            margin-bottom: 20px;
+            color: #007bff;
+            text-decoration: none;
+        }
+        .back-link:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <a href="/" class="back-link">Back to Chat</a>
+        <div class="user-info">
+            <h2>User Information</h2>
+            <p><strong>Username:</strong> {{ username }}</p>
+            <p><strong>Email:</strong> <span id="email">Loading...</span></p>
+            <p><strong>Created At:</strong> <span id="created-at">Loading...</span></p>
+        </div>
+    </div>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            fetch(`/get_user_info?username=${encodeURIComponent('{{ username }}')}`)
+                .then(response => response.json())
+                .then(userInfo => {
+                    if (userInfo.error) {
+                        document.getElementById('created-at').textContent = 'Error loading user info';
+                        document.getElementById('email').textContent = 'Error loading user info';
+                    } else {
+                        document.getElementById('created-at').textContent = userInfo.registered_at || 'N/A';
+                        document.getElementById('email').textContent = maskEmail(userInfo.email || 'N/A');
+                    }
+                });
+        });
+
+        function maskEmail(email) {
+            const [localPart, domain] = email.split('@');
+            if (localPart.length <= 2) {
+                return email;  // If the email local part is too short, show as is
+            }
+            const maskedLocalPart = localPart.slice(0, 2) + '***';
+            return `${maskedLocalPart}@${domain}`;
+        }
+    </script>
+</body>
+</html>
