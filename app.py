@@ -14,6 +14,7 @@ CHAT_LOGS_FILE = 'data/chatlogs.json'
 UPLOAD_FOLDER = 'uploads'
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
+
 def load_json_file(filepath):
     if os.path.exists(filepath):
         with open(filepath, 'r') as file:
@@ -32,6 +33,34 @@ def index():
         users = load_json_file(USER_ACCOUNTS_FILE)
         return render_template('chat.html', messages=messages, users=list(users.keys()))
     return redirect(url_for('login'))
+
+@app.route('/get_user_info')
+def get_user_info():
+    username = request.args.get('username')
+    if not username:
+        return jsonify({'error': 'No username provided'}), 400
+
+    users = load_json_file(USER_ACCOUNTS_FILE)
+    if username not in users:
+        return jsonify({'error': 'User not found'}), 404
+
+    # Example: sending username, email, and registration timestamp
+    user_info = {
+        'username': username,
+        'email': users[username].get('email', 'N/A'),
+        'registered_at': users[username].get('registered_at', 'N/A')
+    }
+    return jsonify(user_info)
+
+
+@app.route('/userinfo-<username>')
+def user_info(username):
+    users = load_json_file(USER_ACCOUNTS_FILE)
+    if username not in users:
+        return 'User not found', 404
+
+    # Pass username to the template
+    return render_template('userinfo.html', username=username)
 
 
 @app.route('/login', methods=['GET', 'POST'])
@@ -53,6 +82,8 @@ def register():
     if request.method == 'POST':
         username = request.form['username']
         password = request.form['password']
+        email = request.form['email']
+        timestamp = datetime.now().strftime('%Y-%m-%d %H:%M:%S')  # Log the current timestamp
 
         if len(username) < 6 or len(password) < 6:
             flash('Username and password must be at least 6 characters long')
@@ -63,12 +94,19 @@ def register():
             flash('Username already exists')
             return render_template('register.html')
 
-        users[username] = password
+        # Add new user details with timestamp and email
+        users[username] = {
+            'password': password,
+            'email': email,
+            'registered_at': timestamp
+        }
         save_json_file(USER_ACCOUNTS_FILE, users)
+
         session['username'] = username
         return redirect(url_for('index'))
 
     return render_template('register.html')
+
 
 @app.route('/logout')
 def logout():
