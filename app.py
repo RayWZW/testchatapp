@@ -29,8 +29,10 @@ def index():
     if 'username' in session:
         chat_logs = load_json_file(CHAT_LOGS_FILE)
         messages = chat_logs.get('messages', [])
-        return render_template('chat.html', messages=messages)
+        users = load_json_file(USER_ACCOUNTS_FILE)
+        return render_template('chat.html', messages=messages, users=list(users.keys()))
     return redirect(url_for('login'))
+
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
@@ -72,6 +74,12 @@ def register():
 def logout():
     session.pop('username', None)
     return redirect(url_for('login'))
+
+@app.route('/get_user_accounts')
+def get_user_accounts():
+    users = load_json_file(USER_ACCOUNTS_FILE)
+    return jsonify(list(users.keys()))
+
 
 @app.route('/get_messages')
 def get_messages():
