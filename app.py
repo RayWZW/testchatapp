@@ -70,7 +70,8 @@ def login():
         password = request.form['password']
 
         users = load_json_file(USER_ACCOUNTS_FILE)
-        if users.get(username) == password:
+        user = users.get(username)
+        if user and user['password'] == password:
             session['username'] = username
             return redirect(url_for('index'))
         else:
@@ -83,7 +84,7 @@ def register():
         username = request.form['username']
         password = request.form['password']
         email = request.form['email']
-        timestamp = datetime.now().strftime('%Y-%m-%d %H:%M:%S')  # Log the current timestamp
+        timestamp = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
 
         if len(username) < 6 or len(password) < 6:
             flash('Username and password must be at least 6 characters long')
@@ -108,6 +109,7 @@ def register():
     return render_template('register.html')
 
 
+
 @app.route('/logout')
 def logout():
     session.pop('username', None)
@@ -124,6 +126,13 @@ def get_messages():
     chat_logs = load_json_file(CHAT_LOGS_FILE)
     messages = chat_logs.get('messages', [])
     return jsonify(messages)
+
+@app.route('/user_count')
+def user_count():
+    users = load_json_file(USER_ACCOUNTS_FILE)
+    count = len(users)
+    return jsonify({'count': count})
+
 
 @app.route('/files/upload', methods=['POST'])
 def upload_file():
