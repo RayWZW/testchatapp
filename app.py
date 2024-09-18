@@ -261,9 +261,6 @@ def user_count():
     count = len(users)
     return jsonify({'count': count})
 
-@app.route('/banned')
-def banned():
-    return render_template('banned.html')
 
 
 @app.route('/files/upload', methods=['POST'])
