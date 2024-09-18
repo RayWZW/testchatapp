@@ -187,7 +187,8 @@ def login():
         if user and user['password'] == password:
             session['username'] = username
             # Track the session ID
-            session_id = session.get('_id', request.cookies.get(app.session_cookie_name))
+            session_cookie_name = app.config.get('SESSION_COOKIE_NAME', 'session')
+            session_id = session.get('_id', request.cookies.get(session_cookie_name))
             active_sessions[username] = session_id
             return redirect(url_for('index'))
         else:
@@ -322,4 +323,4 @@ def handle_message(message):
 
 
 if __name__ == '__main__':
-    socketio.run(app, debug=True, allow_unsafe_werkzeug=True)
+    socketio.run(app, debug=True)
