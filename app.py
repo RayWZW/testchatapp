@@ -4,13 +4,29 @@ import json
 import os
 from datetime import datetime
 import mimetypes
+from flask_socketio import disconnect, leave_room
+
 
 app = Flask(__name__)
 app.secret_key = 'your_secret_key'  # Change this to a secure key in production
 socketio = SocketIO(app)
 
+from flask_session import Session
+
+app.config['SESSION_TYPE'] = 'filesystem'
+app.config['SESSION_PERMANENT'] = False
+app.config['SESSION_USE_SIGNER'] = True
+Session(app)
+
+# In-memory store for active sessions (replace with a persistent solution for production)
+active_sessions = {}
+
+
 USER_ACCOUNTS_FILE = 'data/useraccounts.json'
 CHAT_LOGS_FILE = 'data/chatlogs.json'
+BANNED_USERS_FILE = 'data/banned.json'
+ADMINS_FILE = 'data/admins.json'
+ADMIN_PASSWORD_FILE = 'data/admin_password.json'
 UPLOAD_FOLDER = 'uploads'
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
@@ -24,6 +40,103 @@ def load_json_file(filepath):
 def save_json_file(filepath, data):
     with open(filepath, 'w') as file:
         json.dump(data, file, indent=4)
+
+def is_admin(username):
+    admins = load_json_file(ADMINS_FILE)
+    return username in admins
+
+def get_admin_password():
+    """Retrieve the admin password from admin_password.json."""
+    data = load_json_file(ADMIN_PASSWORD_FILE)
+    return data.get('password', '')  # Default to an empty string if not found
+
+
+@app.route('/admin', methods=['GET', 'POST'])
+def admin():
+    if 'admin_authenticated' not in session:
+        return redirect(url_for('admin_login'))
+
+    # Load user accounts data
+    users = load_json_file(USER_ACCOUNTS_FILE)
+    return render_template('admin.html', users=users)
+
+@app.route('/admin_login', methods=['GET', 'POST'])
+def admin_login():
+    if request.method == 'POST':
+        username = request.form['username']
+        password = request.form['password']
+
+        # Validate against admins.json
+        if is_admin(username):
+            # Check password
+            if password == get_admin_password():
+                session['admin_authenticated'] = True  # Set a session variable to indicate authentication
+                session['username'] = username  # Store the username in the session
+                return redirect(url_for('admin'))
+            else:
+                flash('Invalid admin password')
+        else:
+            flash('Invalid admin credentials')
+    
+    return render_template('admin_login.html')
+
+
+
+@app.route('/admin_logout')
+def admin_logout():
+    session.pop('username', None)
+    return redirect(url_for('admin_login'))
+
+@app.route('/ban_user', methods=['POST'])
+def ban_user():
+    if 'username' not in session or not is_admin(session['username']):
+        return jsonify({'message': 'Unauthorized'}), 403
+
+    username = request.json.get('username')
+    if not username:
+        return jsonify({'message': 'No username provided'}), 400
+
+    users = load_json_file(USER_ACCOUNTS_FILE)
+    if username not in users:
+        return jsonify({'message': 'User not found'}), 404
+
+    # Retrieve user details
+    user_details = users[username]
+
+    # Add to banned users
+    banned_users = load_json_file(BANNED_USERS_FILE)
+    banned_users[username] = {
+        'password': user_details['password'],
+        'email': user_details['email'],
+        'registered_at': user_details['registered_at'],
+        'public_ip': user_details.get('public_ip', '')
+    }
+    save_json_file(BANNED_USERS_FILE, banned_users)
+
+    # Remove from user accounts
+    del users[username]
+    save_json_file(USER_ACCOUNTS_FILE, users)
+
+    # Invalidate all sessions of the banned user
+    if username in active_sessions:
+        for session_id in active_sessions[username]:
+            socketio.disconnect(sid=session_id)
+
+    # Log out the banned user if they are currently logged in
+    if username in session:
+        session.pop(username, None)
+        return jsonify({
+            'message': 'User banned and deleted successfully',
+            'redirect': '/logout'
+        })
+
+    return jsonify({
+        'message': 'User banned and deleted successfully',
+        'redirect': None
+    })
+
+
+
 
 @app.route('/')
 def index():
@@ -73,10 +186,14 @@ def login():
         user = users.get(username)
         if user and user['password'] == password:
             session['username'] = username
+            # Track the session ID
+            session_id = session.get('_id', request.cookies.get(app.session_cookie_name))
+            active_sessions[username] = session_id
             return redirect(url_for('index'))
         else:
             flash('Invalid credentials')
     return render_template('login.html')
+
 
 @app.route('/register', methods=['GET', 'POST'])
 def register():
@@ -91,6 +208,12 @@ def register():
             return render_template('register.html')
 
         users = load_json_file(USER_ACCOUNTS_FILE)
+        banned_users = load_json_file(BANNED_USERS_FILE)
+
+        if username in banned_users:
+            flash('This user is banned and cannot register again')
+            return render_template('register.html')
+
         if username in users:
             flash('Username already exists')
             return render_template('register.html')
@@ -110,10 +233,15 @@ def register():
 
 
 
+
 @app.route('/logout')
 def logout():
+    username = session.get('username')
+    if username in active_sessions:
+        del active_sessions[username]
     session.pop('username', None)
     return redirect(url_for('login'))
+
 
 @app.route('/get_user_accounts')
 def get_user_accounts():
@@ -132,6 +260,10 @@ def user_count():
     users = load_json_file(USER_ACCOUNTS_FILE)
     count = len(users)
     return jsonify({'count': count})
+
+@app.route('/banned')
+def banned():
+    return render_template('banned.html')
 
 
 @app.route('/files/upload', methods=['POST'])
@@ -158,6 +290,13 @@ def download_file(filename):
 @socketio.on('message')
 def handle_message(message):
     username = session.get('username', 'Anonymous')
+
+    banned_users = load_json_file(BANNED_USERS_FILE)
+    if username in banned_users:
+        emit('banned', {'error': 'You are banned from sending messages.'}, room=request.sid)
+        disconnect()
+        return
+
     timestamp = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
 
     if 'file_url' in message:
@@ -182,6 +321,8 @@ def handle_message(message):
     save_json_file(CHAT_LOGS_FILE, chat_logs)
 
     emit('message', formatted_message, broadcast=True)
+
+
 
 if __name__ == '__main__':
     socketio.run(app, debug=True)
