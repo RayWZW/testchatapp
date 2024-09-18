@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Panel</title>
+    <style>
+        body {
+            background-color: #121212;
+            color: #e0e0e0;
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+        }
+        .container {
+            padding: 20px;
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .header h1 {
+            margin: 0;
+            font-size: 2rem;
+            font-weight: bold;
+        }
+        .user-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 20px;
+        }
+        .user-card {
+            background-color: #333;
+            border-radius: 5px;
+            padding: 15px;
+            position: relative;
+            color: #e0e0e0;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
+        }
+        .user-card h2 {
+            margin-top: 0;
+            font-size: 1.25rem;
+        }
+        .user-card .details {
+            margin-top: 10px;
+            font-size: 0.875rem;
+        }
+        .user-card .menu {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            cursor: pointer;
+        }
+        .user-card .menu-content {
+            display: none;
+            position: absolute;
+            top: 30px;
+            right: 0;
+            background-color: #444;
+            border-radius: 5px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
+            padding: 10px;
+            z-index: 1000; /* Ensure it stays on top */
+        }
+        .user-card .menu-content button {
+            background: none;
+            border: none;
+            color: #e0e0e0;
+            cursor: pointer;
+            padding: 5px 10px;
+            text-align: left;
+            display: block;
+            width: 100%;
+        }
+        .user-card .menu-content button:hover {
+            background-color: #555;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Admin Panel</h1>
+        </div>
+        <div class="user-grid">
+            {% for username, details in users.items() %}
+            <div class="user-card">
+                <div class="menu" onclick="toggleMenu(event)">
+                    <span>⋮</span>
+                    <div class="menu-content">
+                        <button onclick="banUser('{{ username }}')">Ban User</button>
+                        <!-- Add more options here -->
+                    </div>
+                </div>
+                <h2>{{ username }}</h2>
+                <div class="details">
+                    <p>Email: {{ details.email }}</p>
+                    <p>Registered At: {{ details.registered_at }}</p>
+                    <p>Public IP: {{ details.public_ip if details.public_ip else 'N/A' }}</p>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <script>
+        function toggleMenu(event) {
+            event.stopPropagation(); // Prevents clicks from bubbling up and closing the menu
+            
+            const menuContent = event.currentTarget.querySelector('.menu-content');
+            const isVisible = menuContent.style.display === 'block';
+            
+            // Hide all other open menus
+            document.querySelectorAll('.menu-content').forEach(menu => {
+                menu.style.display = 'none';
+            });
+            
+            // Toggle the current menu
+            menuContent.style.display = isVisible ? 'none' : 'block';
+        }
+        
+        // Close all menus when clicking outside
+        document.addEventListener('click', () => {
+            document.querySelectorAll('.menu-content').forEach(menu => {
+                menu.style.display = 'none';
+            });
+        });
+
+    async function banUser(username) {
+        if (confirm(`Are you sure you want to ban ${username}?`)) {
+            try {
+                const response = await fetch('/ban_user', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ username }),
+                });
+                const result = await response.json();
+                if (result.message === 'User banned successfully') {
+                    if (result.logout) {
+                        // For the banned user, redirect to logout and reload their page
+                        window.location.href = '/logout';
+                    } else {
+                        // For others, just reload the admin panel
+                        location.reload();
+                    }
+                } else {
+                    alert(result.message);
+                }
+            } catch (error) {
+                alert('An error occurred while banning the user.');
+            }
+        }
+    }
+</script>
+
+</body>
+</html>
