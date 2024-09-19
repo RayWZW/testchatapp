@@ -44,11 +44,17 @@
         .error {
             color: red;
         }
+        .warning {
+            color: red;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
     </style>
 </head>
 <body>
     <form action="/verify/{{ username }}" method="post">
         <h2>Enter Verification Code</h2>
+        <div class="warning">Please check your spam folder if you haven't received the email.</div>
         {% with messages = get_flashed_messages(with_categories=true) %}
             {% if messages %}
                 <ul class="error">
