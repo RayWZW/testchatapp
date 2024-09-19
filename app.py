@@ -27,6 +27,7 @@ CHAT_LOGS_FILE = 'data/chatlogs.json'
 BANNED_USERS_FILE = 'data/banned.json'
 ADMINS_FILE = 'data/admins.json'
 ADMIN_PASSWORD_FILE = 'data/admin_password.json'
+CODES_FILE = 'data/codes.json'
 UPLOAD_FOLDER = 'uploads'
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
@@ -222,23 +223,34 @@ def register():
             flash('Username already exists')
             return render_template('register.html')
 
-        # Generate a 6-digit verification code
+        if any(user['email'] == email for user in users.values()):
+            flash('An account with this email already exists')
+            return render_template('register.html')
+
         verification_code = random.randint(100000, 999999)
 
-        # Send verification code via email
         send_verification_email(email, verification_code)
 
-        # Store user data temporarily
         users[username] = {
             'password': password,
             'email': email,
             'registered_at': timestamp,
             'verified': False,
-            'verification_code': verification_code
+            'verification_time': datetime.now().strftime('%Y-%m-%d %H:%M:%S')
         }
+
         save_json_file(USER_ACCOUNTS_FILE, users)
 
-        # Redirect to verification page
+        os.makedirs('data', exist_ok=True)
+
+        if os.path.exists(CODES_FILE):
+            codes = load_json_file(CODES_FILE)
+        else:
+            codes = {}
+
+        codes[username] = verification_code
+        save_json_file(CODES_FILE, codes)
+
         return redirect(url_for('verify', username=username))
 
     return render_template('register.html')
@@ -246,7 +258,7 @@ def register():
 def send_verification_email(email, code):
     sender_email = "thugchatverify@outlook.com"
     sender_password = "THUGGEDBYSSB5"  # Use app password if 2FA is enabled
-    subject = "Email Verification"
+    subject = "THUG-CHAT Verification"
     body = f"Your verification code is: {code}"
 
     with smtplib.SMTP('smtp-mail.outlook.com', 587) as server:
@@ -258,20 +270,27 @@ def send_verification_email(email, code):
 @app.route('/verify/<username>', methods=['GET', 'POST'])
 def verify(username):
     users = load_json_file(USER_ACCOUNTS_FILE)
+    codes = load_json_file(CODES_FILE)
     user = users.get(username)
 
     if request.method == 'POST':
         code_entered = request.form['code']
-        if user and str(user['verification_code']) == code_entered:
-            user['verified'] = True
-            save_json_file(USER_ACCOUNTS_FILE, users)
-            session['username'] = username
-            return redirect(url_for('index'))
+        current_time = datetime.now()
+        verification_time = datetime.strptime(user['verification_time'], '%Y-%m-%d %H:%M:%S')
+
+        if user and str(codes.get(username)) == code_entered:
+            if (current_time - verification_time).total_seconds() <= 600:  # 10 minutes
+                user['verified'] = True
+                save_json_file(USER_ACCOUNTS_FILE, users)
+
+                session['username'] = username
+                return redirect(url_for('index'))
+            else:
+                flash('Verification code has expired. Please request a new one.')
         else:
             flash('Invalid verification code')
 
     return render_template('verify.html', username=username)
-
 
 
 
