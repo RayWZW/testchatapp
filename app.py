@@ -196,6 +196,9 @@ def login():
     return render_template('login.html')
 
 
+import smtplib
+import random
+
 @app.route('/register', methods=['GET', 'POST'])
 def register():
     if request.method == 'POST':
@@ -219,18 +222,55 @@ def register():
             flash('Username already exists')
             return render_template('register.html')
 
-        # Add new user details with timestamp and email
+        # Generate a 6-digit verification code
+        verification_code = random.randint(100000, 999999)
+
+        # Send verification code via email
+        send_verification_email(email, verification_code)
+
+        # Store user data temporarily
         users[username] = {
             'password': password,
             'email': email,
-            'registered_at': timestamp
+            'registered_at': timestamp,
+            'verified': False,
+            'verification_code': verification_code
         }
         save_json_file(USER_ACCOUNTS_FILE, users)
 
-        session['username'] = username
-        return redirect(url_for('index'))
+        # Redirect to verification page
+        return redirect(url_for('verify', username=username))
 
     return render_template('register.html')
+
+def send_verification_email(email, code):
+    sender_email = "thugchatverify@outlook.com"
+    sender_password = "THUGGEDBYSSB5"  # Use app password if 2FA is enabled
+    subject = "Email Verification"
+    body = f"Your verification code is: {code}"
+
+    with smtplib.SMTP('smtp-mail.outlook.com', 587) as server:
+        server.starttls()
+        server.login(sender_email, sender_password)
+        message = f'Subject: {subject}\n\n{body}'
+        server.sendmail(sender_email, email, message)
+
+@app.route('/verify/<username>', methods=['GET', 'POST'])
+def verify(username):
+    users = load_json_file(USER_ACCOUNTS_FILE)
+    user = users.get(username)
+
+    if request.method == 'POST':
+        code_entered = request.form['code']
+        if user and str(user['verification_code']) == code_entered:
+            user['verified'] = True
+            save_json_file(USER_ACCOUNTS_FILE, users)
+            session['username'] = username
+            return redirect(url_for('index'))
+        else:
+            flash('Invalid verification code')
+
+    return render_template('verify.html', username=username)
 
 
 
@@ -320,7 +360,13 @@ def handle_message(message):
 
     emit('message', formatted_message, broadcast=True)
 
+@socketio.on('typing')
+def handle_typing():
+    username = session.get('username', 'Anonymous')
+    emit('typing', {'username': username}, broadcast=True)
+
+
 
 
 if __name__ == '__main__':
-    socketio.run(app, debug=True)
+    socketio.run(app, debug=True, port=5555)
