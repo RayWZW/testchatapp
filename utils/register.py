@@ -12,16 +12,26 @@ BANNED_USERS_FILE = 'data/banned.json'
 register_bp = Blueprint('register', __name__)
 
 def send_verification_email(email, code):
-    sender_email = "ryantraven14232@outlook.com"
-    sender_password = "Mickey2021"
+    smtp_server = "smtp.fastmail.com"
+    port = 587
+    username = "thugverify11@fastmail.com"  # Your FastMail email address
+    password = "28642x4c2p8q5d74"  # Your app-specific password
     subject = "THUG-CHAT Verification"
     body = f"Your verification code is: {code}"
 
-    with smtplib.SMTP('smtp-mail.outlook.com', 587) as server:
-        server.starttls()
-        server.login(sender_email, sender_password)
-        message = f'Subject: {subject}\n\n{body}'
-        server.sendmail(sender_email, email, message)
+    message = f'From: {username}\nTo: {email}\nSubject: {subject}\n\n{body}'
+
+    try:
+        with smtplib.SMTP(smtp_server, port) as server:
+            server.starttls()
+            server.login(username, password)
+            server.sendmail(username, email, message)
+        print("Email sent successfully!")
+    except Exception as e:
+        print("Failed to send email:", e)
+
+
+
 
 @register_bp.route('/register', methods=['GET', 'POST'])
 def register():
