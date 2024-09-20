@@ -9,14 +9,16 @@ from utils.utils import load_json_file, save_json_file, generate_unique_user_id
 from utils.register import register_bp
 from utils.message import handle_message, handle_typing
 from utils.admin import admin_bp
+from utils.commands import commands_bp
+
 
 app = Flask(__name__)
 app.secret_key = 'your_secret_key'  # Change this to a secure key in production
 socketio = SocketIO(app)
 
 app.register_blueprint(register_bp)
-app.register_blueprint(admin_bp, url_prefix='/admin')  # Register the admin blueprint
-
+app.register_blueprint(admin_bp, url_prefix='/admin') 
+app.register_blueprint(commands_bp)
 
 from flask_session import Session
 
@@ -352,31 +354,29 @@ def upload_file():
     if file.filename == '':
         return jsonify({'error': 'No selected file'}), 400
 
-    if file:
-        filename = file.filename.lower()
-        file_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+    filename = file.filename.lower()
+    file_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
 
-        # Check if the file is an image by file extension
-        image_mime_types = ['image/jpeg', 'image/png', 'image/webp', 'image/gif']
-        if mimetypes.guess_type(filename)[0] in image_mime_types:
-            try:
-                # Open the image and resize it to 500x500
-                with Image.open(file) as img:
-                    # Resize to exactly 500x500 pixels
-                    img = img.resize((500, 500))
+    # Check if the file is an image by MIME type
+    image_mime_types = ['image/jpeg', 'image/png', 'image/webp', 'image/gif']
+    video_mime_types = ['video/mp4', 'video/x-msvideo', 'video/x-flv']  # Add more video MIME types if needed
+    mime_type = mimetypes.guess_type(filename)[0]
 
-                    # Save the resized image
-                    img.save(file_path)
-
-            except Exception as e:
-                return jsonify({'error': f'Failed to process image: {str(e)}'}), 500
+    try:
+        if mime_type in image_mime_types:
+            with Image.open(file) as img:
+                img = img.resize((500, 500))
+                img.save(file_path)
+        elif mime_type in video_mime_types:
+            file.save(file_path)  # Just save the video without processing
         else:
-            return jsonify({'error': 'Only image uploads are supported.'}), 400
+            file.save(file_path)  # Save other file types directly
+    except Exception as e:
+        return jsonify({'error': f'Failed to process file: {str(e)}'}), 500
 
-        file_url = url_for('download_file', filename=filename)
-        file_type = mimetypes.guess_type(file_path)[0]  # Detect the MIME type
-        return jsonify({'file_url': file_url, 'file_type': file_type})
-
+    file_url = url_for('download_file', filename=filename)
+    file_type = mimetypes.guess_type(file_path)[0]
+    return jsonify({'file_url': file_url, 'file_type': file_type})
 @app.route('/uploads/<filename>')
 def download_file(filename):
     return send_from_directory(app.config['UPLOAD_FOLDER'], filename)
