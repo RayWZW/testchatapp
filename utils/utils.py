@@ -2,6 +2,8 @@
 
 import json
 import os
+import random
+import string
 
 def load_json_file(filename):
     if os.path.exists(filename):
@@ -20,3 +22,8 @@ def generate_unique_user_id(users):
         unique_id = f"{random.randint(0, 9999999999):010d}"
         if unique_id not in (user['user_id'] for user in users.values()):
             return unique_id
+        
+
+
+def generate_dm_token(length=16):
+    return ''.join(random.choices(string.ascii_letters + string.digits, k=length))        
