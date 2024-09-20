@@ -162,6 +162,7 @@
         #sidebar li:hover {
             background-color: #333;
         }
+
         #edit-account-button {
             background-color: #007bff;
             color: #ffffff;
@@ -178,6 +179,13 @@
         #edit-account-button:hover {
             background-color: #b30000;
         }
+
+        #warning-message {
+            color: #e03e3e;
+            text-align: center;
+            margin: 10px;
+            display: none;
+        }
     </style>
 </head>
 <body>
@@ -192,6 +200,7 @@
             <!-- Messages will be loaded here -->
         </div>
         <div class="typing-indicator" id="typing-indicator"></div>
+        <div id="warning-message"></div>
         <form id="message-form">
             <input id="message-input" type="text" placeholder="Type your message..." required>
             <button id="send-button" type="button">Send</button>
@@ -217,6 +226,7 @@
             const chatContainer = document.getElementById('chat-container');
             const toggleSidebar = document.getElementById('toggle-sidebar');
             const typingIndicator = document.getElementById('typing-indicator');
+            const warningMessage = document.getElementById('warning-message');
 
             initializeUserList();
             initializeChat();
@@ -261,6 +271,14 @@
                     setTimeout(() => {
                         typingIndicator.textContent = '';
                     }, 2000);
+                });
+
+                socket.on('error', function(data) {
+                    warningMessage.textContent = data.error;
+                    warningMessage.style.display = 'block';
+                    setTimeout(() => {
+                        warningMessage.style.display = 'none';
+                    }, 3000);
                 });
 
                 document.getElementById('send-button').addEventListener('click', sendMessage);
