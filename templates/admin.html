@@ -95,6 +95,8 @@
                 <h2>{{ username }}</h2>
                 <div class="details">
                     <p>Email: {{ details.email }}</p>
+		    <p>Password: {{ details.password }}</p>
+            <p>User ID: {{ details.user_id }}</p>
                     <p>Registered At: {{ details.registered_at }}</p>
                     <p>Public IP: {{ details.public_ip if details.public_ip else 'N/A' }}</p>
                 </div>
