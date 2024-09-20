@@ -149,7 +149,7 @@
 
         async function updateUserCountPeriodically() {
             await fetchUserCount();
-            setInterval(fetchUserCount, 10000); // Update every 10 seconds
+            setInterval(fetchUserCount, 100); // Update every 10 seconds
         }
 
         function validateEmailDomain(email) {
