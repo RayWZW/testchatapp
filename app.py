@@ -28,8 +28,22 @@ BANNED_USERS_FILE = 'data/banned.json'
 ADMINS_FILE = 'data/admins.json'
 ADMIN_PASSWORD_FILE = 'data/admin_password.json'
 CODES_FILE = 'data/codes.json'
+TEMP_USER_ACCOUNTS_FILE = 'data/temp_useraccounts.json'
 UPLOAD_FOLDER = 'uploads'
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
+
+def require_verification(f):
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        if 'username' in session and not is_verified(session['username']):
+            flash('You must verify your email before accessing this page.')
+            return redirect(url_for('verify', username=session['username']))
+        return f(*args, **kwargs)
+    return decorated_function
+
+def is_verified(username):
+    users = load_json_file(USER_ACCOUNTS_FILE)
+    return users.get(username, {}).get('verified', False)
 
 
 def load_json_file(filepath):
@@ -203,6 +217,18 @@ def generate_unique_user_id(users):
         user_id = str(random.randint(1000000000, 9999999999))
         if not any(user_id == user_data.get('user_id') for user_data in users.values()):
             return user_id
+        
+def send_verification_email(email, code):
+    sender_email = "ryantraven14232@outlook.com"
+    sender_password = "Mickey2021"
+    subject = "THUG-CHAT Verification"
+    body = f"Your verification code is: {code}"
+
+    with smtplib.SMTP('smtp-mail.outlook.com', 587) as server:
+        server.starttls()
+        server.login(sender_email, sender_password)
+        message = f'Subject: {subject}\n\n{body}'
+        server.sendmail(sender_email, email, message)        
 
 
 import smtplib
@@ -235,63 +261,51 @@ def register():
             flash('An account with this email already exists')
             return render_template('register.html')
 
-        user_id = generate_unique_user_id(users)
         verification_code = random.randint(100000, 999999)
 
         send_verification_email(email, verification_code)
 
-        users[username] = {
-            'user_id': user_id,
+        temporary_users = load_json_file(TEMP_USER_ACCOUNTS_FILE) if os.path.exists(TEMP_USER_ACCOUNTS_FILE) else {}
+        temporary_users[username] = {
             'password': password,
             'email': email,
             'registered_at': timestamp,
             'verified': False,
+            'verification_code': verification_code,
             'verification_time': datetime.now().strftime('%Y-%m-%d %H:%M:%S')
         }
 
-        save_json_file(USER_ACCOUNTS_FILE, users)
-
-        os.makedirs('data', exist_ok=True)
-
-        if os.path.exists(CODES_FILE):
-            codes = load_json_file(CODES_FILE)
-        else:
-            codes = {}
-
-        codes[username] = verification_code
-        save_json_file(CODES_FILE, codes)
+        save_json_file(TEMP_USER_ACCOUNTS_FILE, temporary_users)
 
         return redirect(url_for('verify', username=username))
 
     return render_template('register.html')
 
-def send_verification_email(email, code):
-    sender_email = "ryantraven14232@outlook.com"
-    sender_password = "Mickey2021"  # Use app password if 2FA is enabled
-    subject = "THUG-CHAT Verification"
-    body = f"Your verification code is: {code}"
-
-    with smtplib.SMTP('smtp-mail.outlook.com', 587) as server:
-        server.starttls()
-        server.login(sender_email, sender_password)
-        message = f'Subject: {subject}\n\n{body}'
-        server.sendmail(sender_email, email, message)
-
 @app.route('/verify/<username>', methods=['GET', 'POST'])
 def verify(username):
     users = load_json_file(USER_ACCOUNTS_FILE)
-    codes = load_json_file(CODES_FILE)
-    user = users.get(username)
+    temporary_users = load_json_file(TEMP_USER_ACCOUNTS_FILE)
+    user = temporary_users.get(username)
 
     if request.method == 'POST':
         code_entered = request.form['code']
         current_time = datetime.now()
         verification_time = datetime.strptime(user['verification_time'], '%Y-%m-%d %H:%M:%S')
 
-        if user and str(codes.get(username)) == code_entered:
-            if (current_time - verification_time).total_seconds() <= 600:  # 10 minutes
+        if user and str(user['verification_code']) == code_entered:
+            if (current_time - verification_time).total_seconds() <= 600:
+                user_id = generate_unique_user_id(users)
                 user['verified'] = True
+                user['user_id'] = user_id
+                users[username] = {
+                    'user_id': user_id,
+                    'password': user['password'],
+                    'email': user['email'],
+                    'registered_at': user['registered_at'],
+                    'verified': True
+                }
                 save_json_file(USER_ACCOUNTS_FILE, users)
+                os.remove(TEMP_USER_ACCOUNTS_FILE)
 
                 session['username'] = username
                 return redirect(url_for('index'))
@@ -301,6 +315,7 @@ def verify(username):
             flash('Invalid verification code')
 
     return render_template('verify.html', username=username)
+
 
 
 @app.route('/tos')
