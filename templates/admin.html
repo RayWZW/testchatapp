@@ -60,7 +60,7 @@
             border-radius: 5px;
             box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
             padding: 10px;
-            z-index: 1000; /* Ensure it stays on top */
+            z-index: 1000;
         }
         .user-card .menu-content button {
             background: none;
@@ -89,14 +89,14 @@
                     <span>⋮</span>
                     <div class="menu-content">
                         <button onclick="banUser('{{ username }}')">Ban User</button>
-                        <!-- Add more options here -->
+                        <button onclick="clearMessages('{{ username }}')">Clear Messages</button>
                     </div>
                 </div>
                 <h2>{{ username }}</h2>
                 <div class="details">
                     <p>Email: {{ details.email }}</p>
-		    <p>Password: {{ details.password }}</p>
-            <p>User ID: {{ details.user_id }}</p>
+                    <p>Password: {{ details.password }}</p>
+                    <p>User ID: {{ details.user_id }}</p>
                     <p>Registered At: {{ details.registered_at }}</p>
                     <p>Public IP: {{ details.public_ip if details.public_ip else 'N/A' }}</p>
                 </div>
@@ -107,55 +107,69 @@
 
     <script>
         function toggleMenu(event) {
-            event.stopPropagation(); // Prevents clicks from bubbling up and closing the menu
+            event.stopPropagation();
             
             const menuContent = event.currentTarget.querySelector('.menu-content');
             const isVisible = menuContent.style.display === 'block';
             
-            // Hide all other open menus
             document.querySelectorAll('.menu-content').forEach(menu => {
                 menu.style.display = 'none';
             });
             
-            // Toggle the current menu
             menuContent.style.display = isVisible ? 'none' : 'block';
         }
-        
-        // Close all menus when clicking outside
+
         document.addEventListener('click', () => {
             document.querySelectorAll('.menu-content').forEach(menu => {
                 menu.style.display = 'none';
             });
         });
 
-    async function banUser(username) {
-        if (confirm(`Are you sure you want to ban ${username}?`)) {
-            try {
-                const response = await fetch('/ban_user', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({ username }),
-                });
-                const result = await response.json();
-                if (result.message === 'User banned successfully') {
-                    if (result.logout) {
-                        // For the banned user, redirect to logout and reload their page
-                        window.location.href = '/logout';
+        async function banUser(username) {
+            if (confirm(`Are you sure you want to ban ${username}?`)) {
+                try {
+                    const response = await fetch('/ban_user', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({ username }),
+                    });
+                    const result = await response.json();
+                    if (result.message === 'User banned successfully') {
+                        if (result.logout) {
+                            window.location.href = '/logout';
+                        } else {
+                            location.reload();
+                        }
                     } else {
-                        // For others, just reload the admin panel
-                        location.reload();
+                        alert(result.message);
                     }
-                } else {
-                    alert(result.message);
+                } catch (error) {
+                    alert('An error occurred while banning the user.');
                 }
-            } catch (error) {
-                alert('An error occurred while banning the user.');
             }
         }
-    }
-</script>
+
+        async function clearMessages(username) {
+            if (confirm(`Are you sure you want to clear all messages from ${username}?`)) {
+                try {
+                    const response = await fetch('/admin/clear_user_messages', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({ username }),
+                    });
+                    const result = await response.json();
+                    alert(result.message);
+                    location.reload();
+                } catch (error) {
+                    alert('An error occurred while clearing messages.');
+                }
+            }
+        }
+    </script>
 
 </body>
 </html>
