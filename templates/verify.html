@@ -53,8 +53,9 @@
 </head>
 <body>
     <form action="/verify/{{ username }}" method="post">
-        <h2>Enter Verification Code</h2>
-        <div class="warning">Please check your spam folder if you haven't received the email.</div>
+        <h2>Verify Your Email</h2>
+        <div class="warning">Please check your email for the verification link.</div>
+        <div class="warning">If you haven't received it, check your spam folder.</div>
         {% with messages = get_flashed_messages(with_categories=true) %}
             {% if messages %}
                 <ul class="error">
