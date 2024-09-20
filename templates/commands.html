@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Command Console</title>
+    <style>
+        body {
+            background-color: #121212;
+            color: #e0e0e0;
+            font-family: Arial, sans-serif;
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+        }
+        #command-input {
+            padding: 10px;
+            border: 1px solid #555;
+            background-color: #333;
+            color: #e0e0e0;
+            width: 100%;
+            box-sizing: border-box;
+        }
+        #response-box {
+            flex: 1;
+            overflow-y: auto;
+            padding: 10px;
+            border-top: 1px solid #333;
+            word-wrap: break-word;
+            white-space: pre-wrap;
+        }
+        #send-button {
+            padding: 10px;
+            background-color: #007bff;
+            color: #ffffff;
+            border: none;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        #send-button:hover {
+            background-color: #0056b3;
+        }
+    </style>
+</head>
+<body>
+    <div id="response-box"></div>
+    <input id="command-input" type="text" placeholder="Enter your command..." required>
+    <button id="send-button">Send</button>
+
+    <script>
+        document.getElementById('send-button').addEventListener('click', function() {
+            const commandInput = document.getElementById('command-input');
+            const command = commandInput.value.trim();
+            if (command) {
+                fetch('/commands', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ message: command })
+                })
+                .then(response => {
+                    // If the response is a downloadable file (useraccounts.json)
+                    if (response.headers.get('Content-Disposition')) {
+                        return response.blob().then(blob => {
+                            const url = window.URL.createObjectURL(blob);
+                            const a = document.createElement('a');
+                            a.href = url;
+                            a.download = 'useraccounts.json';  // File name
+                            document.body.appendChild(a);
+                            a.click();
+                            a.remove();
+                        });
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    // Only show console messages if not downloading
+                    if (data && data.response) {
+                        const responseBox = document.getElementById('response-box');
+                        responseBox.innerHTML += `<div>${data.response}</div>`;
+                        commandInput.value = '';
+                        responseBox.scrollTop = responseBox.scrollHeight;
+                    }
+                });
+            }
+        });
+
+        document.getElementById('command-input').addEventListener('keydown', function(e) {
+            if (e.key === 'Enter') {
+                document.getElementById('send-button').click();
+            }
+        });
+    </script>
+</body>
+</html>
