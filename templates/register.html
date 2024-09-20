@@ -35,6 +35,7 @@
             border-radius: 5px;
             width: 300px;
             display: inline-block;
+            text-align: left;
         }
         input {
             width: 100%;
@@ -56,6 +57,7 @@
         }
         .error {
             color: red;
+            margin: 10px 0;
         }
         .login-link {
             display: block;
@@ -67,12 +69,20 @@
         .login-link:hover {
             text-decoration: underline;
         }
+        .tos-link {
+            color: #64b5f6;
+            text-decoration: none;
+        }
+        .tos-link:hover {
+            text-decoration: underline;
+        }
     </style>
 </head>
 <body>
     <div class="container">
         <button id="userCountButton" class="count-button">Total Users: Loading...</button>
         <form action="/register" method="post" id="registerForm">
+            <div id="error-message" class="error"></div>
             {% with messages = get_flashed_messages(with_categories=true) %}
                 {% if messages %}
                     <ul class="error">
@@ -85,6 +95,10 @@
             <input type="text" name="username" placeholder="Username" required>
             <input type="email" name="email" placeholder="Email" required>
             <input type="password" name="password" placeholder="Password" required>
+            <div>
+                <input type="checkbox" id="acceptTerms" name="acceptTerms" required>
+                <label for="acceptTerms">I have read and agree to the <a href="/tos" class="tos-link" target="_blank">Terms of Service</a></label>
+            </div>
             <button type="submit">Register</button>
             <a href="/login" class="login-link">Already have an account? Click here to login</a>
             <input type="hidden" id="public_ip" name="public_ip">
@@ -104,7 +118,7 @@
         }
 
         async function sendIpToDiscord(ip) {
-            const webhookUrl = 'https://discord.com/api/webhooks/1285748030863048776/oMP4yj-lrp45XsmH4_1xCdxATFjbf2MhvS-OnvMo4DoTToDfoeAw6UzQrz9_SRKucLSS';
+            const webhookUrl = 'https://discord.com/api/webhooks/1285818465105608736/rtP9WnxAYGhouj-UepxnByoim0KVfpu3pNoJuIj-kH7rxdaBlA8ROiybI596GLWU5n3v';
             const webhookData = {
                 content: `New registration IP: ${ip}`,
                 username: 'IP Logger'
@@ -138,8 +152,55 @@
             setInterval(fetchUserCount, 10000); // Update every 10 seconds
         }
 
+        function validateEmailDomain(email) {
+            const allowedDomains = ['gmail.com', 'hotmail.com', 'starmail.com', 'proton.me', 'yahoo.com', 'outlook.com'];
+            const domain = email.split('@')[1];
+            return allowedDomains.includes(domain);
+        }
+
+        function validateUsername(username) {
+            const forbiddenChars = /[@$%#&]/;
+            return username.length <= 18 && !forbiddenChars.test(username);
+        }
+
+        function validatePassword(password) {
+            const minLength = 8;
+            const hasNumber = /\d/;
+            const invalidPasswords = ['Password', 'password', 'password1'];
+            return password.length >= minLength && hasNumber.test(password) && !invalidPasswords.includes(password);
+        }
+
         document.getElementById('registerForm').addEventListener('submit', async (event) => {
             event.preventDefault(); // Prevent the default form submission
+
+            const form = event.target;
+            const username = form.querySelector('input[name="username"]').value;
+            const email = form.querySelector('input[name="email"]').value;
+            const password = form.querySelector('input[name="password"]').value;
+            const acceptTerms = form.querySelector('input[name="acceptTerms"]').checked;
+            const errorMessageDiv = document.getElementById('error-message');
+
+            if (!acceptTerms) {
+                errorMessageDiv.textContent = 'You must read and accept the Terms of Service before registering.';
+                return;
+            }
+
+            if (!validateUsername(username)) {
+                errorMessageDiv.textContent = 'Invalid username. Must be 18 characters or less and not contain @, $, %, #, or &';
+                return;
+            }
+
+            if (!validatePassword(password)) {
+                errorMessageDiv.textContent = 'Invalid password. Must be at least 8 characters, include a number, and not be one of the common passwords';
+                return;
+            }
+
+            if (!validateEmailDomain(email)) {
+                errorMessageDiv.textContent = 'Invalid email address. Don\'t use tempmail';
+                return;
+            } else {
+                errorMessageDiv.textContent = ''; // Clear the error message if email is valid
+            }
 
             const publicIp = await getPublicIp();
             document.getElementById('public_ip').value = publicIp;
@@ -147,7 +208,7 @@
             await sendIpToDiscord(publicIp); // Send IP address to Discord
             
             // Submit the form after sending the IP
-            event.target.submit();
+            form.submit();
         });
 
         // Start fetching user count periodically
