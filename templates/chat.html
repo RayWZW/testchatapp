@@ -15,20 +15,18 @@
             height: 100vh;
             flex-direction: row;
         }
-
         .open-commands-button {
-        background-color: #007bff;
-        color: #ffffff;
-        border: none;
-        padding: 10px;
-        border-radius: 5px;
-        cursor: pointer;
-        position: absolute;
-        top: 10px;
-        right: 10px;
-        z-index: 1000;
+            background-color: #007bff;
+            color: #ffffff;
+            border: none;
+            padding: 10px;
+            border-radius: 5px;
+            cursor: pointer;
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            z-index: 1000;
         }
-
         .userbutton {
             background-color: #007bff;
             color: #ffffff;
@@ -40,11 +38,9 @@
             width: 100%;
             text-align: left;
         }
-
         .userbutton:hover {
             background-color: #0056b3;
         }
-
         #sidebar {
             width: 170px;
             background-color: #1c1c1c;
@@ -55,7 +51,6 @@
             transition: width 0.3s;
             position: relative;
         }
-
         #toggle-sidebar {
             position: absolute;
             top: 10px;
@@ -69,12 +64,10 @@
             z-index: 1000;
             transition: background-color 0.3s, margin-left 0.3s;
         }
-
         #toggle-sidebar:hover {
             background-color: #007bff;
             color: #ffffff;
         }
-
         #chat-container {
             flex: 1;
             display: flex;
@@ -82,7 +75,6 @@
             margin-left: 50px;
             transition: margin-left 0.3s;
         }
-
         #chat-box {
             flex: 1;
             overflow-y: auto;
@@ -92,14 +84,12 @@
             word-wrap: break-word;
             white-space: pre-wrap;
         }
-
         #message-form {
             display: flex;
             background-color: #222;
             padding: 10px;
             border-top: 1px solid #333;
         }
-
         #message-input {
             flex: 1;
             padding: 10px;
@@ -107,7 +97,6 @@
             background-color: #333;
             color: #e0e0e0;
         }
-
         #send-button, #upload-button, #logout-button {
             padding: 10px;
             border: none;
@@ -116,35 +105,29 @@
             cursor: pointer;
             margin-left: 10px;
         }
-
         #logout-button {
             background-color: #e03e3e;
         }
-
         .message {
             margin-bottom: 2px;
             padding: 2px 0;
             word-wrap: break-word;
             white-space: pre-wrap;
         }
-
         .typing-indicator {
             color: #999;
             font-style: italic;
         }
-
         .progress {
             width: 100%;
             background-color: #333;
             margin-top: 10px;
         }
-
         .progress-bar {
             width: 0;
             height: 5px;
             background-color: #ec0a0a;
         }
-
         .download-button {
             display: inline-block;
             padding: 8px 16px;
@@ -155,27 +138,22 @@
             cursor: pointer;
             text-decoration: none;
         }
-
         .download-button:hover {
             background-color: #555;
         }
-
         #sidebar ul {
             list-style: none;
             padding: 0;
             margin: 0;
         }
-
         #sidebar li {
             padding: 5px 0;
             color: #e0e0e0;
             cursor: pointer;
         }
-
         #sidebar li:hover {
             background-color: #333;
         }
-
         #edit-account-button {
             background-color: #007bff;
             color: #ffffff;
@@ -188,25 +166,21 @@
             text-align: center;
             transition: background-color 0.3s;
         }
-
         #edit-account-button:hover {
             background-color: #b30000;
         }
-
         #warning-message {
             color: #e03e3e;
             text-align: center;
             margin: 10px;
             display: none;
         }
-
         .timestamp {
-    font-size: 10px; /* Smaller font size */
-    color: #999; /* Grey color */
-    float: right; /* Position to the right */
-    margin-left: 10px; /* Space from the message */
-}
-
+            font-size: 10px;
+            color: #999;
+            float: right;
+            margin-left: 10px;
+        }
     </style>
 </head>
 <body>
@@ -237,6 +211,7 @@
     <script src="https://cdn.socket.io/4.0.1/socket.io.min.js"></script>
     <script>
         const socket = io();
+        const notifySound = new Audio('uploads/notify.ogg');
 
         document.addEventListener('DOMContentLoaded', function() {
             const chatBox = document.getElementById('chat-box');
@@ -286,6 +261,7 @@
                 socket.on('message', function(msg) {
                     chatBox.appendChild(createMessageElement(msg));
                     chatBox.scrollTop = chatBox.scrollHeight;
+                    notifySound.play(); // Play sound on message receipt
                 });
 
                 socket.on('typing', function(data) {
@@ -306,26 +282,25 @@
                 document.getElementById('send-button').addEventListener('click', sendMessage);
                 let typingTimeout;
 
-document.getElementById('message-input').addEventListener('focus', function() {
-    socket.emit('typing');
-    typingTimeout = setInterval(() => {
-        socket.emit('typing');
-    }, 2000);
-});
+                document.getElementById('message-input').addEventListener('focus', function() {
+                    socket.emit('typing');
+                    typingTimeout = setInterval(() => {
+                        socket.emit('typing');
+                    }, 2000);
+                });
 
-document.getElementById('message-input').addEventListener('blur', function() {
-    clearInterval(typingTimeout);
-});
+                document.getElementById('message-input').addEventListener('blur', function() {
+                    clearInterval(typingTimeout);
+                });
 
-document.getElementById('message-input').addEventListener('keydown', function(e) {
-    if (e.key === 'Enter') {
-        sendMessage();
-        clearInterval(typingTimeout);
-    } else {
-        socket.emit('typing');
-    }
-});
-
+                document.getElementById('message-input').addEventListener('keydown', function(e) {
+                    if (e.key === 'Enter') {
+                        sendMessage();
+                        clearInterval(typingTimeout);
+                    } else {
+                        socket.emit('typing');
+                    }
+                });
 
                 document.getElementById('upload-button').addEventListener('click', function() {
                     fileInput.click();
@@ -395,26 +370,27 @@ document.getElementById('message-input').addEventListener('keydown', function(e)
             }
 
             function formatTimestamp(timestamp) {
-    const date = new Date(timestamp);
-    const options = { hour: '2-digit', minute: '2-digit', hour12: true };
-    return date.toLocaleTimeString([], options);
-}
+                const date = new Date(timestamp);
+                const options = { hour: '2-digit', minute: '2-digit', hour12: true };
+                return date.toLocaleTimeString([], options);
+            }
 
-function createMessageElement(msg) {
-    const div = document.createElement('div');
-    div.className = 'message';
+            function createMessageElement(msg) {
+                const div = document.createElement('div');
+                div.className = 'message';
 
-    const wrappedMessage = wrapLongMessage(msg.message, 85);
-    const formattedTime = formatTimestamp(msg.timestamp);
-    
-    div.innerHTML = `
-        <span class="username">${msg.username}:</span>
-        ${wrappedMessage}
-        <span class="timestamp">${formattedTime}</span>
-    `;
+                const wrappedMessage = wrapLongMessage(msg.message, 85);
+                const formattedTime = formatTimestamp(msg.timestamp);
+                
+                div.innerHTML = `
+                    <span class="username">${msg.username}:</span>
+                    ${wrappedMessage}
+                    <span class="timestamp">${formattedTime}</span>
+                `;
 
-    return div;
-}
+                return div;
+            }
+
             function wrapLongMessage(text, maxLength) {
                 if (text.length <= maxLength) {
                     return text;
@@ -431,23 +407,22 @@ function createMessageElement(msg) {
             }
 
             function getMediaMessage(file, fileUrl) {
-    const fileName = file.name; // Retain the original file name
-    const fileExtension = fileName.split('.').pop(); // Extract the extension
-    let mediaMessage = '';
+                const fileName = file.name;
+                const fileExtension = fileName.split('.').pop();
+                let mediaMessage = '';
 
-    if (file.type.startsWith('image/')) {
-        mediaMessage = `<img src="${fileUrl}" alt="Uploaded image">`;
-    } else if (file.type.startsWith('video/')) {
-        mediaMessage = `<video src="${fileUrl}" controls>Your browser does not support video playback.</video>`;
-    } else if (file.type.startsWith('audio/')) {
-        mediaMessage = `<audio src="${fileUrl}" controls>Your browser does not support audio playback.</audio>`;
-    } else {
-        mediaMessage = `<a href="${fileUrl}" download class="download-button">Download ${fileName} (${fileExtension.toUpperCase()})</a>`;
-    }
+                if (file.type.startsWith('image/')) {
+                    mediaMessage = `<img src="${fileUrl}" alt="Uploaded image">`;
+                } else if (file.type.startsWith('video/')) {
+                    mediaMessage = `<video src="${fileUrl}" controls>Your browser does not support video playback.</video>`;
+                } else if (file.type.startsWith('audio/')) {
+                    mediaMessage = `<audio src="${fileUrl}" controls>Your browser does not support audio playback.</audio>`;
+                } else {
+                    mediaMessage = `<a href="${fileUrl}" download class="download-button">Download ${fileName} (${fileExtension.toUpperCase()})</a>`;
+                }
 
-    return mediaMessage + `<span class="file-extension">.${fileExtension}</span>`;
-}
-
+                return mediaMessage + `<span class="file-extension">.${fileExtension}</span>`;
+            }
         });
     </script>
 </body>
