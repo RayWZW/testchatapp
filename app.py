@@ -1,6 +1,7 @@
 from flask import Flask, render_template, request, redirect, url_for, flash, session, jsonify, send_from_directory
 from flask_socketio import SocketIO, emit
 import json
+from authlib.integrations.flask_client import OAuth
 import os
 from datetime import datetime
 import mimetypes
@@ -210,7 +211,6 @@ def login():
         user = users.get(username)
         if user and user['password'] == password:
             session['username'] = username
-            # Track the session ID
             session_cookie_name = app.config.get('SESSION_COOKIE_NAME', 'session')
             session_id = session.get('_id', request.cookies.get(session_cookie_name))
             active_sessions[username] = session_id
@@ -218,6 +218,86 @@ def login():
         else:
             flash('Invalid credentials')
     return render_template('login.html')
+
+oauth = OAuth(app)
+google = oauth.register(
+    name='thuglogin',
+    client_id='969313658932-k5urg85tfrndhha4883l4oa7hq247690.apps.googleusercontent.com',
+    client_secret='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',
+    authorize_url='https://accounts.google.com/o/oauth2/auth',
+    access_token_url='https://oauth2.googleapis.com/token',
+    client_kwargs={'scope': 'email profile'},
+)
+
+
+@app.route('/google-login', methods=['POST', 'GET'])
+def google_login():
+    if request.method == 'GET':
+        return jsonify({'message': 'Please send a POST request with ID token.'}), 400
+
+    id_token = request.json.get('id_token')
+    if not id_token:
+        return jsonify({'error': 'Missing ID token'}), 400
+
+    try:
+        user_info = google.verify_id_token(id_token)
+        email = user_info['email']
+        token = user_info.get('sub')
+    except Exception as e:
+        return jsonify({'error': str(e)}), 400
+
+    users = load_json_file(USER_ACCOUNTS_FILE)
+
+    if email not in users:
+        users[email] = {
+            'email': email,
+            'password': '',
+            'registered_at': datetime.now().isoformat(),
+            'verified': True,
+            'username': email.split('@')[0],
+            'google_token': token,
+        }
+        save_json_file(USER_ACCOUNTS_FILE, users)
+    else:
+        users[email]['google_token'] = token
+        save_json_file(USER_ACCOUNTS_FILE, users)
+
+    session['username'] = users[email]['username']
+    return jsonify({'redirect': url_for('index')})
+
+
+@app.route('/google-register', methods=['GET'])
+def google_register():
+    redirect_uri = "https://thugchat.loophole.site/authorized"
+    return google.authorize_redirect(redirect_uri)
+
+
+@app.route('/authorized', methods=['GET'])
+def authorized():
+    token = google.authorize_access_token()
+    user_info = google.get('https://www.googleapis.com/oauth2/v3/userinfo').json()
+    email = user_info['email']
+    google_token = user_info['sub']
+
+    users = load_json_file(USER_ACCOUNTS_FILE)
+
+    if email not in users:
+        users[email] = {
+            'email': email,
+            'password': '',
+            'registered_at': datetime.now().isoformat(),
+            'verified': True,
+            'username': email.split('@')[0],
+            'google_token': google_token,
+        }
+        save_json_file(USER_ACCOUNTS_FILE, users)
+    else:
+        users[email]['google_token'] = google_token
+        save_json_file(USER_ACCOUNTS_FILE, users)
+
+    session['username'] = users[email]['username']
+    return redirect(url_for('index'))
+
 
 
 def generate_unique_user_id(users):
@@ -380,6 +460,14 @@ def upload_file():
 @app.route('/uploads/<filename>')
 def download_file(filename):
     return send_from_directory(app.config['UPLOAD_FOLDER'], filename)
+
+@app.route('/webhook/<int:id>', methods=['POST'])
+def webhook(id):
+    data = request.get_json()
+    username = data.get('username')
+    message = data.get('message')
+    # Process the received data as needed
+    return jsonify({"status": "success", "id": id, "username": username, "message": message}), 200
 
 
 @socketio.on('message')
