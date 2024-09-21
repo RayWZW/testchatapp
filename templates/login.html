@@ -10,10 +10,24 @@
             color: #e0e0e0;
             font-family: Arial, sans-serif;
             display: flex;
+            flex-direction: column;
             justify-content: center;
             align-items: center;
             height: 100vh;
             margin: 0;
+        }
+        .header {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+        }
+        .header button {
+            background-color: #444;
+            color: #e0e0e0;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 5px;
+            cursor: pointer;
         }
         form {
             background-color: #333;
@@ -52,9 +66,19 @@
         .register-link:hover {
             text-decoration: underline;
         }
+        .g-signin2 {
+            width: 300px;
+            margin-top: 15px;
+            text-align: center;
+        }
     </style>
+    <script src="https://apis.google.com/js/platform.js" async defer></script>
+    <meta name="google-signin-client_id" content="969313658932-k5urg85tfrndhha4883l4oa7hq247690.apps.googleusercontent.com">
 </head>
 <body>
+    <div class="header">
+        <button onclick="window.location.href='/'">Go to Main</button>
+    </div>
     <form action="/login" method="post">
         {% with messages = get_flashed_messages(with_categories=true) %}
             {% if messages %}
@@ -70,5 +94,23 @@
         <button type="submit">Login</button>
         <a href="/register" class="register-link">No account? Click here to register</a>
     </form>
+    <div class="g-signin2" data-onsuccess="onSignIn" data-theme="dark"></div>
+    <script>
+        function onSignIn(googleUser) {
+            const id_token = googleUser.getAuthResponse().id_token;
+            const xhr = new XMLHttpRequest();
+            xhr.open('POST', '/google-login');
+            xhr.setRequestHeader('Content-Type', 'application/json');
+            xhr.onload = function() {
+                const response = JSON.parse(xhr.responseText);
+                if (xhr.status === 200) {
+                    window.location.href = '/'; // Redirect to main page after successful login
+                } else {
+                    console.error('Login failed:', response.error);
+                }
+            };
+            xhr.send(JSON.stringify({ id_token: id_token }));
+        }
+    </script>
 </body>
 </html>
