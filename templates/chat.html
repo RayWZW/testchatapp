@@ -4,184 +4,385 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>THUG-CHAT</title>
-    <style>
-        body {
-            background-color: #121212;
-            color: #e0e0e0;
-            font-family: Arial, sans-serif;
-            margin: 0;
-            overflow: hidden;
-            display: flex;
-            height: 100vh;
-            flex-direction: row;
-        }
-        .open-commands-button {
-            background-color: #007bff;
-            color: #ffffff;
-            border: none;
-            padding: 10px;
-            border-radius: 5px;
-            cursor: pointer;
-            position: absolute;
-            top: 10px;
-            right: 10px;
-            z-index: 1000;
-        }
-        .userbutton {
-            background-color: #007bff;
-            color: #ffffff;
-            border: none;
-            padding: 10px;
-            border-radius: 5px;
-            cursor: pointer;
-            margin: 5px 0;
-            width: 100%;
-            text-align: left;
-        }
-        .userbutton:hover {
-            background-color: #0056b3;
-        }
-        #sidebar {
-            width: 170px;
-            background-color: #1c1c1c;
-            padding: 10px;
-            overflow-y: auto;
-            height: 100%;
-            border-right: 1px solid #333;
-            transition: width 0.3s;
-            position: relative;
-        }
-        #toggle-sidebar {
-            position: absolute;
-            top: 10px;
-            left: 100%;
-            margin-left: -30px;
-            background-color: transparent;
-            color: #e0e0e0;
-            border: none;
-            padding: 5px 10px;
-            cursor: pointer;
-            z-index: 1000;
-            transition: background-color 0.3s, margin-left 0.3s;
-        }
-        #toggle-sidebar:hover {
-            background-color: #007bff;
-            color: #ffffff;
-        }
-        #chat-container {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            margin-left: 50px;
-            transition: margin-left 0.3s;
-        }
-        #chat-box {
-            flex: 1;
-            overflow-y: auto;
-            padding: 10px;
-            padding-left: 15px;
-            border-bottom: 1px solid #333;
-            word-wrap: break-word;
-            white-space: pre-wrap;
-        }
-        #message-form {
-            display: flex;
-            background-color: #222;
-            padding: 10px;
-            border-top: 1px solid #333;
-        }
-        #message-input {
-            flex: 1;
-            padding: 10px;
-            border: 1px solid #555;
-            background-color: #333;
-            color: #e0e0e0;
-        }
-        #send-button, #upload-button, #logout-button {
-            padding: 10px;
-            border: none;
-            background-color: #444;
-            color: #e0e0e0;
-            cursor: pointer;
-            margin-left: 10px;
-        }
-        #logout-button {
-            background-color: #e03e3e;
-        }
-        .message {
-            margin-bottom: 2px;
-            padding: 2px 0;
-            word-wrap: break-word;
-            white-space: pre-wrap;
-        }
-        .typing-indicator {
-            color: #999;
-            font-style: italic;
-        }
-        .progress {
-            width: 100%;
-            background-color: #333;
-            margin-top: 10px;
-        }
-        .progress-bar {
-            width: 0;
-            height: 5px;
-            background-color: #ec0a0a;
-        }
-        .download-button {
-            display: inline-block;
-            padding: 8px 16px;
-            margin: 8px 0;
-            color: #e0e0e0;
-            background-color: #444;
-            border: none;
-            cursor: pointer;
-            text-decoration: none;
-        }
-        .download-button:hover {
-            background-color: #555;
-        }
-        #sidebar ul {
-            list-style: none;
-            padding: 0;
-            margin: 0;
-        }
-        #sidebar li {
-            padding: 5px 0;
-            color: #e0e0e0;
-            cursor: pointer;
-        }
-        #sidebar li:hover {
-            background-color: #333;
-        }
-        #edit-account-button {
-            background-color: #007bff;
-            color: #ffffff;
-            border: none;
-            padding: 10px;
-            border-radius: 5px;
-            cursor: pointer;
-            margin-top: 10px;
-            width: 100%;
-            text-align: center;
-            transition: background-color 0.3s;
-        }
-        #edit-account-button:hover {
-            background-color: #b30000;
-        }
-        #warning-message {
-            color: #e03e3e;
-            text-align: center;
-            margin: 10px;
-            display: none;
-        }
-        .timestamp {
-            font-size: 10px;
-            color: #999;
-            float: right;
-            margin-left: 10px;
-        }
-    </style>
+   <style>
+    body {
+    background-color: #121212;
+    color: #e0e0e0;
+    font-family: Arial, sans-serif;
+    margin: 0;
+    overflow: hidden;
+    display: flex;
+    height: 100vh;
+    flex-direction: row;
+}
+
+.open-commands-button {
+    background-color: #333333;
+    color: #ffffff;
+    border: none;
+    padding: 10px 15px;
+    border-radius: 4px;
+    cursor: pointer;
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    z-index: 1000;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
+    transition: background-color 0.3s, transform 0.2s;
+}
+
+.open-commands-button:hover {
+    background-color: #444444;
+    transform: scale(1.05);
+}
+
+.userbutton {
+    background-color: #2a2a2a;
+    color: #e0e0e0;
+    border: 1px solid #555;
+    padding: 12px;
+    border-radius: 0;
+    cursor: pointer;
+    width: 100%;
+    text-align: left;
+    margin: 0;
+    box-shadow: none;
+    transition: background-color 0.3s;
+}
+
+.userbutton:hover {
+    background-color: #444;
+}
+
+.userbutton:active {
+    background-color: #3a3a3a;
+}
+
+#sidebar {
+    width: 170px;
+    background-color: #1c1c1c;
+    padding: 10px;
+    overflow-y: auto;
+    height: 100%;
+    border-right: 1px solid #333;
+    transition: width 0.3s;
+}
+
+#sidebar::-webkit-scrollbar {
+    width: 10px;
+}
+
+#sidebar::-webkit-scrollbar-thumb {
+    background-color: #444;
+    border-radius: 5px;
+}
+
+#sidebar::-webkit-scrollbar-thumb:hover {
+    background-color: #666;
+}
+
+#sidebar::-webkit-scrollbar-track {
+    background: #2c2c2c;
+    border-radius: 5px;
+}
+
+#toggle-sidebar {
+    position: absolute;
+    top: 10px;
+    left: 100%;
+    margin-left: -30px;
+    background-color: transparent;
+    color: #e0e0e0;
+    border: none;
+    padding: 5px 10px;
+    cursor: pointer;
+    z-index: 1000;
+    transition: background-color 0.3s, margin-left 0.3s;
+}
+
+#toggle-sidebar:hover {
+    background-color: #007bff;
+    color: #ffffff;
+}
+
+#chat-container {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    margin-left: 50px;
+    transition: margin-left 0.3s;
+}
+
+#chat-box {
+    flex: 1;
+    overflow-y: auto;
+    padding: 10px;
+    padding-left: 15px;
+    border-bottom: 1px solid #333;
+    word-wrap: break-word;
+    white-space: pre-wrap;
+}
+
+
+.textarea-container {
+    position: relative;
+    padding-left: 50px; /* Shift the entire textarea */
+}
+
+
+#message-form {
+    display: flex;
+    background-color: #222;
+    padding: 10px;
+    border-top: 1px solid #333;
+    flex-wrap: wrap;
+}
+
+#message-input {
+    flex: 1;
+    padding: 10px;
+    border: 1px solid #555;
+    background-color: #333;
+    color: #e0e0e0;
+    min-width: 0;
+    resize: none;
+    line-height: 1.5em;
+    white-space: pre-wrap;
+    overflow-wrap: break-word;
+    box-sizing: border-box;
+    font-family: inherit; /* Ensure font is consistent */
+    word-break: break-word; /* Handles long words better */
+}
+
+
+
+
+#send-button, #upload-button {
+    padding: 12px 20px;
+    border: none;
+    background-color: #555;
+    color: #f0f0f0;
+    cursor: pointer;
+    margin-left: 10px;
+    flex-shrink: 0;
+    transition: background-color 0.3s, box-shadow 0.3s, transform 0.2s;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+#send-button:hover, #upload-button:hover {
+    background-color: #666;
+    box-shadow: 0 6px 10px rgba(0, 0, 0, 0.15);
+}
+
+#send-button:active, #upload-button:active {
+    background-color: #777;
+    transform: translateY(2px);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+#logout-button {
+    padding: 12px 20px;
+    border: none;
+    color: #f0f0f0;
+    cursor: pointer;
+    margin-left: 10px;
+    flex-shrink: 0;
+    transition: color 0.3s;
+    text-decoration: none;
+    background: none;
+}
+
+#logout-button:hover {
+    color: #e03e3e;
+}
+
+
+.link {
+    color: lightblue;
+    font-weight: bold;
+    white-space: nowrap;
+    text-decoration: none;
+}
+
+.link:hover {
+    text-decoration: underline;
+}
+
+#logout-button {
+    background-color: #e03e3e;
+}
+
+.message {
+    margin-bottom: 2px;
+    padding: 2px 0;
+    word-wrap: break-word;
+    white-space: pre-wrap;
+}
+
+.typing-indicator {
+    color: #999;
+    font-style: italic;
+}
+
+.progress {
+    width: 100%;
+    background-color: #333;
+}
+
+.progress-bar {
+    width: 0;
+    height: 5px;
+    background-color: #ec0a0a;
+}
+
+.download-button {
+    display: inline-block;
+    padding: 8px 16px;
+    margin: 8px 0;
+    color: #e0e0e0;
+    background-color: #444;
+    border: none;
+    cursor: pointer;
+    text-decoration: none;
+}
+
+.download-button:hover {
+    background-color: #555;
+}
+
+#sidebar ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+#sidebar li {
+    padding: 5px 0;
+    color: #e0e0e0;
+    cursor: pointer;
+}
+
+#sidebar li:hover {
+    background-color: #333;
+}
+
+#edit-account-button {
+    background-color: #2a2a2a;
+    color: #e0e0e0;
+    border: 1px solid #444;
+    padding: 12px;
+    border-radius: 5px;
+    cursor: pointer;
+    width: 200px;
+    text-align: left;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
+    transition: background-color 0.3s, transform 0.2s;
+    position: fixed;
+    bottom: 80px;
+    right: 0px;
+}
+
+#edit-account-button:hover {
+    background-color: #3c3c3c;
+    transform: scale(1.02);
+}
+
+#warning-message {
+    color: #8e16f7;
+    text-align: center;
+    margin: 10px;
+    display: none;
+}
+
+.timestamp {
+    font-size: 10px;
+    color: #999;
+    float: right;
+    margin-left: 10px;
+}
+
+#reload-button {
+    background-color: #2a2a2a;
+    border: none;
+    width: 120px;
+    height: 50px;
+    color: #ffffff;
+    cursor: pointer;
+    z-index: 1000;
+    transition: background-color 0.3s, transform 0.2s;
+    font-size: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 40px 20px 20px 20px;
+    text-transform: uppercase;
+    font-weight: bold;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+}
+
+#reload-button:hover {
+    background-color: #444;
+    transform: scale(1.05);
+}
+
+#reload-button:active {
+    background-color: #3a3a3a;
+    transform: scale(0.98);
+}
+
+@media (max-width: 768px) {
+    body {
+        flex-direction: column;
+        height: auto; /* Allow body to adjust height */
+        overflow: auto; /* Enable scrolling */
+    }
+
+    #sidebar {
+        width: 100%;
+        height: auto;
+        border-right: none;
+        border-bottom: 1px solid #333;
+        padding: 5px;
+    }
+
+    #chat-container {
+        margin-left: 0;
+        margin-top: 10px;
+        flex: 1;
+        height: calc(100vh - 150px); /* Adjust height to fit screen */
+        display: flex;
+        flex-direction: column;
+    }
+
+    #chat-box {
+        flex: 1;
+        padding: 10px;
+        padding-left: 15px;
+        border-bottom: 1px solid #333;
+        overflow-y: auto; /* Allow scrolling for chat */
+    }
+
+    #message-form {
+        flex-direction: row; /* Keep input and buttons in a row */
+    }
+
+    #message-input {
+        flex: 1;
+        margin-bottom: 0; /* Remove bottom margin */
+    }
+
+    #send-button, #upload-button, #logout-button {
+        flex-shrink: 0; /* Prevent shrinking */
+        margin-left: 10px; /* Space between buttons */
+    }
+
+    #edit-account-button, #reload-button {
+        width: 100%; /* Full width for buttons */
+    }
+}
+
+</style>
+
 </head>
 <body>
     <button class="open-commands-button" onclick="window.open('/commands', '_blank')">Open Commands Console</button>
@@ -189,16 +390,18 @@
         <button id="toggle-sidebar">☰</button>
         <h3>ALL USERS</h3>
         <ul id="user-list"></ul>
-        <button id="edit-account-button" onclick="window.location.href='/accsettings'">Click to Edit Your Account</button>
+        </div>
+        
     </div>
-    <div id="chat-container">
+    <button id="reload-button" class="open-commands-button">Reload</button>
+        <div id="chat-container">
         <div id="chat-box">
             <!-- Messages will be loaded here -->
         </div>
         <div class="typing-indicator" id="typing-indicator"></div>
         <div id="warning-message"></div>
         <form id="message-form">
-            <input id="message-input" type="text" placeholder="Type your message..." required maxlength="15000">
+            <textarea id="message-input" placeholder="Type your message..."></textarea>
             <button id="send-button" type="button">Send</button>
             <button id="upload-button" type="button">Send Attachment</button>
             <a id="logout-button" href="/logout">Logout</a>
@@ -216,6 +419,14 @@
         document.addEventListener('DOMContentLoaded', function() {
             const chatBox = document.getElementById('chat-box');
             const messageInput = document.getElementById('message-input');
+            const sendButton = document.getElementById('send-button');
+
+sendButton.addEventListener('click', () => {
+    let messageText = messageInput.value.trim();
+    messageText = messageText.replace(/\n{2,}/g, '\n'); // Replace multiple newlines with a single newline
+    // Send the cleaned message text
+    sendMessage(messageText);
+});
             const fileInput = document.getElementById('file-input');
             const progressBar = document.getElementById('progress-bar');
             const userList = document.getElementById('user-list');
@@ -224,6 +435,17 @@
             const toggleSidebar = document.getElementById('toggle-sidebar');
             const typingIndicator = document.getElementById('typing-indicator');
             const warningMessage = document.getElementById('warning-message');
+
+
+
+
+            
+        // Reload button functionality
+        const reloadButton = document.getElementById('reload-button');
+        reloadButton.addEventListener('click', function() {
+            location.reload(); // Reloads the page when the button is clicked
+        });            
+
 
             initializeUserList();
             initializeChat();
@@ -261,15 +483,48 @@
                 socket.on('message', function(msg) {
                     chatBox.appendChild(createMessageElement(msg));
                     chatBox.scrollTop = chatBox.scrollHeight;
-                    notifySound.play(); // Play sound on message receipt
+                    notifySound.play(); 
+                    fetchMessages();
                 });
 
+                setInterval(fetchMessages, 300000);                
+
+                function fetchMessages() {
+                    fetch('/get_messages')
+                        .then(response => response.json())
+                        .then(messages => {
+                            chatBox.innerHTML = '';
+                            messages.forEach(msg => {
+                                chatBox.appendChild(createMessageElement(msg));
+                            });
+                            chatBox.scrollTop = chatBox.scrollHeight;
+                        });
+                }
+
+                let typingUsers = new Set();
+                let typingTimeouts = new Map();
+
                 socket.on('typing', function(data) {
-                    typingIndicator.textContent = `${data.username} is typing...`;
-                    setTimeout(() => {
-                        typingIndicator.textContent = '';
-                    }, 2000);
+                    typingUsers.add(data.username);
+                    updateTypingIndicator(data.username);
+
+                    if (typingTimeouts.has(data.username)) {
+                        clearTimeout(typingTimeouts.get(data.username));
+                    }
+
+                    typingTimeouts.set(data.username, setTimeout(() => {
+                        typingUsers.delete(data.username);
+                        updateTypingIndicator();
+                    }, 2000));
                 });
+
+                function updateTypingIndicator(username) {
+                    if (username) {
+                        typingIndicator.textContent = `${Array.from(typingUsers).join(', ')} ${typingUsers.size > 1 ? 'are' : 'is'} typing...`;
+                    } else {
+                        typingIndicator.textContent = '';
+                    }
+                }
 
                 socket.on('error', function(data) {
                     warningMessage.textContent = data.error;
@@ -280,27 +535,33 @@
                 });
 
                 document.getElementById('send-button').addEventListener('click', sendMessage);
-                let typingTimeout;
+                let typingInterval;
 
                 document.getElementById('message-input').addEventListener('focus', function() {
                     socket.emit('typing');
-                    typingTimeout = setInterval(() => {
+                    typingInterval = setInterval(() => {
                         socket.emit('typing');
                     }, 2000);
                 });
 
                 document.getElementById('message-input').addEventListener('blur', function() {
-                    clearInterval(typingTimeout);
+                    clearInterval(typingInterval);
                 });
 
                 document.getElementById('message-input').addEventListener('keydown', function(e) {
-                    if (e.key === 'Enter') {
-                        sendMessage();
-                        clearInterval(typingTimeout);
-                    } else {
-                        socket.emit('typing');
-                    }
-                });
+    if (e.key === 'Enter' && !e.shiftKey) {
+        e.preventDefault(); // Prevent the default form submission
+        sendMessage(); // Call the sendMessage function to send the message
+    } else if (e.key === 'Enter' && e.shiftKey) {
+        // If Shift+Enter is pressed, insert a newline in the textarea
+        const start = this.selectionStart;
+        const end = this.selectionEnd;
+        this.value = this.value.substring(0, start) + '\n' + this.value.substring(end);
+        this.selectionStart = this.selectionEnd = start + 1;
+        e.preventDefault(); // Prevent the default behavior
+    }
+});
+
 
                 document.getElementById('upload-button').addEventListener('click', function() {
                     fileInput.click();
@@ -328,18 +589,42 @@
                 }
             }
 
-            function formatMessage(message) {
-                message = message
-                    .replace(/RR(.*?)RR/g, '<span style="color: #FF0000;">$1</span>')
-                    .replace(/BB(.*?)BB/g, '<span style="color: #0000FF;">$1</span>')
-                    .replace(/GG(.*?)GG/g, '<span style="color: #008000;">$1</span>')
-                    .replace(/VV(.*?)VV/g, (_, text) => `<span style="color: #800080;">${text}</span>`)
-                    .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-                    .replace(/__(.*?)__/g, '<em>$1</em>')
-                    .replace(/\[(.*?)\]\((https?:\/\/[^\s]+)\)/g, '<a href="$2" target="_blank">$1</a>');
+            function formatLinks(message) {
+    const urlPattern = /(?<!\S)(https?:\/\/[^\s]+)/g;
+    return message.replace(urlPattern, '<a href="$1" class="link" target="_blank" rel="noopener noreferrer">$1</a>');
+}
 
-                return message;
-            }
+
+
+
+function formatMessage(message) {
+    message = message
+        .replace(/RR(.*?)RR/g, '<span style="color: #FF0000;">$1</span>')
+        .replace(/BB(.*?)BB/g, '<span style="color: #0000FF;">$1</span>')
+        .replace(/GG(.*?)GG/g, '<span style="color: #008000;">$1</span>')
+        .replace(/YY(.*?)YY/g, '<span style="color: #FFFF00;">$1</span>')
+        .replace(/PP(.*?)PP/g, '<span style="color: #800080;">$1</span>')
+        .replace(/OO(.*?)OO/g, '<span style="color: #FFA500;">$1</span>')
+        .replace(/CC(.*?)CC/g, '<span style="color: #00FFFF;">$1</span>')
+        .replace(/W(.*?)W/g, '<span style="color: #FFFFFF;">$1</span>')
+        .replace(/BK(.*?)BK/g, '<span style="color: #000000;">$1</span>')
+        .replace(/GY(.*?)GY/g, '<span style="color: #808080;">$1</span>')
+        .replace(/DB(.*?)DB/g, '<span style="color: #A52A2A;">$1</span>')
+        .replace(/LBB(.*?)LBB/g, '<span style="color: #ADD8E6;">$1</span>')
+        .replace(/LGR(.*?)LGR/g, '<span style="color: #90EE90;">$1</span>')
+        .replace(/LPR(.*?)LPR/g, '<span style="color: #DDA0DD;">$1</span>')
+        .replace(/VV(.*?)VV/g, '<span style="color: #800080;">$1</span>')
+        .replace(/RV(.*?)RV/g, '<span style="unicode-bidi: bidi-override; direction: rtl;">$1</span>')
+        .replace(/GL(.*?)GL/g, '<span style="font-family: monospace; color: #00FF00; text-shadow: 0 0 5px #00FF00, 0 0 10px #00FF00;">$1</span>')
+        .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+        .replace(/__(.*?)__/g, '<em>$1</em>')
+        .replace(/```(.*?)```/g, '<div style="border: 1px solid #000; padding: 10px; border-radius: 5px; background-color: #f0f0f0; font-family: monospace;">$1</div>')
+        .replace(/\[(.*?)\]\((.*?)\)/g, '<a href="$2" style="color: #00f;">$1</a>'); // Add this line for links
+
+    message = formatLinks(message);
+    return message;
+}
+
 
             function uploadFile(file) {
                 const formData = new FormData();
@@ -376,20 +661,26 @@
             }
 
             function createMessageElement(msg) {
-                const div = document.createElement('div');
-                div.className = 'message';
+    const div = document.createElement('div');
+    div.className = 'message';
 
-                const wrappedMessage = wrapLongMessage(msg.message, 85);
-                const formattedTime = formatTimestamp(msg.timestamp);
-                
-                div.innerHTML = `
-                    <span class="username">${msg.username}:</span>
-                    ${wrappedMessage}
-                    <span class="timestamp">${formattedTime}</span>
-                `;
+    const formattedMessage = formatLinks(msg.message); 
+    const wrappedMessage = wrapLongMessage(formattedMessage, 85);
+    const formattedTime = formatTimestamp(msg.timestamp);
 
-                return div;
-            }
+    const usernameStyle = msg.username === 'George' ? 'color: red; font-weight: bold;' : '';
+
+    div.innerHTML = `
+        <span class="username" style="${usernameStyle}">${msg.username}:</span>
+        ${wrappedMessage}
+        <span class="timestamp">${formattedTime}</span>
+    `;
+
+    return div;
+}
+
+
+
 
             function wrapLongMessage(text, maxLength) {
                 if (text.length <= maxLength) {
