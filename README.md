@@ -22,5 +22,5 @@ THUG-CHAT is a real-time chat application that allows users to communicate in a 
 
 1. Clone the repository:
    ```bash
-   git clone <repository-url>
-   cd thug-chat
+   git clone https://github.com/RayWZW/testchatapp
+   then install python 3.12 and run app.py, this will start a flask server in port 5555 then use a tool like loophole to make the site public or just use a dedicated webhost
