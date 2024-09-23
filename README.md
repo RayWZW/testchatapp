@@ -8,15 +8,14 @@
 - **User Management**: Easily view and interact with a list of active users to stay connected.
 - **File Uploads**: Share images, videos, and audio files directly in your chats—no hassle, just click and send.
 - **Typing Indicators**: Know when someone is crafting their reply with real-time typing indicators.
-- **Responsive Design**: THUG-CHAT is fully optimized for both desktop and mobile devices, providing a smooth experience wherever you are.
 - **Message Formatting**: Enhance your messages with text formatting and link previews to make conversations more dynamic.
 
 ## Technologies Used
 
 - **Frontend**: HTML, CSS, JavaScript
-- **Backend**: Node.js, Express
+- **Backend**: Flask, Python
 - **Real-Time Communication**: Socket.io
-- **Database**: [Specify your database if applicable]
+- 
 
 ## Installation
 
