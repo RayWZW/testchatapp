@@ -201,29 +201,93 @@ def user_info(username):
     # Pass username to the template
     return render_template('userinfo.html', username=username)
 
+failed_attempts = {}
+verification_codes = {}
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     if request.method == 'POST':
-        username = request.form['username']
-        password = request.form['password']
-
+        username = request.form.get('username')
+        password = request.form.get('password')
         users = load_json_file(USER_ACCOUNTS_FILE)
         user = users.get(username)
-        if user and user['password'] == password:
+
+        if user is None:
+            flash('User not found.')
+            return render_template('login.html')
+
+        if user['password'] == password:
+            session['username'] = username
+            return redirect(url_for('index'))
+
+        if username not in failed_attempts:
+            failed_attempts[username] = {'count': 0, 'locked': False}
+
+        failed_attempts[username]['count'] += 1
+
+        if failed_attempts[username]['count'] >= 3:
+            failed_attempts[username]['locked'] = True
+            verification_code = str(random.randint(100000, 999999))
+            verification_codes[username] = verification_code
+            send_verification_email(user['email'], verification_code)
+            flash('Too many failed attempts. A verification code has been sent to your email.')
+            return redirect(url_for('locked_screen'))
+
+        flash('Invalid credentials. Try again.')
+
+    return render_template('login.html')
+
+
+
+@app.route('/locked', methods=['GET', 'POST'])
+def locked_screen():
+    username = session.get('username')
+
+    if request.method == 'POST':
+        verification_code_input = request.form.get('verification_code')
+
+        if username in verification_codes and verification_codes[username] == verification_code_input:
+            failed_attempts[username] = {'count': 0, 'locked': False}
+            return redirect(url_for('index'))
+        else:
+            flash('Incorrect verification code.')
+
+    return render_template('locked.html')
+
+
+
+
+
+
+        # Validate credentials
+    if user and user['password'] == password:
+            # Reset failed attempts after successful login
+            failed_attempts[username] = {'count': 0, 'locked': False}
             session['username'] = username
             session_cookie_name = app.config.get('SESSION_COOKIE_NAME', 'session')
             session_id = session.get('_id', request.cookies.get(session_cookie_name))
             active_sessions[username] = session_id
             return redirect(url_for('index'))
-        else:
-            flash('Invalid credentials')
-    return render_template('login.html')
+    else:
+            # Increment failed attempt counter
+            if username not in failed_attempts:
+                failed_attempts[username] = {'count': 0, 'locked': False}
 
-# Removed Google OAuth initialization
-# Removed Google login route
-# Removed Google registration route
-# Removed authorized route
+            failed_attempts[username]['count'] += 1
+
+            if failed_attempts[username]['count'] >= 4:
+                failed_attempts[username]['locked'] = True
+                verification_code = str(random.randint(100000, 999999))  # Generate random 6-digit code
+                verification_codes[username] = verification_code
+                if user and 'email' in user:
+                    send_verification_email(user['email'], verification_code)
+                flash('Too many failed attempts. A verification code has been sent to your email.')
+                return render_template('login.html', requires_verification=True)
+            else:
+                flash('Invalid credentials. Try again.')
+
+    return render_template('login.html', requires_verification=False)
+
 
 
 
@@ -236,16 +300,24 @@ def generate_unique_user_id(users):
             return user_id
         
 def send_verification_email(email, code):
-    sender_email = "ryantraven14232@outlook.com"
-    sender_password = "Mickey2021"
+    smtp_server = "smtp.fastmail.com"
+    port = 587
+    username = "thugverify11@fastmail.com"  # Your FastMail email address
+    password = "28642x4c2p8q5d74"  # Your app-specific password
     subject = "THUG-CHAT Verification"
-    body = f"Your verification code is: {code}"
+    body = f"Someone tried to login to your account too many times incorrectly. You must verify your account again to access it, here is your code: {code}"
 
-    with smtplib.SMTP('smtp-mail.outlook.com', 587) as server:
-        server.starttls()
-        server.login(sender_email, sender_password)
-        message = f'Subject: {subject}\n\n{body}'
-        server.sendmail(sender_email, email, message)        
+    message = f'From: {username}\nTo: {email}\nSubject: {subject}\n\n{body}'
+
+    try:
+        with smtplib.SMTP(smtp_server, port) as server:
+            server.starttls()
+            server.login(username, password)
+            server.sendmail(username, email, message)
+        print("Email sent successfully!")
+    except Exception as e:
+        print("Failed to send email:", e)
+   
 
 
 import smtplib
