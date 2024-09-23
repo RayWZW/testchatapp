@@ -1,26 +1,28 @@
 # THUG-CHAT
 
-THUG-CHAT is a real-time chat application that allows users to communicate in a sleek, modern interface. The application supports private messaging, file uploads, and user management.
+**THUG-CHAT** is an engaging real-time chat application designed for seamless communication in a sleek and modern interface. Whether you’re catching up with friends or collaborating with colleagues, THUG-CHAT provides an intuitive platform for all your messaging needs.
 
 ## Features
 
-- **Real-Time Messaging**: Instant messaging capabilities with Socket.io.
-- **User Management**: View and interact with a list of active users.
-- **File Uploads**: Send images, videos, and audio files directly in the chat.
-- **Typing Indicators**: See when other users are typing.
-- **Responsive Design**: Optimized for both desktop and mobile devices.
-- **Message Formatting**: Supports text formatting and link previews.
+- **Real-Time Messaging**: Enjoy instant messaging powered by Socket.io, ensuring your conversations are always in the moment.
+- **User Management**: Easily view and interact with a list of active users to stay connected.
+- **File Uploads**: Share images, videos, and audio files directly in your chats—no hassle, just click and send.
+- **Typing Indicators**: Know when someone is crafting their reply with real-time typing indicators.
+- **Responsive Design**: THUG-CHAT is fully optimized for both desktop and mobile devices, providing a smooth experience wherever you are.
+- **Message Formatting**: Enhance your messages with text formatting and link previews to make conversations more dynamic.
 
 ## Technologies Used
 
 - **Frontend**: HTML, CSS, JavaScript
 - **Backend**: Node.js, Express
 - **Real-Time Communication**: Socket.io
-- **Database**: (Specify your database if applicable)
+- **Database**: [Specify your database if applicable]
 
 ## Installation
 
 1. Clone the repository:
    ```bash
    git clone https://github.com/RayWZW/testchatapp
-   then install python 3.12 and run app.py, this will start a flask server in port 5555 then use a tool like loophole to make the site public or just use a dedicated webhost
+
+then install the requirements.txt then start the flask server and use loophole or some other reverse proxy to make it live 
+my sites at https://thugchat.loophole.site
