@@ -352,64 +352,6 @@ def tos():
     return render_template('tos.html')
 
 
-@app.route('/update_account_settings', methods=['POST'])
-def update_account_settings():
-    current_username = session.get('username')
-    if not current_username:
-        return redirect(url_for('login'))  # Redirect to login if not authenticated
-
-    new_username = request.form.get('username')
-    
-    if not new_username:
-        flash('Username is required.')
-        return redirect(url_for('account_settings_user', userid=current_username))
-
-    users = load_json_file(USER_ACCOUNTS_FILE)
-
-    # Check if new username is already taken
-    if new_username != current_username and new_username in users:
-        flash('The new username is already taken.')
-        return redirect(url_for('account_settings_user', userid=current_username))
-
-    # Update user data
-    if current_username in users:
-        # Update username in user accounts
-        user_data = users.pop(current_username)
-        user_data['username'] = new_username
-        users[new_username] = user_data
-        
-        save_json_file(USER_ACCOUNTS_FILE, users)
-
-        # Update the active_sessions dictionary
-        if current_username in active_sessions:
-            active_sessions[new_username] = active_sessions.pop(current_username)
-
-        # Update session with new username
-        session['username'] = new_username
-        flash('Account settings updated successfully.')
-    
-    return redirect(url_for('account_settings_user', userid=new_username))
-
-
-
-@app.route('/accsettings')
-def account_settings():
-    username = session.get('username')
-    if not username:
-        return redirect(url_for('login'))  # Redirect to login if not authenticated
-
-    return redirect(url_for('account_settings_user', userid=username))
-
-@app.route('/accsettings-<userid>')
-def account_settings_user(userid):
-    if 'username' not in session or session['username'] != userid:
-        return redirect(url_for('login'))  # Redirect to login if not authenticated or wrong user
-
-    # Pass the userid to the template
-    return render_template('account_settings.html', userid=userid)
-
-
-
 @app.route('/logout')
 def logout():
     username = session.get('username')
