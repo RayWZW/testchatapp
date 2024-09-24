@@ -13,6 +13,7 @@ from utils.admin import admin_bp
 from utils.commands import commands_bp
 
 
+
 app = Flask(__name__, static_folder='static')
 app.secret_key = 'your_secret_key'  # Change this to a secure key in production
 socketio = SocketIO(app)
