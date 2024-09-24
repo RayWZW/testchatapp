@@ -174,7 +174,7 @@
         }
 
         function validateEmailDomain(email) {
-            const allowedDomains = ['gmail.com', 'hotmail.com', 'fastmail.com', 'starmail.com', 'proton.me', 'yahoo.com', 'outlook.com'];
+            const allowedDomains = ['gmail.com', 'yahoo.com', 'starmail.com', 'hotmail.com', 'live.com', 'aol.com', 'outlook.com', 'proton.me', 'protonmail.com', 'fastmail.com', 'starmail.com'];
             const domain = email.split('@')[1];
             return allowedDomains.includes(domain);
         }
