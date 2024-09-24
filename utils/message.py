@@ -3,6 +3,7 @@ from flask_socketio import emit, disconnect
 from datetime import datetime, timedelta
 from utils.utils import load_json_file, save_json_file
 import threading
+import re  # Import the regex module
 
 BANNED_USERS_FILE = 'data/banned.json'
 CHAT_LOGS_FILE = 'data/chatlogs.json'
@@ -44,6 +45,13 @@ def handle_message(message):
     if cooldown_users[username]:  # Prevent saving during cooldown
         return
 
+    # Strip HTML tags from the message
+    clean_message = re.sub(r'<.*?>', '', message)  # Remove HTML tags
+
+    if not clean_message:  # Check if the message is empty after stripping HTML
+        emit('error', {'error': 'Message contains only HTML and was rejected.'}, room=request.sid)
+        return
+
     timestamp = now.strftime('%Y-%m-%d %H:%M:%S')
 
     if 'file_url' in message:
@@ -58,7 +66,7 @@ def handle_message(message):
         formatted_message = {
             'timestamp': timestamp,
             'username': username,
-            'message': message
+            'message': clean_message  # Use the cleaned message
         }
 
     chat_logs = load_json_file(CHAT_LOGS_FILE)
