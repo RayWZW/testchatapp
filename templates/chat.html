@@ -362,6 +362,52 @@
         margin-left: 10px; /* Space between buttons */
     }
 
+
+    .custom-alert {
+    display: none; /* Initially hidden */
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.6);
+    z-index: 1000;
+    justify-content: center;
+    align-items: center;
+}
+
+.alert-content {
+    background-color: white;
+    border-radius: 8px;
+    padding: 20px;
+    text-align: center;
+    width: 300px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+}
+
+.alert-content span {
+    display: block;
+    margin-bottom: 15px;
+    font-size: 16px;
+    color: #333;
+}
+
+.close-button {
+    background-color: #007bff;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    padding: 10px 15px;
+    cursor: pointer;
+    font-size: 14px;
+}
+
+.close-button:hover {
+    background-color: #0056b3;
+}
+
+
+    
     #edit-account-button, #reload-button {
         width: 100%; /* Full width for buttons */
     }
@@ -377,7 +423,11 @@
         <ul id="user-list"></ul>
         </div>
         
-
+        <div id="customAlert" style="display:none; position:fixed; top:20%; left:50%; transform:translate(-50%, -50%); background-color:rgba(0,0,0,0.8); color:white; padding:20px; border-radius:5px;">
+            <span id="alertMessage"></span>
+            <button id="alertCloseButton" style="margin-left:10px;">Close</button>
+        </div>
+        
 
         
     </div>
@@ -403,6 +453,7 @@
     <script>
         const socket = io();
         const notifySound = new Audio('uploads/notify.ogg');
+        notifySound.preload = 'auto';
 
         document.addEventListener('DOMContentLoaded', function() {
             const chatBox = document.getElementById('chat-box');
@@ -434,6 +485,28 @@ sendButton.addEventListener('click', () => {
             location.reload(); // Reloads the page when the button is clicked
         });            
 
+
+
+
+        socket.on('ban_packet', function(data) {
+    alert('You have been banned from the chat: ' + data.username);
+    
+    // Make a request to log out the user
+    fetch('/logout', {
+        method: 'POST', // Or use 'GET' if your logout endpoint accepts it
+        credentials: 'include' // Include cookies if necessary
+    })
+    .then(response => {
+        if (response.ok) {
+            window.location.reload(); // Reloads the page after logging out
+        } else {
+            console.error('Failed to log out.');
+        }
+    })
+    .catch(error => {
+        console.error('Error during logout:', error);
+    });
+});
 
             initializeUserList();
             initializeChat();
@@ -467,14 +540,43 @@ sendButton.addEventListener('click', () => {
                         });
                         chatBox.scrollTop = chatBox.scrollHeight;
                     });
+                    
 
-                    socket.on('message', function(msg) {
+                    const soundQueue = [];
+let isPlaying = false;
+
+function playNextSound() {
+    if (soundQueue.length > 0 && !isPlaying) {
+        isPlaying = true;
+        const nextSound = soundQueue.shift(); // Get the next sound from the queue
+        notifySound.play().then(() => {
+            isPlaying = false; // Reset the flag once the sound has finished
+            playNextSound(); // Play the next sound in the queue
+        }).catch(error => {
+            console.error('Error playing sound:', error);
+            isPlaying = false; // Reset the flag even if there was an error
+            playNextSound(); // Continue with the next sound
+        });
+    }
+}                    
+
+socket.on('message', function(msg) {
     chatBox.appendChild(createMessageElement(msg));
     chatBox.scrollTop = chatBox.scrollHeight;
-    notifySound.play(); 
+
+    // Create a new Audio instance for each message
+    const notifySound = new Audio('uploads/notify.ogg');
+    notifySound.preload = 'auto';
+
+    // Play the notification sound
+    notifySound.play().catch(error => {
+        console.error('Error playing sound:', error);
+    });
+
     fetchMessages();
     window.scrollTo(0, document.body.scrollHeight);
 });
+
 
 
                 setInterval(fetchMessages, 300000);                
@@ -620,33 +722,54 @@ function formatMessage(message) {
 }
 
 
-            function uploadFile(file) {
-                const formData = new FormData();
-                formData.append('file', file);
+function showCustomAlert(message) {
+    const alertBox = document.getElementById('customAlert');
+    const alertMessage = document.getElementById('alertMessage');
+    const alertCloseButton = document.getElementById('alertCloseButton');
 
-                const xhr = new XMLHttpRequest();
-                xhr.open('POST', '/files/upload', true);
+    alertMessage.innerText = message;
+    alertBox.style.display = 'block';
 
-                xhr.upload.onprogress = function(e) {
-                    if (e.lengthComputable) {
-                        const percentComplete = (e.loaded / e.total) * 100;
-                        progressBar.style.width = percentComplete + '%';
-                    }
-                };
+    alertCloseButton.onclick = function() {
+        alertBox.style.display = 'none';
+    };
+}
 
-                xhr.onload = function() {
-                    if (xhr.status === 200) {
-                        const response = JSON.parse(xhr.responseText);
-                        if (response.file_url) {
-                            const message = getMediaMessage(file, response.file_url);
-                            socket.send(message);
-                            progressBar.style.width = '0%';
-                        }
-                    }
-                };
+function uploadFile(file) {
+    const maxFileSize = 10 *1024 * 1024 * 1024;
 
-                xhr.send(formData);
+    if (file.size > maxFileSize) {
+        showCustomAlert('File size exceeds the maximum limit of 10 GB.');
+        return;
+    }
+
+    const formData = new FormData();
+    formData.append('file', file);
+
+    const xhr = new XMLHttpRequest();
+    xhr.open('POST', '/files/upload', true);
+
+    xhr.upload.onprogress = function(e) {
+        if (e.lengthComputable) {
+            const percentComplete = (e.loaded / e.total) * 100;
+            progressBar.style.width = percentComplete + '%';
+        }
+    };
+
+    xhr.onload = function() {
+        if (xhr.status === 200) {
+            const response = JSON.parse(xhr.responseText);
+            if (response.file_url) {
+                const message = getMediaMessage(file, response.file_url);
+                socket.send(message);
+                progressBar.style.width = '0%';
             }
+        }
+    };
+
+    xhr.send(formData);
+}
+
 
             function formatTimestamp(timestamp) {
                 const date = new Date(timestamp);
