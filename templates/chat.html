@@ -86,24 +86,6 @@
     border-radius: 5px;
 }
 
-#toggle-sidebar {
-    position: absolute;
-    top: 10px;
-    left: 100%;
-    margin-left: -30px;
-    background-color: transparent;
-    color: #e0e0e0;
-    border: none;
-    padding: 5px 10px;
-    cursor: pointer;
-    z-index: 1000;
-    transition: background-color 0.3s, margin-left 0.3s;
-}
-
-#toggle-sidebar:hover {
-    background-color: #007bff;
-    color: #ffffff;
-}
 
 #chat-container {
     flex: 1;
@@ -181,7 +163,7 @@
 }
 
 #logout-button {
-    padding: 12px 20px;
+    padding: 10px 15px;
     border: none;
     color: #f0f0f0;
     cursor: pointer;
@@ -189,12 +171,19 @@
     flex-shrink: 0;
     transition: color 0.3s;
     text-decoration: none;
-    background: none;
+    background-color: transparent;
+    font-size: 14px;
+    text-align: center;
+    text-transform: uppercase; /* Make text all caps */
+    margin-top: 10px; /* Move text down by 10px */
 }
 
 #logout-button:hover {
     color: #e03e3e;
+    background-color: transparent;
 }
+
+
 
 
 .link {
@@ -208,9 +197,6 @@
     text-decoration: underline;
 }
 
-#logout-button {
-    background-color: #e03e3e;
-}
 
 .message {
     margin-bottom: 2px;
@@ -371,7 +357,7 @@
         margin-bottom: 0; /* Remove bottom margin */
     }
 
-    #send-button, #upload-button, #logout-button {
+    #send-button, #upload-button {
         flex-shrink: 0; /* Prevent shrinking */
         margin-left: 10px; /* Space between buttons */
     }
@@ -386,11 +372,13 @@
 </head>
 <body>
     <button class="open-commands-button" onclick="window.open('/commands', '_blank')">Open Commands Console</button>
-    <div id="sidebar">
-        <button id="toggle-sidebar">☰</button>
+    <div id="sidebar">        
         <h3>ALL USERS</h3>
         <ul id="user-list"></ul>
         </div>
+        
+
+
         
     </div>
     <button id="reload-button" class="open-commands-button">Reload</button>
@@ -480,12 +468,14 @@ sendButton.addEventListener('click', () => {
                         chatBox.scrollTop = chatBox.scrollHeight;
                     });
 
-                socket.on('message', function(msg) {
-                    chatBox.appendChild(createMessageElement(msg));
-                    chatBox.scrollTop = chatBox.scrollHeight;
-                    notifySound.play(); 
-                    fetchMessages();
-                });
+                    socket.on('message', function(msg) {
+    chatBox.appendChild(createMessageElement(msg));
+    chatBox.scrollTop = chatBox.scrollHeight;
+    notifySound.play(); 
+    fetchMessages();
+    window.scrollTo(0, document.body.scrollHeight);
+});
+
 
                 setInterval(fetchMessages, 300000);                
 
@@ -581,13 +571,17 @@ sendButton.addEventListener('click', () => {
             }
 
             function sendMessage() {
-                const message = messageInput.value.trim();
-                if (message) {
-                    const formattedMessage = formatMessage(message);
-                    socket.send(formattedMessage);
-                    messageInput.value = '';
-                }
-            }
+    const message = messageInput.value.trim();
+    if (message) {
+        const formattedMessage = formatMessage(message);
+        socket.send(formattedMessage);
+        messageInput.value = '';
+
+        // Scroll to the bottom of the chat box
+        chatBox.scrollTop = chatBox.scrollHeight;
+    }
+}
+
 
             function formatLinks(message) {
     const urlPattern = /(?<!\S)(https?:\/\/[^\s]+)/g;
@@ -698,22 +692,23 @@ function formatMessage(message) {
             }
 
             function getMediaMessage(file, fileUrl) {
-                const fileName = file.name;
-                const fileExtension = fileName.split('.').pop();
-                let mediaMessage = '';
+    const fileName = file.name;
+    const fileExtension = fileName.split('.').pop();
+    let mediaMessage = '';
 
-                if (file.type.startsWith('image/')) {
-                    mediaMessage = `<img src="${fileUrl}" alt="Uploaded image">`;
-                } else if (file.type.startsWith('video/')) {
-                    mediaMessage = `<video src="${fileUrl}" controls>Your browser does not support video playback.</video>`;
-                } else if (file.type.startsWith('audio/')) {
-                    mediaMessage = `<audio src="${fileUrl}" controls>Your browser does not support audio playback.</audio>`;
-                } else {
-                    mediaMessage = `<a href="${fileUrl}" download class="download-button">Download ${fileName} (${fileExtension.toUpperCase()})</a>`;
-                }
+    if (file.type.startsWith('image/')) {
+        mediaMessage = `<img src="${fileUrl}" alt="Uploaded image">`;
+    } else if (file.type.startsWith('video/') || fileExtension.toLowerCase() === 'mov') {
+        mediaMessage = `<video src="${fileUrl}" controls>Your browser does not support video playback.</video>`;
+    } else if (file.type.startsWith('audio/')) {
+        mediaMessage = `<audio src="${fileUrl}" controls>Your browser does not support audio playback.</audio>`;
+    } else {
+        mediaMessage = `<a href="${fileUrl}" download class="download-button">Download ${fileName} (${fileExtension.toUpperCase()})</a>`;
+    }
 
-                return mediaMessage + `<span class="file-extension">.${fileExtension}</span>`;
-            }
+    return mediaMessage + `<span class="file-extension">.${fileExtension}</span>`;
+}
+
         });
     </script>
 </body>
