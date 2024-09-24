@@ -380,6 +380,7 @@ def user_count():
     return jsonify({'count': count})
 
 from PIL import Image
+import time
 
 @app.route('/files/upload', methods=['POST'])
 def upload_file():
@@ -390,13 +391,16 @@ def upload_file():
     if file.filename == '':
         return jsonify({'error': 'No selected file'}), 400
 
-    filename = file.filename.lower()
-    file_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+    original_filename = file.filename.lower()
+    # Create a unique filename using a timestamp
+    timestamp = int(time.time())
+    filename, file_extension = os.path.splitext(original_filename)
+    new_filename = f"{filename}_{timestamp}{file_extension}"
+    file_path = os.path.join(app.config['UPLOAD_FOLDER'], new_filename)
 
-    # Check if the file is an image by MIME type
     image_mime_types = ['image/jpeg', 'image/png', 'image/webp', 'image/gif']
-    video_mime_types = ['video/mp4', 'video/x-msvideo', 'video/x-flv']  # Add more video MIME types if needed
-    mime_type = mimetypes.guess_type(filename)[0]
+    video_mime_types = ['video/mp4', 'video/x-msvideo', 'video/x-flv']  
+    mime_type = mimetypes.guess_type(original_filename)[0]
 
     try:
         if mime_type in image_mime_types:
@@ -404,15 +408,16 @@ def upload_file():
                 img = img.resize((500, 500))
                 img.save(file_path)
         elif mime_type in video_mime_types:
-            file.save(file_path)  # Just save the video without processing
+            file.save(file_path)  
         else:
-            file.save(file_path)  # Save other file types directly
+            file.save(file_path)  
     except Exception as e:
         return jsonify({'error': f'Failed to process file: {str(e)}'}), 500
 
-    file_url = url_for('download_file', filename=filename)
+    file_url = url_for('download_file', filename=new_filename)
     file_type = mimetypes.guess_type(file_path)[0]
     return jsonify({'file_url': file_url, 'file_type': file_type})
+
 @app.route('/uploads/<filename>')
 def download_file(filename):
     return send_from_directory(app.config['UPLOAD_FOLDER'], filename)
