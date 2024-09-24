@@ -13,7 +13,7 @@ from utils.admin import admin_bp
 from utils.commands import commands_bp
 
 
-app = Flask(__name__)
+app = Flask(__name__, static_folder='static')
 app.secret_key = 'your_secret_key'  # Change this to a secure key in production
 socketio = SocketIO(app)
 
@@ -41,6 +41,15 @@ CODES_FILE = 'data/codes.json'
 TEMP_USER_ACCOUNTS_FILE = 'data/temp_useraccounts.json'
 UPLOAD_FOLDER = 'uploads'
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
+
+
+@app.before_request
+def before_request():
+    if request.is_secure:
+        return  # Already HTTPS
+    else:
+        # Redirect to HTTPS
+        return redirect(request.url.replace("http://", "https://"), code=301)
 
 def require_verification(f):
     @wraps(f)
@@ -84,6 +93,10 @@ def admin():
     # Load user accounts data
     users = load_json_file(USER_ACCOUNTS_FILE)
     return render_template('admin.html', users=users)
+
+@app.route('/.well-known/pki-validation/<filename>')
+def serve_verification_file(filename):
+    return send_from_directory(os.path.join(app.static_folder, '.well-known/pki-validation'), filename)
 
 
 @app.route('/admin_login', methods=['GET', 'POST'])
@@ -480,6 +493,13 @@ def socket_handle_typing():
 
 
 
+base_dir = os.path.dirname(os.path.abspath(__file__))
+
+# Define relative paths to your SSL files
+ssl_context = (
+    os.path.join(base_dir, "certificate.crt"),  # Certificate file
+    os.path.join(base_dir, "private.key"),       # Private key file
+)
 
 if __name__ == '__main__':
-    socketio.run(app, debug=True, port=5555)
+    socketio.run(app, host='0.0.0.0', debug=True, port=443, ssl_context=ssl_context)
