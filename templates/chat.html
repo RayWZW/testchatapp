@@ -727,52 +727,73 @@ socket.on('message', function(msg) {
 }
 
 
-function formatLinks(message) {
-    const urlPattern = /(?<!\S)(https?:\/\/[^\s]+)/g;
-    
-    // Define pattern for detecting YouTube URLs
+function embedYouTubeVideo(url) {
     const youtubePattern = /https?:\/\/(www\.)?(youtube\.com|youtu\.be)\/(watch\?v=|embed\/|v\/)?([^\s&]+)/;
 
+    // Check if the URL contains "/shorts/" and return null to prevent processing as a normal video
+    if (url.includes('/shorts/')) {
+        return null; // Blacklist Shorts URLs
+    }
+
+    const match = url.match(youtubePattern);
+
+    if (match) {
+        const videoId = match[4]; // Extract video ID
+        return `<iframe width="560" height="315" src="https://www.youtube.com/embed/${videoId}" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>`;
+    }
+    return null; // Return null if not a valid YouTube video URL
+}
+
+function embedYouTubeShorts(url) {
+    const youtubeShortsPattern = /https?:\/\/(www\.)?youtube\.com\/shorts\/([a-zA-Z0-9_-]+)/;
+    const match = url.match(youtubeShortsPattern);
+
+    if (match) {
+        const shortsId = match[2]; // Extract video ID for Shorts
+        return `<iframe width="350" height="560" src="https://www.youtube.com/embed/${shortsId}" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>`;
+    }
+    return null; // Return null if not a valid Shorts URL
+}
+
+
+function embedDiscordInvite(url) {
+    const discordInvitePattern = /https?:\/\/(www\.)?discord\.gg\/[a-zA-Z0-9]+|https?:\/\/discord\.com\/invite\/[a-zA-Z0-9]+/;
+    const match = url.match(discordInvitePattern);
+
+    if (match) {
+        return `<div style="border: 1px solid #7289DA; border-radius: 5px; padding: 10px; background-color: #2C2F33; color: white;">
+                    <p>Join our Discord Server!</p>
+                    <a href="${url}" target="_blank" rel="noopener noreferrer" 
+                       style="display: inline-block; width: 250px; height: 95px; 
+                              background-color: red; color: white; 
+                              text-align: center; line-height: 40px; 
+                              text-decoration: none; border-radius: 5px; 
+                              font-weight: bold;">                   JOIN                             </a>
+                </div>`;
+    }
+    return null;
+}
+
+function formatLinks(message) {
+    const urlPattern = /(?<!\S)(https?:\/\/[^\s]+)/g;
+
     return message.replace(urlPattern, function(url) {
-        // Check if the URL matches YouTube pattern
-        const youtubeMatch = url.match(youtubePattern);
-        
-        if (youtubeMatch) {
-            const videoId = youtubeMatch[4]; // Extract video ID
-            return `<iframe width="560" height="315" src="https://www.youtube.com/embed/${videoId}" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>`;
-        }
-        
-        // For non-YouTube links, return a standard anchor tag
-        return `<a href="${url}" class="link" target="_blank" rel="noopener noreferrer">${url}</a>`;
+        const embedVideo = embedYouTubeVideo(url);
+        const embedShorts = embedYouTubeShorts(url);
+        const embedInvite = embedDiscordInvite(url);
+
+        return embedVideo || embedShorts || embedInvite || `<a href="${url}" class="link" target="_blank" rel="noopener noreferrer">${url}</a>`;
     });
 }
 
 
 
 
+
+
 function formatMessage(message) {
     message = message
-        .replace(/RR(.*?)RR/g, '<span style="color: #FF0000;">$1</span>')
-        .replace(/BB(.*?)BB/g, '<span style="color: #0000FF;">$1</span>')
-        .replace(/GG(.*?)GG/g, '<span style="color: #008000;">$1</span>')
-        .replace(/YY(.*?)YY/g, '<span style="color: #FFFF00;">$1</span>')
-        .replace(/PP(.*?)PP/g, '<span style="color: #800080;">$1</span>')
-        .replace(/OO(.*?)OO/g, '<span style="color: #FFA500;">$1</span>')
-        .replace(/CC(.*?)CC/g, '<span style="color: #00FFFF;">$1</span>')
-        .replace(/W(.*?)W/g, '<span style="color: #FFFFFF;">$1</span>')
-        .replace(/BK(.*?)BK/g, '<span style="color: #000000;">$1</span>')
-        .replace(/GY(.*?)GY/g, '<span style="color: #808080;">$1</span>')
-        .replace(/LBB(.*?)LBB/g, '<span style="color: #ADD8E6;">$1</span>')
-        .replace(/LGR(.*?)LGR/g, '<span style="color: #90EE90;">$1</span>')
-        .replace(/LPR(.*?)LPR/g, '<span style="color: #DDA0DD;">$1</span>')
-        .replace(/VV(.*?)VV/g, '<span style="color: #800080;">$1</span>')
-        .replace(/RV(.*?)RV/g, '<span style="unicode-bidi: bidi-override; direction: rtl;">$1</span>')
-        .replace(/GL(.*?)GL/g, '<span style="font-family: monospace; color: #00FF00; text-shadow: 0 0 5px #00FF00, 0 0 10px #00FF00;">$1</span>')
-        .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-        .replace(/__(.*?)__/g, '<em>$1</em>')
-        .replace(/```(.*?)```/g, '<div style="border: 1px solid #000; padding: 10px; border-radius: 5px; background-color: #f0f0f0; font-family: monospace;">$1</div>')
-        .replace(/\[(.*?)\]\((.*?)\)/g, '<a href="$2" style="color: #00f;">$1</a>'); // Add this line for links
-
+ 
     message = formatLinks(message);
     return message;
 }
