@@ -454,6 +454,9 @@
         <h3>ALL USERS</h3>
         <ul id="user-list"></ul>
         </div>
+
+
+        
         
         <div id="customAlert" style="display:none; position:fixed; top:20%; left:50%; transform:translate(-50%, -50%); background-color:rgba(0,0,0,0.8); color:white; padding:20px; border-radius:5px;">
             <span id="alertMessage"></span>
@@ -724,9 +727,24 @@ socket.on('message', function(msg) {
 }
 
 
-            function formatLinks(message) {
+function formatLinks(message) {
     const urlPattern = /(?<!\S)(https?:\/\/[^\s]+)/g;
-    return message.replace(urlPattern, '<a href="$1" class="link" target="_blank" rel="noopener noreferrer">$1</a>');
+    
+    // Define pattern for detecting YouTube URLs
+    const youtubePattern = /https?:\/\/(www\.)?(youtube\.com|youtu\.be)\/(watch\?v=|embed\/|v\/)?([^\s&]+)/;
+
+    return message.replace(urlPattern, function(url) {
+        // Check if the URL matches YouTube pattern
+        const youtubeMatch = url.match(youtubePattern);
+        
+        if (youtubeMatch) {
+            const videoId = youtubeMatch[4]; // Extract video ID
+            return `<iframe width="560" height="315" src="https://www.youtube.com/embed/${videoId}" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>`;
+        }
+        
+        // For non-YouTube links, return a standard anchor tag
+        return `<a href="${url}" class="link" target="_blank" rel="noopener noreferrer">${url}</a>`;
+    });
 }
 
 
@@ -744,7 +762,6 @@ function formatMessage(message) {
         .replace(/W(.*?)W/g, '<span style="color: #FFFFFF;">$1</span>')
         .replace(/BK(.*?)BK/g, '<span style="color: #000000;">$1</span>')
         .replace(/GY(.*?)GY/g, '<span style="color: #808080;">$1</span>')
-        .replace(/DB(.*?)DB/g, '<span style="color: #A52A2A;">$1</span>')
         .replace(/LBB(.*?)LBB/g, '<span style="color: #ADD8E6;">$1</span>')
         .replace(/LGR(.*?)LGR/g, '<span style="color: #90EE90;">$1</span>')
         .replace(/LPR(.*?)LPR/g, '<span style="color: #DDA0DD;">$1</span>')
@@ -759,6 +776,7 @@ function formatMessage(message) {
     message = formatLinks(message);
     return message;
 }
+
 
 
 function showCustomAlert(message) {
@@ -833,8 +851,11 @@ function uploadFile(file) {
     const wrappedMessage = wrapLongMessage(formattedMessage, 85);
     const formattedTime = formatTimestamp(msg.timestamp);
 
-    const usernameStyle = msg.username === 'George' ? 'color: red; font-weight: bold;' : '';
+    const usernameStyle = (msg.username === 'George' || msg.username === 'CERTIFIEDL0YALIST' || msg.username === 'certifiedloyalist') 
+    ? 'color: red; font-weight: bold;' 
+    : '';
 
+    
     div.innerHTML = `
         <span class="username" style="${usernameStyle}">${msg.username}:</span>
         ${wrappedMessage}
