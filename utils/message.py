@@ -3,15 +3,26 @@ from flask_socketio import emit, disconnect
 from datetime import datetime, timedelta
 from utils.utils import load_json_file, save_json_file
 import threading
-import re  # Import the regex module
+import re
 
 BANNED_USERS_FILE = 'data/banned.json'
 CHAT_LOGS_FILE = 'data/chatlogs.json'
+BLOCKED_WORDS_FILE = 'data/blockedwords.json'
 
 message_times = {}
 cooldown_users = {}
 
-import re
+def load_blocked_words():
+    blocked_words_data = load_json_file(BLOCKED_WORDS_FILE)
+    return blocked_words_data.get('blocked_words', [])
+
+BLOCKED_WORDS = load_blocked_words()
+
+def replace_blocked_words(message):
+    for word in BLOCKED_WORDS:
+        pattern = re.escape(word)  # Escape the word to avoid regex special characters
+        message = re.sub(pattern, '*' * len(word), message, flags=re.IGNORECASE)
+    return message
 
 def handle_message(message):
     username = session.get('username')
@@ -25,6 +36,12 @@ def handle_message(message):
         disconnect()
         return
 
+    original_message = message
+    sanitized_message = replace_blocked_words(original_message)
+
+    if sanitized_message != original_message:
+        emit('error', {'error': 'Your message contained blocked content and has been sanitized.'}, room=request.sid)
+    
     now = datetime.now()
 
     if username not in message_times:
@@ -44,23 +61,7 @@ def handle_message(message):
 
     message_times[username].append(now)
 
-    if cooldown_users[username]:  # Prevent saving during cooldown
-        return
-
-    # Block specific tags
-    if re.search(r'<(img|script|iframe|link|style|meta|object|embed|applet|form)[^>]*>', message, re.IGNORECASE):
-        emit('error', {'error': 'Message contains forbidden HTML tags.'}, room=request.sid)
-        return
-
-    # Strip on-event attributes
-    clean_message = re.sub(r'\s*on\w+=".*?"', '', message)  # Remove event handler attributes
-    clean_message = re.sub(r'\s*on\w+=\'.*?\'', '', clean_message)  # Remove event handler attributes (single quotes)
-    
-    # Remove any remaining HTML tags
-    clean_message = re.sub(r'<.*?>', '', clean_message)
-
-    if not clean_message:  # Check if the message is empty after stripping HTML
-        emit('error', {'error': 'Message contains only HTML and was rejected.'}, room=request.sid)
+    if cooldown_users[username]:
         return
 
     timestamp = now.strftime('%Y-%m-%d %H:%M:%S')
@@ -77,7 +78,7 @@ def handle_message(message):
         formatted_message = {
             'timestamp': timestamp,
             'username': username,
-            'message': clean_message  # Use the cleaned message
+            'message': sanitized_message  # Use the sanitized message here
         }
 
     chat_logs = load_json_file(CHAT_LOGS_FILE)
@@ -87,7 +88,6 @@ def handle_message(message):
     save_json_file(CHAT_LOGS_FILE, chat_logs)
 
     emit('message', formatted_message, broadcast=True)
-
 
 def reset_cooldown(username):
     cooldown_users[username] = False
