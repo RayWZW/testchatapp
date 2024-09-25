@@ -593,69 +593,62 @@ sendButton.addEventListener('click', () => {
             }
 
             function initializeChat() {
-                fetch('/get_messages')
-                    .then(response => response.json())
-                    .then(messages => {
-                        messages.forEach(msg => {
-                            chatBox.appendChild(createMessageElement(msg));
-                        });
-                        chatBox.scrollTop = chatBox.scrollHeight;
-                    });
-
-                    const soundQueue = [];
-let isPlaying = false;
-
-function playNextSound() {
-    if (soundQueue.length > 0 && !isPlaying) {
-        isPlaying = true;
-        const nextSound = soundQueue.shift(); 
-        notifySound.play().then(() => {
-            isPlaying = false; 
-            playNextSound(); 
-        }).catch(error => {
-            console.error('Error playing sound:', error);
-            isPlaying = false; 
-            playNextSound(); 
+    fetch('/get_messages')
+        .then(response => response.json())
+        .then(messages => {
+            messages.forEach(msg => {
+                chatBox.appendChild(createMessageElement(msg));
+            });
+            chatBox.scrollTop = chatBox.scrollHeight;
         });
-    }
-}                    
 
-socket.on('message', function(msg) {
-    chatBox.appendChild(createMessageElement(msg));
-    chatBox.scrollTop = chatBox.scrollHeight;
+    socket.on('message', function(msg) {
+        const messageId = msg.timestamp; // Assuming timestamp is unique for each message
+        if (!Array.from(chatBox.children).some(child => child.dataset.timestamp === messageId)) {
+            chatBox.appendChild(createMessageElement(msg));
+            chatBox.scrollTop = chatBox.scrollHeight;
 
-    const notifySound = new Audio('static/notify.mp3');
-    notifySound.preload = 'auto';
+            const videos = document.querySelectorAll('video');
+            let isPlaying = false;
 
-    notifySound.play().catch(error => {
-        console.error('Error playing sound:', error);
+            videos.forEach(video => {
+                if (!video.paused) {
+                    isPlaying = true;
+                }
+            });
+
+            if (!isPlaying) {
+                notifySound.play().catch(error => {
+                    console.error('Error playing sound:', error);
+                });
+            }
+        }
+
+        setTimeout(() => {
+            if (msg.type === 'file') {
+                window.scrollTo(0, document.body.scrollHeight);
+            } else {
+                chatBox.scrollTop = chatBox.scrollHeight;
+            }
+        }, 1000);
     });
 
-    fetchMessages();
+    setInterval(fetchMessages, 300000);
 
-    setTimeout(() => {
-        if (msg.type === 'file') {
-            window.scrollTo(0, document.body.scrollHeight);
-        } else {
-            chatBox.scrollTop = chatBox.scrollHeight;
-        }
-    }, 1000);
-});
+    function fetchMessages() {
+        fetch('/get_messages')
+            .then(response => response.json())
+            .then(messages => {
+                messages.forEach(msg => {
+                    const messageId = msg.timestamp; // Assuming timestamp is unique for each message
+                    if (!Array.from(chatBox.children).some(child => child.dataset.timestamp === messageId)) {
+                        chatBox.appendChild(createMessageElement(msg));
+                    }
+                });
+                chatBox.scrollTop = chatBox.scrollHeight; 
+            });
+    }
 
-
-                setInterval(fetchMessages, 300000);                
-
-                function fetchMessages() {
-                    fetch('/get_messages')
-                        .then(response => response.json())
-                        .then(messages => {
-                            chatBox.innerHTML = '';
-                            messages.forEach(msg => {
-                                chatBox.appendChild(createMessageElement(msg));
-                            });
-                            chatBox.scrollTop = chatBox.scrollHeight;
-                        });
-                }
 
                 let typingUsers = new Set();
                 let typingTimeouts = new Map();
