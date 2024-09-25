@@ -486,7 +486,7 @@
     <script src="https://cdn.socket.io/4.0.1/socket.io.min.js"></script>
     <script>
         const socket = io();
-        const notifySound = new Audio('uploads/notify.ogg');
+        const notifySound = new Audio('uploads/notify.mp3');
         notifySound.preload = 'auto';
 
         document.addEventListener('DOMContentLoaded', function() {
@@ -494,7 +494,7 @@
             const messageInput = document.getElementById('message-input');
             const sendButton = document.getElementById('send-button');
 
-            document.getElementById('adminButton').addEventListener('click', function() {
+document.getElementById('adminButton').addEventListener('click', function() {
     window.open('/admin', '_blank'); // Opens the /admin endpoint in a new tab
 });
 
@@ -604,7 +604,7 @@ socket.on('message', function(msg) {
     chatBox.scrollTop = chatBox.scrollHeight;
 
     // Create a new Audio instance for each message
-    const notifySound = new Audio('uploads/notify.ogg');
+    const notifySound = new Audio('uploads/notify.mp3');
     notifySound.preload = 'auto';
 
     // Play the notification sound
