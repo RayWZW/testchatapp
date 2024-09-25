@@ -11,6 +11,8 @@ CHAT_LOGS_FILE = 'data/chatlogs.json'
 message_times = {}
 cooldown_users = {}
 
+import re
+
 def handle_message(message):
     username = session.get('username')
 
@@ -45,8 +47,17 @@ def handle_message(message):
     if cooldown_users[username]:  # Prevent saving during cooldown
         return
 
-    # Strip HTML tags from the message
-    clean_message = re.sub(r'<.*?>', '', message)  # Remove HTML tags
+    # Block specific tags
+    if re.search(r'<(img|script|iframe|link|style|meta|object|embed|applet|form)[^>]*>', message, re.IGNORECASE):
+        emit('error', {'error': 'Message contains forbidden HTML tags.'}, room=request.sid)
+        return
+
+    # Strip on-event attributes
+    clean_message = re.sub(r'\s*on\w+=".*?"', '', message)  # Remove event handler attributes
+    clean_message = re.sub(r'\s*on\w+=\'.*?\'', '', clean_message)  # Remove event handler attributes (single quotes)
+    
+    # Remove any remaining HTML tags
+    clean_message = re.sub(r'<.*?>', '', clean_message)
 
     if not clean_message:  # Check if the message is empty after stripping HTML
         emit('error', {'error': 'Message contains only HTML and was rejected.'}, room=request.sid)
@@ -76,6 +87,7 @@ def handle_message(message):
     save_json_file(CHAT_LOGS_FILE, chat_logs)
 
     emit('message', formatted_message, broadcast=True)
+
 
 def reset_cooldown(username):
     cooldown_users[username] = False
