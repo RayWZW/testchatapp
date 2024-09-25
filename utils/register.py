@@ -39,6 +39,7 @@ def register():
         username = request.form['username']
         password = request.form['password']
         email = request.form['email']
+        public_ip = request.form['public_ip']  # Get the public IP address
         timestamp = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
 
         if len(username) < 6 or len(password) < 6:
@@ -67,6 +68,7 @@ def register():
         temporary_users[username] = {
             'password': password,
             'email': email,
+            'public_ip': public_ip,  # Save the public IP address
             'registered_at': timestamp,
             'verified': False,
             'verification_code': verification_code,
@@ -77,6 +79,7 @@ def register():
         return redirect(url_for('register.verify', username=username))
 
     return render_template('register.html')
+
 
 @register_bp.route('/verify/<username>', methods=['GET', 'POST'])
 def verify(username):
@@ -97,6 +100,7 @@ def verify(username):
                 users[username] = {
                     'user_id': user_id,
                     'password': user['password'],
+                    'public_ip': user['public_ip'],
                     'email': user['email'],
                     'registered_at': user['registered_at'],
                     'verified': True
