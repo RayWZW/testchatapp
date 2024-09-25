@@ -508,7 +508,7 @@ button {
     <script src="https://cdn.socket.io/4.0.1/socket.io.min.js"></script>
     <script>
         const socket = io();
-        const notifySound = new Audio('uploads/notify.mp3');
+        const notifySound = new Audio('static/notify.mp3');
         notifySound.preload = 'auto';
 
         document.addEventListener('DOMContentLoaded', function() {
@@ -624,7 +624,7 @@ socket.on('message', function(msg) {
     chatBox.appendChild(createMessageElement(msg));
     chatBox.scrollTop = chatBox.scrollHeight;
 
-    const notifySound = new Audio('uploads/notify.mp3');
+    const notifySound = new Audio('static/notify.mp3');
     notifySound.preload = 'auto';
 
     notifySound.play().catch(error => {
@@ -774,19 +774,24 @@ function embedYouTubeShorts(url) {
 }
 
 function embedDiscordInvite(url) {
-    const discordInvitePattern = /https?:\/\/(www\.)?discord\.gg\/[a-zA-Z0-9]+|https?:\/\/discord\.com\/invite\/[a-zA-Z0-9]+/;
+    const discordInvitePattern = /^(https?:\/\/)?(www\.)?(discord\.gg|discord\.com\/invite)\/[a-zA-Z0-9]+$/;
     const match = url.match(discordInvitePattern);
 
     if (match) {
-        return `<div style="border: 1px solid #7289DA; border-radius: 5px; padding: 10px; background-color: #2C2F33; color: white;">
-                    <p>Join our Discord Server!</p>
-                    <a href="${url}" target="_blank" rel="noopener noreferrer" 
-                       style="display: inline-block; width: 250px; height: 95px; 
-                              background-color: red; color: white; 
-                              text-align: center; line-height: 40px; 
-                              text-decoration: none; border-radius: 5px; 
-                              font-weight: bold;">                   JOIN                             </a>
-                </div>`;
+        const formattedUrl = url.startsWith('http') ? url : `https://${url}`;
+        return `
+            <div style="position: relative; display: inline-block; width: 300px; height: 100px;">
+                <a href="${formattedUrl}" target="_blank" rel="noopener noreferrer" 
+                   style="display: block; width: 100%; height: 100%; background: none; border: none; text-decoration: none;">
+                    <img src="static/discordinvite.png" 
+                         alt="Discord Invite" 
+                         style="width: 100%; height: 100%; object-fit: contain; border-radius: 8px;"/>
+                    <span style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); 
+                                 color: white; font-weight: bold; font-size: 16px; text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.7);">
+                        JOIN SERVER
+                    </span>
+                </a>
+            </div>`;
     }
     return null;
 }
