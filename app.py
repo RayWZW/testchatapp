@@ -11,6 +11,7 @@ from utils.register import register_bp
 from utils.message import handle_message, handle_typing
 from utils.admin import admin_bp
 from utils.commands import commands_bp
+from utils.forgot_password import password_reset_bp
 
 
 
@@ -21,6 +22,8 @@ socketio = SocketIO(app)
 app.register_blueprint(register_bp)
 app.register_blueprint(admin_bp, url_prefix='/admin') 
 app.register_blueprint(commands_bp)
+app.register_blueprint(password_reset_bp)
+
 
 from flask_session import Session
 
@@ -429,6 +432,8 @@ def webhook(id):
     message = data.get('message')
     # Process the received data as needed
     return jsonify({"status": "success", "id": id, "username": username, "message": message}), 200
+
+
 
 
 @socketio.on('message')
