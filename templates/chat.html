@@ -86,7 +86,6 @@
     border-radius: 5px;
 }
 
-
 #chat-container {
     flex: 1;
     display: flex;
@@ -97,7 +96,7 @@
 
 #chat-box {
     flex: 1;
-    overflow-y: auto; /* Allow scrolling for chat */
+    overflow-y: auto; 
     padding: 10px;
     padding-left: 15px;
     border-bottom: 1px solid #333;
@@ -105,33 +104,29 @@
     white-space: pre-wrap;
 }
 
-/* Custom scrollbar styles for webkit browsers */
 #chat-box::-webkit-scrollbar {
-    width: 16px; /* Width of the scrollbar */
+    width: 16px; 
 }
 
 #chat-box::-webkit-scrollbar-track {
-    background: #2C2F33; /* Background of the scrollbar track */
-    border-radius: 0; /* Remove rounded corners for a more rectangular shape */
+    background: #2C2F33; 
+    border-radius: 0; 
 }
 
 #chat-box::-webkit-scrollbar-thumb {
-    background-color: #333333; /* Color of the scrollbar thumb */
-    border-radius: 0; /* Remove rounded corners for a more rectangular shape */
-    border: 4px solid transparent; /* Space around thumb */
+    background-color: #333333; 
+    border-radius: 0; 
+    border: 4px solid transparent; 
 }
 
 #chat-box::-webkit-scrollbar-thumb:hover {
-    background-color: #5b6eae; /* Darker shade on hover */
+    background-color: #5b6eae; 
 }
-
-
 
 .textarea-container {
     position: relative;
-    padding-left: 50px; /* Shift the entire textarea */
+    padding-left: 50px; 
 }
-
 
 #message-form {
     display: flex;
@@ -159,7 +154,7 @@
     box-sizing: border-box;
     font-family: inherit;
     word-break: break-word;
-    padding-bottom: 30px; /* Space for character count */
+    padding-bottom: 30px; 
 }
 
 #char-count {
@@ -168,16 +163,12 @@
     bottom: 10px;
     color: #aaa;
     font-size: 0.8em;
-    pointer-events: none; /* Prevent interactions with the count */
+    pointer-events: none; 
 }
 
 button {
-    margin-top: 10px; /* Space buttons below the textarea */
+    margin-top: 10px; 
 }
-
-
-
-
 
 #send-button, #upload-button {
     padding: 12px 20px;
@@ -214,17 +205,14 @@ button {
     background-color: transparent;
     font-size: 14px;
     text-align: center;
-    text-transform: uppercase; /* Make text all caps */
-    margin-top: 10px; /* Move text down by 10px */
+    text-transform: uppercase; 
+    margin-top: 10px; 
 }
 
 #logout-button:hover {
     color: #e03e3e;
     background-color: transparent;
 }
-
-
-
 
 .link {
     color: lightblue;
@@ -236,7 +224,6 @@ button {
 .link:hover {
     text-decoration: underline;
 }
-
 
 .message {
     margin-bottom: 2px;
@@ -356,22 +343,20 @@ button {
     transform: scale(0.98);
 }
 
-
-
 #adminButton {
     background-color: #2a2a2a;
     border: none;
-    width: 150px; /* Increased width */
-    height: 60px; /* Increased height */
+    width: 150px; 
+    height: 60px; 
     color: #ffffff;
     cursor: pointer;
     z-index: 1000;
     transition: background-color 0.3s, transform 0.2s;
-    font-size: 12px; /* Smaller font size */
+    font-size: 12px; 
     display: flex;
     align-items: center;
     justify-content: center;
-    margin: 110px 20px 20px 20px; /* Move down by adjusting the margin (60px + 50px) */
+    margin: 110px 20px 20px 20px; 
     text-transform: uppercase;
     font-weight: bold;
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
@@ -387,12 +372,11 @@ button {
     transform: scale(0.98);
 }
 
-
 @media (max-width: 768px) {
     body {
         flex-direction: column;
-        height: auto; /* Allow body to adjust height */
-        overflow: auto; /* Enable scrolling */
+        height: auto; 
+        overflow: auto; 
     }
 
     #sidebar {
@@ -407,7 +391,7 @@ button {
         margin-left: 0;
         margin-top: 10px;
         flex: 1;
-        height: calc(100vh - 150px); /* Adjust height to fit screen */
+        height: calc(100vh - 150px); 
         display: flex;
         flex-direction: column;
     }
@@ -417,27 +401,25 @@ button {
         padding: 10px;
         padding-left: 15px;
         border-bottom: 1px solid #333;
-        overflow-y: auto; /* Allow scrolling for chat */
+        overflow-y: auto; 
     }
 
     #message-form {
-        flex-direction: row; /* Keep input and buttons in a row */
+        flex-direction: row; 
     }
 
     #message-input {
         flex: 1;
-        margin-bottom: 0; /* Remove bottom margin */
+        margin-bottom: 0; 
     }
 
-    
     #send-button, #upload-button {
-        flex-shrink: 0; /* Prevent shrinking */
-        margin-left: 10px; /* Space between buttons */
+        flex-shrink: 0; 
+        margin-left: 10px; 
     }
-
 
     .custom-alert {
-    display: none; /* Initially hidden */
+    display: none; 
     position: fixed;
     top: 0;
     left: 0;
@@ -479,10 +461,8 @@ button {
     background-color: #0056b3;
 }
 
-
-    
     #edit-account-button, #reload-button {
-        width: 100%; /* Full width for buttons */
+        width: 100%; 
     }
 }
 
@@ -496,21 +476,17 @@ button {
         <ul id="user-list"></ul>
         </div>
 
-
-        
-        
         <div id="customAlert" style="display:none; position:fixed; top:20%; left:50%; transform:translate(-50%, -50%); background-color:rgba(0,0,0,0.8); color:white; padding:20px; border-radius:5px;">
             <span id="alertMessage"></span>
             <button id="alertCloseButton" style="margin-left:10px;">Close</button>
         </div>
-        
 
  <button id="adminButton" class="open-commands-button">ADMIN PANEL</button>
 
     </div>
     <button id="reload-button" class="open-commands-button">Reload</button>
         <div id="chat-container">
-            
+
         <div id="chat-box">
             <!-- Messages will be loaded here -->
         </div>
@@ -523,7 +499,7 @@ button {
             <button id="upload-button" type="button">Send Attachment</button>
             <a id="logout-button" href="/logout">Logout</a>
         </form>
-        
+
         <input id="file-input" type="file" style="display: none;">
         <div class="progress">
             <div class="progress-bar" id="progress-bar"></div>
@@ -540,17 +516,14 @@ button {
             const messageInput = document.getElementById('message-input');
             const sendButton = document.getElementById('send-button');
 
-            
-
 document.getElementById('adminButton').addEventListener('click', function() {
-    window.open('/admin', '_blank'); // Opens the /admin endpoint in a new tab
+    window.open('/admin', '_blank'); 
 });
-
 
 sendButton.addEventListener('click', () => {
     let messageText = messageInput.value.trim();
-    messageText = messageText.replace(/\n{2,}/g, '\n'); // Replace multiple newlines with a single newline
-    // Send the cleaned message text
+    messageText = messageText.replace(/\n{2,}/g, '\n'); 
+
     sendMessage(messageText);
 });
             const fileInput = document.getElementById('file-input');
@@ -564,40 +537,29 @@ sendButton.addEventListener('click', () => {
             const charCount = document.getElementById('char-count');
             const maxChars = 10000;
 
-            
-
             messageInput.addEventListener('input', function() {
         if (messageInput.value.length > maxChars) {
-            messageInput.value = messageInput.value.substring(0, maxChars); // Truncate to maxChars
+            messageInput.value = messageInput.value.substring(0, maxChars); 
         }
         const count = messageInput.value.length;
-        charCount.textContent = count; // Update character count
+        charCount.textContent = count; 
     });
 
-
-
-
-            
-        // Reload button functionality
         const reloadButton = document.getElementById('reload-button');
         reloadButton.addEventListener('click', function() {
-            location.reload(); // Reloads the page when the button is clicked
+            location.reload(); 
         });            
-
-
-
 
         socket.on('ban_packet', function(data) {
     alert('You have been banned from the chat: ' + data.username);
-    
-    // Make a request to log out the user
+
     fetch('/logout', {
-        method: 'POST', // Or use 'GET' if your logout endpoint accepts it
-        credentials: 'include' // Include cookies if necessary
+        method: 'POST', 
+        credentials: 'include' 
     })
     .then(response => {
         if (response.ok) {
-            window.location.reload(); // Reloads the page after logging out
+            window.location.reload(); 
         } else {
             console.error('Failed to log out.');
         }
@@ -639,7 +601,6 @@ sendButton.addEventListener('click', () => {
                         });
                         chatBox.scrollTop = chatBox.scrollHeight;
                     });
-                    
 
                     const soundQueue = [];
 let isPlaying = false;
@@ -647,14 +608,14 @@ let isPlaying = false;
 function playNextSound() {
     if (soundQueue.length > 0 && !isPlaying) {
         isPlaying = true;
-        const nextSound = soundQueue.shift(); // Get the next sound from the queue
+        const nextSound = soundQueue.shift(); 
         notifySound.play().then(() => {
-            isPlaying = false; // Reset the flag once the sound has finished
-            playNextSound(); // Play the next sound in the queue
+            isPlaying = false; 
+            playNextSound(); 
         }).catch(error => {
             console.error('Error playing sound:', error);
-            isPlaying = false; // Reset the flag even if there was an error
-            playNextSound(); // Continue with the next sound
+            isPlaying = false; 
+            playNextSound(); 
         });
     }
 }                    
@@ -663,19 +624,23 @@ socket.on('message', function(msg) {
     chatBox.appendChild(createMessageElement(msg));
     chatBox.scrollTop = chatBox.scrollHeight;
 
-    // Create a new Audio instance for each message
     const notifySound = new Audio('uploads/notify.mp3');
     notifySound.preload = 'auto';
 
-    // Play the notification sound
     notifySound.play().catch(error => {
         console.error('Error playing sound:', error);
     });
- 
-    fetchMessages();
-    window.scrollTo(0, document.body.scrollHeight);
-});
 
+    fetchMessages();
+
+    setTimeout(() => {
+        if (msg.type === 'file') {
+            window.scrollTo(0, document.body.scrollHeight);
+        } else {
+            chatBox.scrollTop = chatBox.scrollHeight;
+        }
+    }, 1000);
+});
 
 
                 setInterval(fetchMessages, 300000);                
@@ -741,18 +706,17 @@ socket.on('message', function(msg) {
 
                 document.getElementById('message-input').addEventListener('keydown', function(e) {
     if (e.key === 'Enter' && !e.shiftKey) {
-        e.preventDefault(); // Prevent the default form submission
-        sendMessage(); // Call the sendMessage function to send the message
+        e.preventDefault(); 
+        sendMessage(); 
     } else if (e.key === 'Enter' && e.shiftKey) {
-        // If Shift+Enter is pressed, insert a newline in the textarea
+
         const start = this.selectionStart;
         const end = this.selectionEnd;
         this.value = this.value.substring(0, start) + '\n' + this.value.substring(end);
         this.selectionStart = this.selectionEnd = start + 1;
-        e.preventDefault(); // Prevent the default behavior
+        e.preventDefault(); 
     }
 });
-
 
                 document.getElementById('upload-button').addEventListener('click', function() {
                     fileInput.click();
@@ -778,27 +742,24 @@ socket.on('message', function(msg) {
         socket.send(formattedMessage);
         messageInput.value = '';
 
-        // Scroll to the bottom of the chat box
         chatBox.scrollTop = chatBox.scrollHeight;
     }
 }
 
-
 function embedYouTubeVideo(url) {
     const youtubePattern = /https?:\/\/(www\.)?(youtube\.com|youtu\.be)\/(watch\?v=|embed\/|v\/)?([^\s&]+)/;
 
-    // Check if the URL contains "/shorts/" and return null to prevent processing as a normal video
     if (url.includes('/shorts/')) {
-        return null; // Blacklist Shorts URLs
+        return null; 
     }
 
     const match = url.match(youtubePattern);
 
     if (match) {
-        const videoId = match[4]; // Extract video ID
+        const videoId = match[4]; 
         return `<iframe width="560" height="315" src="https://www.youtube.com/embed/${videoId}" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>`;
     }
-    return null; // Return null if not a valid YouTube video URL
+    return null; 
 }
 
 function embedYouTubeShorts(url) {
@@ -806,12 +767,11 @@ function embedYouTubeShorts(url) {
     const match = url.match(youtubeShortsPattern);
 
     if (match) {
-        const shortsId = match[2]; // Extract video ID for Shorts
+        const shortsId = match[2]; 
         return `<iframe width="350" height="560" src="https://www.youtube.com/embed/${shortsId}" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>`;
     }
-    return null; // Return null if not a valid Shorts URL
+    return null; 
 }
-
 
 function embedDiscordInvite(url) {
     const discordInvitePattern = /https?:\/\/(www\.)?discord\.gg\/[a-zA-Z0-9]+|https?:\/\/discord\.com\/invite\/[a-zA-Z0-9]+/;
@@ -843,19 +803,12 @@ function formatLinks(message) {
     });
 }
 
-
-
-
-
-
 function formatMessage(message) {
     message = message
- 
+
     message = formatLinks(message);
     return message;
 }
-
-
 
 function showCustomAlert(message) {
     const alertBox = document.getElementById('customAlert');
@@ -871,7 +824,7 @@ function showCustomAlert(message) {
 }
 
 function uploadFile(file) {
-    const maxFileSize = 10 * 1024 * 1024 * 1024; // 10 GB
+    const maxFileSize = 10 * 1024 * 1024 * 1024; 
 
     if (file.size > maxFileSize) {
         showCustomAlert('File size exceeds the maximum limit of 10 GB.');
@@ -880,8 +833,8 @@ function uploadFile(file) {
 
     const formData = new FormData();
     formData.append('file', file);
-    progressBar.style.display = 'block'; // Show progress bar
-    progressBar.style.width = '0%'; // Reset progress bar
+    progressBar.style.display = 'block'; 
+    progressBar.style.width = '0%'; 
 
     const xhr = new XMLHttpRequest();
     xhr.open('POST', '/files/upload', true);
@@ -899,8 +852,8 @@ function uploadFile(file) {
             if (response.file_url) {
                 const message = getMediaMessage(file, response.file_url);
                 socket.send(message);
-                progressBar.style.width = '0%'; // Reset progress bar
-                progressBar.style.display = 'none'; // Hide progress bar after upload
+                progressBar.style.width = '0%'; 
+                progressBar.style.display = 'none'; 
             }
         } else {
             showCustomAlert('File upload failed. Please try again.');
@@ -913,7 +866,6 @@ function uploadFile(file) {
 
     xhr.send(formData);
 }
-
 
             function formatTimestamp(timestamp) {
                 const date = new Date(timestamp);
@@ -933,7 +885,6 @@ function uploadFile(file) {
     ? 'color: red; font-weight: bold;' 
     : '';
 
-    
     div.innerHTML = `
         <span class="username" style="${usernameStyle}">${msg.username}:</span>
         ${wrappedMessage}
@@ -942,9 +893,6 @@ function uploadFile(file) {
 
     return div;
 }
-
-
-
 
             function wrapLongMessage(text, maxLength) {
                 if (text.length <= maxLength) {
