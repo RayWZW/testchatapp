@@ -1,13 +1,17 @@
-# utils/files.py
-from flask import Blueprint, request, jsonify, send_from_directory, url_for, current_app
+from flask import Blueprint, request, jsonify, send_from_directory, url_for
 from PIL import Image
+from moviepy.editor import VideoFileClip
 import os
 import mimetypes
 import time
+import logging
 
 files_bp = Blueprint('files', __name__)
 
 UPLOAD_FOLDER = 'uploads'
+
+# Configure logging
+logging.basicConfig(level=logging.INFO)
 
 @files_bp.route('/files/upload', methods=['POST'])
 def upload_file():
@@ -34,10 +38,22 @@ def upload_file():
                 img = img.resize((500, 500))
                 img.save(file_path)
         elif mime_type in video_mime_types:
-            file.save(file_path)
+            # Save the uploaded video file to a temporary location
+            temp_video_path = os.path.join(UPLOAD_FOLDER, 'temp_' + new_filename)
+            file.save(temp_video_path)
+
+            # Process the video using the temporary path
+            with VideoFileClip(temp_video_path) as video:
+                video_resized = video.resize(height=500)
+                video_resized.write_videofile(file_path, codec='libx264', audio_codec='aac')
+            
+            # Remove the temporary file after processing
+            os.remove(temp_video_path)
         else:
-            file.save(file_path)
+            return jsonify({'error': 'Unsupported file type'}), 400
+
     except Exception as e:
+        logging.error(f"Error processing file '{original_filename}': {str(e)}")
         return jsonify({'error': f'Failed to process file: {str(e)}'}), 500
 
     file_url = url_for('files.download_file', filename=new_filename)
