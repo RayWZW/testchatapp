@@ -316,6 +316,38 @@
     transform: scale(0.98);
 }
 
+
+
+#adminButton {
+    background-color: #2a2a2a;
+    border: none;
+    width: 150px; /* Increased width */
+    height: 60px; /* Increased height */
+    color: #ffffff;
+    cursor: pointer;
+    z-index: 1000;
+    transition: background-color 0.3s, transform 0.2s;
+    font-size: 12px; /* Smaller font size */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 110px 20px 20px 20px; /* Move down by adjusting the margin (60px + 50px) */
+    text-transform: uppercase;
+    font-weight: bold;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+}
+
+#adminButton:hover {
+    background-color: #444;
+    transform: scale(1.05);
+}
+
+#adminButton:active {
+    background-color: #3a3a3a;
+    transform: scale(0.98);
+}
+
+
 @media (max-width: 768px) {
     body {
         flex-direction: column;
@@ -429,10 +461,12 @@
         </div>
         
 
-        
+ <button id="adminButton" class="open-commands-button">ADMIN PANEL</button>
+
     </div>
     <button id="reload-button" class="open-commands-button">Reload</button>
         <div id="chat-container">
+            
         <div id="chat-box">
             <!-- Messages will be loaded here -->
         </div>
@@ -459,6 +493,11 @@
             const chatBox = document.getElementById('chat-box');
             const messageInput = document.getElementById('message-input');
             const sendButton = document.getElementById('send-button');
+
+            document.getElementById('adminButton').addEventListener('click', function() {
+    window.open('/admin', '_blank'); // Opens the /admin endpoint in a new tab
+});
+
 
 sendButton.addEventListener('click', () => {
     let messageText = messageInput.value.trim();
@@ -572,7 +611,7 @@ socket.on('message', function(msg) {
     notifySound.play().catch(error => {
         console.error('Error playing sound:', error);
     });
-
+ 
     fetchMessages();
     window.scrollTo(0, document.body.scrollHeight);
 });
@@ -736,7 +775,7 @@ function showCustomAlert(message) {
 }
 
 function uploadFile(file) {
-    const maxFileSize = 10 *1024 * 1024 * 1024;
+    const maxFileSize = 10 * 1024 * 1024 * 1024; // 10 GB
 
     if (file.size > maxFileSize) {
         showCustomAlert('File size exceeds the maximum limit of 10 GB.');
@@ -745,6 +784,8 @@ function uploadFile(file) {
 
     const formData = new FormData();
     formData.append('file', file);
+    progressBar.style.display = 'block'; // Show progress bar
+    progressBar.style.width = '0%'; // Reset progress bar
 
     const xhr = new XMLHttpRequest();
     xhr.open('POST', '/files/upload', true);
@@ -762,9 +803,16 @@ function uploadFile(file) {
             if (response.file_url) {
                 const message = getMediaMessage(file, response.file_url);
                 socket.send(message);
-                progressBar.style.width = '0%';
+                progressBar.style.width = '0%'; // Reset progress bar
+                progressBar.style.display = 'none'; // Hide progress bar after upload
             }
+        } else {
+            showCustomAlert('File upload failed. Please try again.');
         }
+    };
+
+    xhr.onerror = function() {
+        showCustomAlert('An error occurred while uploading the file.');
     };
 
     xhr.send(formData);
