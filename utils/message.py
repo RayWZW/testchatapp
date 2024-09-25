@@ -20,8 +20,10 @@ BLOCKED_WORDS = load_blocked_words()
 
 def replace_blocked_words(message):
     for word in BLOCKED_WORDS:
-        pattern = re.escape(word)  # Escape the word to avoid regex special characters
-        message = re.sub(pattern, '*' * len(word), message, flags=re.IGNORECASE)
+        # Create a regex pattern that matches the blocked word and replaces it with asterisks
+        pattern = re.escape(word)  # Escape the blocked word
+        # Replace the blocked word and any surrounding special characters with asterisks
+        message = re.sub(r'(?i)(' + pattern + r')', lambda match: '*' * len(match.group(0)), message)
     return message
 
 def handle_message(message):
