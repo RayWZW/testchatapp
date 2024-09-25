@@ -141,6 +141,10 @@
     flex-wrap: wrap;
 }
 
+#message-form {
+    position: relative;
+}
+
 #message-input {
     flex: 1;
     padding: 10px;
@@ -153,9 +157,24 @@
     white-space: pre-wrap;
     overflow-wrap: break-word;
     box-sizing: border-box;
-    font-family: inherit; /* Ensure font is consistent */
-    word-break: break-word; /* Handles long words better */
+    font-family: inherit;
+    word-break: break-word;
+    padding-bottom: 30px; /* Space for character count */
 }
+
+#char-count {
+    position: absolute;
+    right: 10px;
+    bottom: 10px;
+    color: #aaa;
+    font-size: 0.8em;
+    pointer-events: none; /* Prevent interactions with the count */
+}
+
+button {
+    margin-top: 10px; /* Space buttons below the textarea */
+}
+
 
 
 
@@ -497,12 +516,14 @@
         </div>
         <div class="typing-indicator" id="typing-indicator"></div>
         <div id="warning-message"></div>
-        <form id="message-form">
+        <form id="message-form" style="position: relative;">
             <textarea id="message-input" placeholder="Type your message..."></textarea>
+            <span id="char-count" style="position: absolute; right: 10px; bottom: 10px; color: #aaa; font-size: 0.8em;">0</span>
             <button id="send-button" type="button">Send</button>
             <button id="upload-button" type="button">Send Attachment</button>
             <a id="logout-button" href="/logout">Logout</a>
         </form>
+        
         <input id="file-input" type="file" style="display: none;">
         <div class="progress">
             <div class="progress-bar" id="progress-bar"></div>
@@ -518,6 +539,8 @@
             const chatBox = document.getElementById('chat-box');
             const messageInput = document.getElementById('message-input');
             const sendButton = document.getElementById('send-button');
+
+            
 
 document.getElementById('adminButton').addEventListener('click', function() {
     window.open('/admin', '_blank'); // Opens the /admin endpoint in a new tab
@@ -538,6 +561,18 @@ sendButton.addEventListener('click', () => {
             const toggleSidebar = document.getElementById('toggle-sidebar');
             const typingIndicator = document.getElementById('typing-indicator');
             const warningMessage = document.getElementById('warning-message');
+            const charCount = document.getElementById('char-count');
+            const maxChars = 10000;
+
+            
+
+            messageInput.addEventListener('input', function() {
+        if (messageInput.value.length > maxChars) {
+            messageInput.value = messageInput.value.substring(0, maxChars); // Truncate to maxChars
+        }
+        const count = messageInput.value.length;
+        charCount.textContent = count; // Update character count
+    });
 
 
 
