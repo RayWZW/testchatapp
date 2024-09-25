@@ -11,15 +11,23 @@ CHAT_LOGS_FILE = 'data/chatlogs.json'
 message_times = {}
 cooldown_users = {}
 
-MALICIOUS_ATTRIBUTES = ['onerror', 'onclick', 'onload', 'onmouseover', 'onmouseout', 'onsubmit', 'onfocus', 'onblur']
+# Blocked attributes and event handlers
+MALICIOUS_ATTRIBUTES = [
+    'onerror', 'onclick', 'onmouseover', 'onmouseout',
+    'onsubmit', 'onfocus', 'onblur', 'onchange', 'onkeydown', 'onkeyup',
+    'window.onload'  # Blocking window.onload directly
+]
+
+# Pattern to block complete HTML documents
+BLOCKED_HTML_TAGS = re.compile(r'<html|<head|<body', re.IGNORECASE)
 
 def remove_malicious_attributes(message):
     for attr in MALICIOUS_ATTRIBUTES:
         message = re.sub(rf'\s*{attr}=["\'][^"\']*["\']', '', message, flags=re.IGNORECASE)
     return message
 
-def contains_malicious_code(message):
-    return bool(re.search(r'<[^>]+>', message))  # Check if there are any HTML tags in the message
+def contains_complete_html(message):
+    return bool(BLOCKED_HTML_TAGS.search(message))  # Check if the message contains complete HTML tags
 
 def handle_message(message):
     username = session.get('username')
@@ -35,15 +43,9 @@ def handle_message(message):
 
     original_message = message
 
-    # Check if the message is a file message and skip HTML tag checks
-    if not is_file_message(original_message) and isinstance(original_message, str):
-        if contains_malicious_code(original_message):
-            sanitized_message = remove_malicious_attributes(original_message)
-            if sanitized_message != original_message:
-                emit('error', {'error': 'Your message contained malicious attributes and has been sanitized.'}, room=request.sid)
-                original_message = sanitized_message
-
+    # Check if the message is a file message
     if is_file_message(original_message):
+        # Proceed without HTML checks for file messages
         formatted_message = {
             'timestamp': datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
             'username': username,
@@ -51,12 +53,26 @@ def handle_message(message):
             'file_url': message['file_url'],
             'file_type': message['file_type']
         }
-    else:
+    elif isinstance(original_message, str):
+        # Check for complete HTML documents
+        if contains_complete_html(original_message):
+            emit('error', {'error': 'Your message contains complete HTML and is not allowed.'}, room=request.sid)
+            return
+
+        # Sanitize the message by removing malicious attributes
+        sanitized_message = remove_malicious_attributes(original_message)
+        if sanitized_message != original_message:
+            emit('error', {'error': 'Your message contained malicious attributes and has been sanitized.'}, room=request.sid)
+            original_message = sanitized_message
+
+        # Format message for non-file uploads
         formatted_message = {
             'timestamp': datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
             'username': username,
             'message': original_message
         }
+    else:
+        return  # Handle unexpected message types gracefully
 
     now = datetime.now()
 
