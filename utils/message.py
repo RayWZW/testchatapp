@@ -7,24 +7,19 @@ import re
 
 BANNED_USERS_FILE = 'data/banned.json'
 CHAT_LOGS_FILE = 'data/chatlogs.json'
-BLOCKED_WORDS_FILE = 'data/blockedwords.json'
 
 message_times = {}
 cooldown_users = {}
 
-def load_blocked_words():
-    blocked_words_data = load_json_file(BLOCKED_WORDS_FILE)
-    return blocked_words_data.get('blocked_words', [])
+MALICIOUS_ATTRIBUTES = ['onerror', 'onclick', 'onload', 'onmouseover', 'onmouseout', 'onsubmit', 'onfocus', 'onblur']
 
-BLOCKED_WORDS = load_blocked_words()
-
-def replace_blocked_words(message):
-    for word in BLOCKED_WORDS:
-        # Create a regex pattern that matches the blocked word and replaces it with asterisks
-        pattern = re.escape(word)  # Escape the blocked word
-        # Replace the blocked word and any surrounding special characters with asterisks
-        message = re.sub(r'(?i)(' + pattern + r')', lambda match: '*' * len(match.group(0)), message)
+def remove_malicious_attributes(message):
+    for attr in MALICIOUS_ATTRIBUTES:
+        message = re.sub(rf'\s*{attr}=["\'][^"\']*["\']', '', message, flags=re.IGNORECASE)
     return message
+
+def contains_malicious_code(message):
+    return bool(re.search(r'<[^>]+>', message))  # Check if there are any HTML tags in the message
 
 def handle_message(message):
     username = session.get('username')
@@ -39,16 +34,35 @@ def handle_message(message):
         return
 
     original_message = message
-    sanitized_message = replace_blocked_words(original_message)
 
-    if sanitized_message != original_message:
-        emit('error', {'error': 'Your message contained blocked content and has been sanitized.'}, room=request.sid)
-    
+    # Check if the message is a file message and skip HTML tag checks
+    if not is_file_message(original_message) and isinstance(original_message, str):
+        if contains_malicious_code(original_message):
+            sanitized_message = remove_malicious_attributes(original_message)
+            if sanitized_message != original_message:
+                emit('error', {'error': 'Your message contained malicious attributes and has been sanitized.'}, room=request.sid)
+                original_message = sanitized_message
+
+    if is_file_message(original_message):
+        formatted_message = {
+            'timestamp': datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
+            'username': username,
+            'message': '',
+            'file_url': message['file_url'],
+            'file_type': message['file_type']
+        }
+    else:
+        formatted_message = {
+            'timestamp': datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
+            'username': username,
+            'message': original_message
+        }
+
     now = datetime.now()
 
     if username not in message_times:
         message_times[username] = []
-    
+
     if username not in cooldown_users:
         cooldown_users[username] = False
 
@@ -66,23 +80,6 @@ def handle_message(message):
     if cooldown_users[username]:
         return
 
-    timestamp = now.strftime('%Y-%m-%d %H:%M:%S')
-
-    if 'file_url' in message:
-        formatted_message = {
-            'timestamp': timestamp,
-            'username': username,
-            'message': '',
-            'file_url': message['file_url'],
-            'file_type': message['file_type']
-        }
-    else:
-        formatted_message = {
-            'timestamp': timestamp,
-            'username': username,
-            'message': sanitized_message  # Use the sanitized message here
-        }
-
     chat_logs = load_json_file(CHAT_LOGS_FILE)
     if 'messages' not in chat_logs:
         chat_logs['messages'] = []
@@ -98,3 +95,6 @@ def handle_typing():
     username = session.get('username')
     if username is not None:
         emit('typing', {'username': username}, broadcast=True)
+
+def is_file_message(message):
+    return isinstance(message, dict) and 'file_url' in message  # Ensure it is a dict and contains 'file_url'
