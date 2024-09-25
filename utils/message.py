@@ -68,7 +68,7 @@ def handle_message(message):
 
     message_times[username] = [t for t in message_times[username] if now - t < timedelta(seconds=7)]
 
-    if len(message_times[username]) >= 10:
+    if len(message_times[username]) >= 6:
         if not cooldown_users[username]:
             emit('error', {'error': 'Slow down! You are sending messages too quickly.'}, room=request.sid)
             cooldown_users[username] = True
