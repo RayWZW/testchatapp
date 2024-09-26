@@ -66,10 +66,17 @@ def upload_file():
 
     # Process the file if it's an image or video and save it
     try:
+        # Handle image files
         if mime_type in image_mime_types:
-            with Image.open(file) as img:
-                img = img.resize((500, 500))
-                img.save(existing_file_path)
+            # Skip processing if the file is a GIF
+            if mime_type == 'image/gif':
+                file.save(existing_file_path)  # Save GIF directly without resizing
+            else:
+                with Image.open(file) as img:
+                    img = img.resize((500, 500))  # Resize non-GIF images
+                    img.save(existing_file_path)
+
+        # Handle video files
         elif mime_type in video_mime_types:
             temp_video_path = os.path.join(UPLOAD_FOLDER, 'temp_' + existing_filename)
             file.save(temp_video_path)
@@ -80,8 +87,8 @@ def upload_file():
             # Return response immediately while the video is being processed
             return jsonify({'message': 'Video is being processed', 'file_url': url_for('files.download_file', filename=existing_filename)})
 
+        # Save non-media files directly
         else:
-            # Save non-media files directly
             file.save(existing_file_path)
 
     except Exception as e:
