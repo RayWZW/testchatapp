@@ -909,21 +909,32 @@ function uploadFile(file) {
 
             function getMediaMessage(file, fileUrl) {
     const fileName = file.name;
-    const fileExtension = fileName.split('.').pop();
+    const fileExtension = fileName.split('.').pop().toLowerCase(); // Ensure it's lowercase
     let mediaMessage = '';
 
     if (file.type.startsWith('image/')) {
-        mediaMessage = `<img src="${fileUrl}" alt="Uploaded image">`;
-    } else if (file.type.startsWith('video/') || fileExtension.toLowerCase() === 'mov') {
+        if (fileExtension === 'gif') {
+            // GIF files should display normally
+            mediaMessage = `<img src="${fileUrl}" alt="Uploaded GIF">`;
+        } else {
+            // Other image files
+            mediaMessage = `<img src="${fileUrl}" alt="Uploaded image">`;
+        }
+    } else if (file.type.startsWith('video/') || fileExtension === 'mov') {
         mediaMessage = `<video src="${fileUrl}" controls>Your browser does not support video playback.</video>`;
     } else if (file.type.startsWith('audio/')) {
         mediaMessage = `<audio src="${fileUrl}" controls>Your browser does not support audio playback.</audio>`;
     } else {
-        mediaMessage = `<a href="${fileUrl}" download class="download-button">Download ${fileName} (${fileExtension.toUpperCase()})</a>`;
+        mediaMessage = `<a href="${fileUrl}" download class="download-button">Download ${fileName}</a>`;
     }
 
-    return mediaMessage + `<span class="file-extension">.${fileExtension}</span>`;
+    return mediaMessage;
 }
+
+
+
+
+
 
         });
     </script>
