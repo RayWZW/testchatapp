@@ -773,21 +773,13 @@ function embedDiscordInvite(url) {
     if (match) {
         const formattedUrl = url.startsWith('http') ? url : `https://${url}`;
         return `
-            <div style="position: relative; display: inline-block; width: 300px; height: 100px;">
-                <a href="${formattedUrl}" target="_blank" rel="noopener noreferrer" 
-                   style="display: block; width: 100%; height: 100%; background: none; border: none; text-decoration: none;">
-                    <img src="static/discordinvite.png" 
-                         alt="Discord Invite" 
-                         style="width: 100%; height: 100%; object-fit: contain; border-radius: 8px;"/>
-                    <span style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); 
-                                 color: white; font-weight: bold; font-size: 16px; text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.7);">
-                        JOIN SERVER
-                    </span>
-                </a>
-            </div>`;
+            <a href="${formattedUrl}" target="_blank" rel="noopener noreferrer">
+                <img src="static/discordinvite.png" style="width: 200px; height: 400px; border-radius: 8px;"/>
+            </a>`;
     }
     return null;
 }
+
 
 function formatLinks(message) {
     const urlPattern = /(?<!\S)(https?:\/\/[^\s]+)/g;
