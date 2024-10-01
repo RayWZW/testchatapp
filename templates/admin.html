@@ -24,6 +24,34 @@
             font-size: 2rem;
             font-weight: bold;
         }
+        .user-count-card {
+    background-color: #444;
+    border-radius: 5px;
+    height: 50px; /* Set height to 50 pixels */
+    padding: 0; /* Remove padding */
+    color: #e0e0e0;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
+    margin-bottom: 5px; /* Space below the card */
+    position: absolute;
+    top: 20px;
+    left: 20px;
+    width: 80px; /* Adjust width for better fit */
+    z-index: 100;
+    font-size: 0.6rem; /* Smaller font size */
+    display: flex; /* Use flexbox for alignment */
+    align-items: center; /* Center content vertically */
+    justify-content: center; /* Center content horizontally */
+    overflow: hidden; /* Prevent overflow */
+    text-overflow: ellipsis; /* Ellipsis for overflow text */
+}
+
+.user-count-card::after {
+    content: attr(data-user-count); /* Display user count */
+    font-size: 1.5rem; /* Increased font size for the number */
+    color: #e0e0e0; /* Text color */
+}
+
+
         .user-grid {
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
@@ -75,12 +103,40 @@
         .user-card .menu-content button:hover {
             background-color: #555;
         }
+        .clear-chats {
+            text-align: center;
+            margin-top: 20px;
+        }
+        .clear-chats {
+            position: absolute;
+            top: 5px; /* Adjusted to move it 15px up */
+            right: 20px;
+        }
+        .clear-chats button {
+            padding: 10px 20px; /* Add padding for a rectangular shape */
+            background-color: #121212; /* Match the background color */
+            border: none;
+            color: white;
+            border-radius: 0px; /* Slightly rounded corners */
+            font-size: 1rem;
+            font-weight: bold;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            transition: background-color 0.3s, transform 0.3s;
+        }
+        .clear-chats button:hover {
+            background-color: #1a1a1a; /* Slightly lighter on hover */
+            transform: translateY(-2px);
+        }
     </style>
 </head>
 <body>
     <div class="container">
         <div class="header">
             <h1>Admin Panel</h1>
+        </div>
+        <div class="user-count-card">
+            <h2>Total Users</h2>
+            <p>{{ users|length }}</p>
         </div>
         <div class="user-grid">
             {% for username, details in users.items() %}
@@ -102,6 +158,9 @@
                 </div>
             </div>
             {% endfor %}
+        </div>
+        <div class="clear-chats">
+            <button onclick="clearAllChats()">Clear All Chats</button>
         </div>
     </div>
 
@@ -169,7 +228,24 @@
                 }
             }
         }
-    </script>
 
+        async function clearAllChats() {
+            if (confirm("Are you sure you want to clear all chat logs?")) {
+                try {
+                    const response = await fetch('/admin/clear_all_chats', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                    });
+                    const result = await response.json();
+                    alert(result.message);
+                    location.reload();
+                } catch (error) {
+                    alert('An error occurred while clearing chat logs.');
+                }
+            }
+        }
+    </script>
 </body>
 </html>
