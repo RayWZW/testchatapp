@@ -1,6 +1,7 @@
 # utils/admin.py
 from flask import Blueprint, session, redirect, url_for, flash, request, render_template, jsonify
 from utils.utils import load_json_file, save_json_file
+import os
 
 admin_bp = Blueprint('admin', __name__)
 
@@ -101,3 +102,14 @@ def ban_user_route():
 def clear_user_messages_route():
     username = request.json.get('username')
     return clear_user_messages(username)
+
+@admin_bp.route('/clear_all_chats', methods=['POST'])
+def clear_all_chats():
+    if 'username' not in session or not is_admin(session['username']):
+        return jsonify({'message': 'Unauthorized'}), 403
+
+    if os.path.exists(CHAT_LOGS_FILE):
+        os.remove(CHAT_LOGS_FILE)
+
+    return jsonify({'message': 'All chat logs cleared successfully'})
+
