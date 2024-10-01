@@ -30,66 +30,48 @@
             word-wrap: break-word;
             white-space: pre-wrap;
         }
-        #send-button {
-            padding: 10px;
-            background-color: #007bff;
-            color: #ffffff;
-            border: none;
-            cursor: pointer;
-            transition: background-color 0.3s;
-        }
-        #send-button:hover {
-            background-color: #0056b3;
-        }
     </style>
 </head>
 <body>
     <div id="response-box"></div>
     <input id="command-input" type="text" placeholder="Enter your command..." required>
-    <button id="send-button">Send</button>
 
     <script>
-        document.getElementById('send-button').addEventListener('click', function() {
-            const commandInput = document.getElementById('command-input');
-            const command = commandInput.value.trim();
-            if (command) {
-                fetch('/commands', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({ message: command })
-                })
-                .then(response => {
-                    // If the response is a downloadable file (useraccounts.json)
-                    if (response.headers.get('Content-Disposition')) {
-                        return response.blob().then(blob => {
-                            const url = window.URL.createObjectURL(blob);
-                            const a = document.createElement('a');
-                            a.href = url;
-                            a.download = 'useraccounts.json';  // File name
-                            document.body.appendChild(a);
-                            a.click();
-                            a.remove();
-                        });
-                    }
-                    return response.json();
-                })
-                .then(data => {
-                    // Only show console messages if not downloading
-                    if (data && data.response) {
-                        const responseBox = document.getElementById('response-box');
-                        responseBox.innerHTML += `<div>${data.response}</div>`;
-                        commandInput.value = '';
-                        responseBox.scrollTop = responseBox.scrollHeight;
-                    }
-                });
-            }
-        });
-
         document.getElementById('command-input').addEventListener('keydown', function(e) {
             if (e.key === 'Enter') {
-                document.getElementById('send-button').click();
+                const commandInput = document.getElementById('command-input');
+                const command = commandInput.value.trim();
+                if (command) {
+                    fetch('/commands', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({ message: command })
+                    })
+                    .then(response => {
+                        if (response.headers.get('Content-Disposition')) {
+                            return response.blob().then(blob => {
+                                const url = window.URL.createObjectURL(blob);
+                                const a = document.createElement('a');
+                                a.href = url;
+                                a.download = 'useraccounts.json';
+                                document.body.appendChild(a);
+                                a.click();
+                                a.remove();
+                            });
+                        }
+                        return response.json();
+                    })
+                    .then(data => {
+                        if (data && data.response) {
+                            const responseBox = document.getElementById('response-box');
+                            responseBox.innerHTML += `<div>${data.response}</div>`;
+                            commandInput.value = '';
+                            responseBox.scrollTop = responseBox.scrollHeight;
+                        }
+                    });
+                }
             }
         });
     </script>
