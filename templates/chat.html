@@ -603,7 +603,7 @@ sendButton.addEventListener('click', () => {
         });
 
     socket.on('message', function(msg) {
-        const messageId = msg.timestamp; // Assuming timestamp is unique for each message
+        const messageId = msg.timestamp; 
         if (!Array.from(chatBox.children).some(child => child.dataset.timestamp === messageId)) {
             chatBox.appendChild(createMessageElement(msg));
             chatBox.scrollTop = chatBox.scrollHeight;
@@ -633,14 +633,12 @@ sendButton.addEventListener('click', () => {
         }, 1000);
     });
 
-
-
     function fetchMessages() {
         fetch('/get_messages')
             .then(response => response.json())
             .then(messages => {
                 messages.forEach(msg => {
-                    const messageId = msg.timestamp; // Assuming timestamp is unique for each message
+                    const messageId = msg.timestamp; 
                     if (!Array.from(chatBox.children).some(child => child.dataset.timestamp === messageId)) {
                         chatBox.appendChild(createMessageElement(msg));
                     }
@@ -648,7 +646,6 @@ sendButton.addEventListener('click', () => {
                 chatBox.scrollTop = chatBox.scrollHeight; 
             });
     }
-
 
                 let typingUsers = new Set();
                 let typingTimeouts = new Map();
@@ -771,7 +768,7 @@ function embedDiscordInvite(url) {
     const match = url.match(discordInvitePattern);
 
     if (match) {
-        const formattedUrl = url.startsWith('http') ? url : `https://${url}`;
+        const formattedUrl = url.startsWith('http') ? url : `https:
         return `
             <a href="${formattedUrl}" target="_blank" rel="noopener noreferrer">
                 <img src="static/discordinvite.png" style="width: 200px; height: 400px; border-radius: 8px;"/>
@@ -779,7 +776,6 @@ function embedDiscordInvite(url) {
     }
     return null;
 }
-
 
 function formatLinks(message) {
     const urlPattern = /(?<!\S)(https?:\/\/[^\s]+)/g;
@@ -901,15 +897,15 @@ function uploadFile(file) {
 
             function getMediaMessage(file, fileUrl) {
     const fileName = file.name;
-    const fileExtension = fileName.split('.').pop().toLowerCase(); // Ensure it's lowercase
+    const fileExtension = fileName.split('.').pop().toLowerCase(); 
     let mediaMessage = '';
 
     if (file.type.startsWith('image/')) {
         if (fileExtension === 'gif') {
-            // GIF files should display normally
+
             mediaMessage = `<img src="${fileUrl}" alt="Uploaded GIF">`;
         } else {
-            // Other image files
+
             mediaMessage = `<img src="${fileUrl}" alt="Uploaded image">`;
         }
     } else if (file.type.startsWith('video/') || fileExtension === 'mov') {
@@ -922,11 +918,6 @@ function uploadFile(file) {
 
     return mediaMessage;
 }
-
-
-
-
-
 
         });
     </script>
