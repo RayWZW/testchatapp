@@ -892,10 +892,10 @@ sendButton.addEventListener('click', () => {
         });
 
         socket.on('message', function(msg) {
-    const messageId = msg.timestamp; // Assuming timestamp is unique for each message
+    const messageId = msg.timestamp;
 
     // Fetch all messages from the server every time a new message is received
-    fetchTaggedMessages();
+    fetchMessages();
 
     // Check if the message is already displayed in the chatbox
     if (!Array.from(chatBox.children).some(child => child.dataset.timestamp === messageId)) {
@@ -919,6 +919,7 @@ sendButton.addEventListener('click', () => {
     }
 
 
+
         setTimeout(() => {
             if (msg.type === 'file') {
                 window.scrollTo(0, document.body.scrollHeight);
@@ -931,112 +932,56 @@ sendButton.addEventListener('click', () => {
     
 
 
-    function fetchTaggedMessages() {
-    fetch('/data/chatlogs.json') // Load messages from the server endpoint
+    let previousMessages = [];
+
+function fetchMessages() {
+    fetch('/data/chatlogs.json')
         .then(response => {
             if (!response.ok) {
-                console.error('Chatlogs not found.'); // Log the error
-                return; // Exit the function
+                console.error('Chatlogs not found. Unable to fetch messages.');
+                return;
             }
             return response.json();
         })
         .then(data => {
-            const messages = data.messages || []; // Get messages or default to an empty array
+            const messages = data.messages || [];
 
-            // Filter messages to get only those containing <video> or <iframe>
-            const taggedMessages = messages.filter(msg => 
-                msg.message.includes('<video') || msg.message.includes('<iframe')
-            );
-
-            // Preserve existing tagged message IDs
-            const currentTaggedMessageIds = new Set();
-            Array.from(chatBox.children).forEach(child => {
-                if (child.classList.contains('media-message')) {
-                    currentTaggedMessageIds.add(child.dataset.timestamp); // Track media message IDs
-                }
-            });
-
-            // Clear non-tagged messages but keep tagged messages
-            Array.from(chatBox.children).forEach(child => {
-                const messageId = child.dataset.timestamp;
-                if (!currentTaggedMessageIds.has(messageId)) {
-                    chatBox.removeChild(child); // Remove non-tagged messages
-                }
-            });
-
-            // Append new tagged messages to the chatbox
-            taggedMessages.forEach(msg => {
-                const existingElement = Array.from(chatBox.children).find(child => child.dataset.timestamp === msg.timestamp);
-                if (!existingElement) {
-                    chatBox.appendChild(createMessageElement(msg)); // Append new tagged message
-                }
-            });
-
-            // Scroll to the bottom of the chatbox
-            chatBox.scrollTop = chatBox.scrollHeight; 
-        })
-        .catch(error => console.error('Error loading messages:', error)); // Error handling
-}
-
-
-function fetchNonTaggedMessages() {
-    fetch('/data/chatlogs.json') // Load messages from the server endpoint
-        .then(response => {
-            if (!response.ok) {
-                // If the chatlogs.json is not found, clear the chatbox
-                chatBox.innerHTML = ''; // Clear current messages
-                console.error('Chatlogs not found. Chatbox emptied.'); // Log the error
-                return; // Exit the function
+            // If messages haven't changed, do nothing
+            if (JSON.stringify(messages) === JSON.stringify(previousMessages)) {
+                return; // No change, exit the function
             }
-            return response.json();
-        })
-        .then(data => {
-            const messages = data.messages || []; // Get messages or default to an empty array
 
-            // Create a set of current media message timestamps to preserve them
-            const currentMediaMessageIds = new Set();
-
-            // Check for existing messages in chatbox and track media messages
+            // Remove messages that are no longer in the new data
             Array.from(chatBox.children).forEach(child => {
                 const messageId = child.dataset.timestamp;
-                if (child.classList.contains('media-message')) {
-                    currentMediaMessageIds.add(messageId); // Track media message IDs
+                if (!messages.some(msg => msg.timestamp === messageId)) {
+                    chatBox.removeChild(child);
                 }
             });
 
-            // Clear the chatbox of non-tagged messages but keep media messages
-            Array.from(chatBox.children).forEach(child => {
-                const messageId = child.dataset.timestamp;
-                // Remove only non-tagged messages
-                if (!currentMediaMessageIds.has(messageId) && !child.innerHTML.includes('<video') && !child.innerHTML.includes('<iframe')) {
-                    chatBox.removeChild(child); // Remove non-tagged messages
-                }
-            });
-
-            // Append each new non-tagged message to the chatbox
+            // Add new messages or update existing ones
             messages.forEach(msg => {
                 const messageId = msg.timestamp;
+                const existingElement = Array.from(chatBox.children).find(child => child.dataset.timestamp === messageId);
 
-                // Check if message does NOT contain <video> or <iframe>
-                if (!msg.message.includes('<video') && !msg.message.includes('<iframe')) {
-                    const existingElement = Array.from(chatBox.children).find(child => child.dataset.timestamp === messageId);
-                    if (!existingElement) {
-                        chatBox.appendChild(createMessageElement(msg)); // Append new message
-                    } else if (msg.message !== '') {
-                        // Update existing message if it's a text message
-                        existingElement.innerHTML = createMessageElement(msg).innerHTML; // Update the content
-                    }
+                if (!existingElement) {
+                    chatBox.appendChild(createMessageElement(msg));
+                } else if (existingElement.innerHTML !== createMessageElement(msg).innerHTML) {
+                    existingElement.innerHTML = createMessageElement(msg).innerHTML;
                 }
             });
 
+            // Update the previous messages to the current ones
+            previousMessages = messages;
+
             // Scroll to the bottom of the chatbox
-            chatBox.scrollTop = chatBox.scrollHeight; 
+            chatBox.scrollTop = chatBox.scrollHeight;
         })
-        .catch(error => console.error('Error loading messages:', error)); // Error handling
+        .catch(error => console.error('Error loading messages:', error));
 }
 
-// Fetch non-tagged messages every 500 ms
-setInterval(fetchNonTaggedMessages, 500);
+setInterval(fetchMessages, 500);
+
 
 
 
