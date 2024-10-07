@@ -7,7 +7,7 @@
     <style>
         body {
             font-family: 'Helvetica Neue', Arial, sans-serif;
-            background: linear-gradient(135deg, #2c2f33, #23272a); /* Gradient background */
+            background: linear-gradient(135deg, #2c2f33, #23272a);
             color: #e0e0e0;
             margin: 0;
             padding: 20px;
@@ -17,33 +17,42 @@
             margin: 0 auto;
         }
         .user-info {
-            background-color: #3a3c40; /* Darker background for user info */
+            background-color: #3a3c40;
             padding: 20px;
             border-radius: 8px;
             box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
             transition: transform 0.3s;
         }
         .user-info:hover {
-            transform: scale(1.02); /* Subtle scale effect on hover */
+            transform: scale(1.02);
         }
         .user-info h2 {
             margin-top: 0;
-            font-size: 24px; /* Increased font size */
-            color: #ffffff; /* Title color */
+            font-size: 24px;
+            color: #ffffff;
         }
         .user-info p {
             margin: 10px 0;
-            font-size: 16px; /* Font size for info */
+            font-size: 16px;
         }
         .back-link {
             display: inline-block;
             margin-bottom: 20px;
             color: #007bff;
             text-decoration: none;
-            font-size: 16px; /* Font size for the back link */
+            font-size: 16px;
         }
         .back-link:hover {
             text-decoration: underline;
+        }
+        .profile-pic {
+            width: 100px; /* Set width for profile picture */
+            height: 100px; /* Set height for profile picture */
+            border-radius: 50%; /* Make it circular */
+            margin-bottom: 15px; /* Space between image and text */
+            display: block; /* Center the image */
+            object-fit: cover; /* Crop the image to fit */
+            border: 2px solid #ffffff; /* Optional: Add a border around the image */
         }
     </style>
 </head>
@@ -51,6 +60,7 @@
     <div class="container">
         <a href="/" class="back-link">Back to Chat</a>
         <div class="user-info">
+            <img id="profile-pic" class="profile-pic" src="" alt="Profile Picture" />
             <h2>User Information</h2>
             <p><strong>Username:</strong> {{ username }}</p>
             <p><strong>Created At:</strong> <span id="created-at">Loading...</span></p>
@@ -58,7 +68,27 @@
     </div>
     <script>
         document.addEventListener('DOMContentLoaded', function() {
-            fetch(`/get_user_info?username=${encodeURIComponent('{{ username }}')}`)
+            const username = '{{ username }}';
+            const profilePic = document.getElementById('profile-pic');
+            const userInfoUrl = `/get_user_info?username=${encodeURIComponent(username)}`;
+            const profilePicUrl = `static/pfps/${username}.png`; // User profile picture URL
+            const defaultPicUrl = 'static/boring/default.png'; // Default profile picture URL
+
+            // Check if the profile picture exists
+            fetch(profilePicUrl, { method: 'HEAD' })
+                .then(response => {
+                    if (response.ok) {
+                        profilePic.src = profilePicUrl; // Use user's profile picture
+                    } else {
+                        profilePic.src = defaultPicUrl; // Use default picture if not found
+                    }
+                })
+                .catch(() => {
+                    profilePic.src = defaultPicUrl; // Use default picture in case of error
+                });
+
+            // Fetch user info
+            fetch(userInfoUrl)
                 .then(response => response.json())
                 .then(userInfo => {
                     if (userInfo.error) {
@@ -71,7 +101,7 @@
 
         function formatDate(timestamp) {
             const date = new Date(timestamp);
-            return `${date.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })} at ${date.toLocaleString('en-US', { hour: 'numeric', hour12: true }).replace(/:\d{1,2}$/, '')}`; // Format to include the date and hour with AM/PM
+            return `${date.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })} at ${date.toLocaleString('en-US', { hour: 'numeric', hour12: true }).replace(/:\d{1,2}$/, '')}`;
         }
     </script>
 </body>
