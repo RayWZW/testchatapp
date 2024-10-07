@@ -168,6 +168,14 @@ button {
     margin-top: 10px; 
 }
 
+.profile-picture {
+    width: 40px; /* Set your desired size */
+    height: 40px;
+    border-radius: 50%; /* Makes the image circular */
+    object-fit: cover; /* Ensures the image covers the area without distortion */
+}
+
+
 .container {
     display: flex; /* Use flexbox to align buttons horizontally */
     align-items: flex-end; /* Align buttons to the bottom of the container */
@@ -520,6 +528,38 @@ button {
     text-transform: uppercase; /* Make text uppercase */
 }
 
+#change-pfp-button {
+    position: absolute; /* Use absolute positioning */
+    background-color: #42464d; /* Dark button background */
+    border: none; /* No border */
+    width: 120px; /* Set width */
+    height: 50px; /* Set height */
+    color: #ffffff; /* Button text color */
+    cursor: pointer; /* Cursor style */
+    z-index: 1000; /* Stack order */
+    transition: background-color 0.3s, transform 0.2s; /* Transition effects */
+    font-size: 14px; /* Font size */
+    display: flex; /* Use flexbox for alignment */
+    align-items: center; /* Vertical alignment */
+    justify-content: center; /* Horizontal alignment */
+    top: 5px; /* Set y-coordinate */
+    right: 600px; /* Set x-coordinate (adjust as needed) */
+    text-transform: uppercase; /* Uppercase text */
+    font-weight: bold; /* Bold text */
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.4); /* Box shadow */
+    border-radius: 0; /* No border-radius for a rectangular shape */
+}
+
+#change-pfp-button:hover {
+    background-color: #4f545c; /* Lighter on hover */
+    transform: scale(1.05); /* Slightly scale on hover */
+}
+
+#change-pfp-button:active {
+    background-color: #3a3a3a; /* Darker on active */
+    transform: scale(0.98); /* Slightly scale down on active */
+}
+
 
 </style>
 
@@ -542,6 +582,8 @@ button {
  <button id="adminButton" class="open-commands-button">ADMIN PANEL</button>
 
     </div>
+    <button id="change-pfp-button" class="open-commands-button" onclick="window.open('/account_settings', '_blank');">Change PFP</button>
+
     <button id="reload-button" class="open-commands-button">Reload</button>
         <div id="chat-container">
 
@@ -957,8 +999,7 @@ function formatTimestamp(timestamp) {
     }
 }
 
-
-            function createMessageElement(msg) {
+function createMessageElement(msg) {
     const div = document.createElement('div');
     div.className = 'message';
 
@@ -970,14 +1011,35 @@ function formatTimestamp(timestamp) {
     ? 'color: red; font-weight: bold;' 
     : '';
 
+    const profilePictureUrl = `/static/pfps/${msg.username.toLowerCase()}.png`; 
+    const defaultProfilePictureUrl = '/static/boring/default.png'; 
+
+    const img = new Image();
+    img.src = profilePictureUrl;
+
+    img.onerror = function() {
+        img.src = defaultProfilePictureUrl; 
+    };
+
     div.innerHTML = `
-        <span class="username" style="${usernameStyle}">${msg.username}:</span>
-        ${wrappedMessage}
-        <span class="timestamp">${formattedTime}</span>
+        <div class="message-content" style="display: flex; align-items: center; justify-content: space-between;">
+            <div style="display: flex; align-items: center;">
+                <img src="${profilePictureUrl}" alt="${msg.username}'s profile picture" class="profile-picture" style="margin-right: 8px;" onerror="this.src='${defaultProfilePictureUrl}';">
+                <div>
+                    <span class="username" style="${usernameStyle}">${msg.username}:</span>
+                    ${wrappedMessage}
+                </div>
+            </div>
+            <span class="timestamp">${formattedTime}</span>
+        </div>
     `;
 
     return div;
 }
+
+
+
+
 
             function wrapLongMessage(text, maxLength) {
                 if (text.length <= maxLength) {
