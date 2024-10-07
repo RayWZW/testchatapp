@@ -14,65 +14,79 @@ body {
     display: flex;
     height: 100vh;
     flex-direction: row;
+    flex-wrap: wrap; /* Allow wrapping of children if necessary */
 }
 
 .open-commands-button {
-    display: flex; /* Use flexbox for centering */
-    align-items: center; /* Center text vertically */
-    justify-content: center; /* Center text horizontally */
-    height: 50px; /* Match height with other buttons */
-    padding: 0 20px; /* Match padding */
-    background-color: #42464d; /* Dark button background */
-    color: #ffffff; /* Button text color */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 50px;
+    padding: 0 20px;
+    background-color: #42464d;
+    color: #ffffff;
     border: none;
-    border-radius: 0; /* Straight edges */
+    border-radius: 0;
     cursor: pointer;
     position: absolute;
     top: 5px;
     right: 15px;
     z-index: 1000;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15); /* Match box shadow */
-    transition: background-color 0.3s, box-shadow 0.3s, transform 0.2s; /* Match transitions */
-    font-size: 14px; /* Match font size */
-    max-width: 120px; /* Limit the maximum width */
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+    transition: background-color 0.3s, box-shadow 0.3s, transform 0.2s;
+    font-size: 14px;
+    max-width: 120px;
 }
 
-
 .open-commands-button:hover {
-    background-color: #4f545c; /* Lighter on hover */
+    background-color: #4f545c;
     transform: scale(1.05);
 }
 
 .userbutton {
-    background-color: #2f3136; /* Dark background for user buttons */
-    color: #dcddde; /* Light gray text */
-    border: 1px solid #3f4146; /* Darker border */
+    background-color: #2f3136;
+    color: #dcddde;
+    border: 1px solid #3f4146;
     padding: 12px;
-    border-radius: 4px; /* Rounded corners */
+    border-radius: 4px;
     cursor: pointer;
     width: 100%;
     text-align: left;
-    margin: 5px 0; /* Margin between buttons */
+    margin: 2.5% 0; /* Using percentage to adjust spacing based on screen size */
     box-shadow: none;
     transition: background-color 0.3s;
 }
 
 .userbutton:hover {
-    background-color: #4f545c; /* Hover effect */
+    background-color: #4f545c;
 }
 
 .userbutton:active {
-    background-color: #42464d; /* Darker when active */
+    background-color: #42464d;
 }
 
+/* Media queries for responsiveness */
+@media (max-width: 768px) {
+    .userbutton {
+        margin: 5% 0; /* Increase margin on smaller screens */
+    }
+}
+
+@media (max-width: 480px) {
+    .userbutton {
+        margin: 10% 0; /* Further increase margin on very small screens */
+    }
+}
+
+
 #sidebar {
-    width: 200px; /* Increased width for better spacing */
+    width: 200px; /* Default width for the sidebar */
     background-color: #2c2f33; /* Sidebar background */
     padding: 10px;
     overflow-y: auto;
     height: 100%;
     border-right: 1px solid #40444b; /* Border for separation */
-    transition: width 0.3s;
+    transition: width 0.3s, left 0.3s; /* Smooth transition for width and position */
 }
 
 #sidebar::-webkit-scrollbar {
@@ -93,23 +107,49 @@ body {
     border-radius: 5px;
 }
 
-#chat-container {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    margin-left: 50px; /* Adjust as necessary */
-    transition: margin-left 0.3s;
+/* Media queries for responsiveness */
+@media (max-width: 768px) {
+    #sidebar {
+        width: 150px; /* Reduced width on smaller screens */
+    }
 }
 
-#chat-box {
-    flex: 1;
-    overflow-y: auto; 
-    padding: 10px;
-    padding-left: 15px;
-    border-bottom: 1px solid #333;
-    word-wrap: break-word;
-    white-space: pre-wrap;
+@media (max-width: 480px) {
+    #sidebar {
+        width: 100px; /* Further reduced width on very small screens */
+        position: absolute; /* Positioning to prevent overlap */
+        left: -100px; /* Hide off-screen */
+        transition: left 0.3s; /* Smooth transition for opening */
+    }
+
+    #sidebar.open {
+        left: 0; /* Position it back when open */
+    }
 }
+
+/* Media query for aspect ratio 16:9 or less */
+@media (max-aspect-ratio: 14/10) {
+    #sidebar {
+        display: none; /* Hide sidebar */
+    }
+
+    #chat-container {
+        margin-left: 0; /* Remove margin to utilize full width */
+        flex: 1; /* Allow chat container to take the full space */
+    }
+}
+
+#chat-container {
+    display: flex;
+    flex-direction: column;
+    flex: 1; /* Allow chat container to fill available space */
+    margin-left: 50px; /* Adjust as necessary for larger screens */
+    transition: margin-left 0.3s; /* Smooth transition for margin */
+    padding-top: 0; /* No padding needed when sidebar is hidden */
+}
+
+
+
 
 #chat-box::-webkit-scrollbar {
     width: 16px; /* Scrollbar width */
@@ -135,6 +175,24 @@ body {
     padding-left: 50px; /* Space for icons or buttons */
 }
 
+#chat-container {
+    display: flex;
+    flex-direction: column;
+    flex: 1; /* Allow chat container to fill available space */
+    margin-left: 50px; /* Adjust as necessary for larger screens */
+    transition: margin-left 0.3s; /* Smooth transition for margin */
+    height: 100%; /* Ensure the container takes full height */
+}
+
+#chat-box {
+    flex: 1; /* Allow chat box to take up remaining space */
+    overflow-y: auto; 
+    padding: 10px;
+    padding-left: 15px;
+    border-bottom: 1px solid #333;
+    word-wrap: break-word;
+    white-space: pre-wrap;
+}
 
 #message-form {
     display: flex;
@@ -142,6 +200,8 @@ body {
     padding: 10px;
     border-top: 1px solid #40444b; /* Lighter border for visibility */
     flex-wrap: wrap;
+    box-shadow: 0 -2px 5px rgba(0, 0, 0, 0.3); /* Optional shadow for separation */
+    margin-top: auto; /* Push the message form to the bottom */
 }
 
 #message-input {
@@ -158,8 +218,58 @@ body {
     box-sizing: border-box;
     font-family: inherit;
     word-break: break-word;
-    padding-bottom: 30px; 
+    padding-bottom: 10px; /* Adjust padding to avoid unnecessary space */
 }
+
+/* Media queries for responsiveness */
+@media (max-aspect-ratio: 9/16) {
+    #chat-container {
+        height: 100vh; /* Full viewport height for smaller screens */
+    }
+
+    #chat-box {
+        padding-bottom: 0; /* Remove bottom padding for chat box */
+    }
+
+    #message-form {
+        margin-top: auto; /* Ensures it stays at the bottom */
+    }
+}
+
+@media (max-width: 768px) {
+    #sidebar {
+        width: 150px; /* Reduced width on smaller screens */
+    }
+}
+
+@media (max-width: 480px) {
+    #sidebar {
+        width: 100px; /* Further reduced width on very small screens */
+        position: absolute; /* Positioning to prevent overlap */
+        left: -100px; /* Hide off-screen */
+        transition: left 0.3s; /* Smooth transition for opening */
+    }
+
+    #sidebar.open {
+        left: 0; /* Position it back when open */
+    }
+}
+
+/* Media queries for responsiveness */
+@media (max-width: 480px) {
+    #chat-container {
+        flex-direction: column; /* Ensure the chat container stacks vertically */
+    }
+
+    #message-form {
+        padding: 5px; /* Reduced padding for smaller screens */
+    }
+
+    #message-input {
+        padding: 8px; /* Reduced input padding for smaller screens */
+    }
+}
+
 
 #char-count {
     position: absolute;
@@ -170,17 +280,68 @@ body {
     pointer-events: none; 
 }
 
+/* Media queries for responsiveness */
+@media (max-width: 768px) {
+    #chat-container {
+        margin-left: 20px; /* Reduce left margin on smaller screens */
+    }
+
+    #message-form {
+        flex-direction: column; /* Stack elements vertically */
+    }
+
+    #message-input {
+        margin-bottom: 10px; /* Space between input and any other buttons */
+        padding-bottom: 15px; /* Adjust padding for better spacing */
+    }
+
+    #char-count {
+        left: -30px; /* Adjust position for better visibility */
+        bottom: 40px; /* Adjust bottom position */
+    }
+}
+
+@media (max-width: 480px) {
+    #chat-container {
+        margin-left: 10px; /* Further reduce left margin */
+    }
+
+    #message-form {
+        padding: 5px; /* Reduce padding for smaller screens */
+    }
+
+    #message-input {
+        padding: 8px; /* Adjust padding for smaller screens */
+        min-height: 40px; /* Set a minimum height for usability */
+    }
+
+    #char-count {
+        left: -20px; /* Further adjust position */
+        bottom: 30px; /* Further adjust bottom position */
+        font-size: 0.7em; /* Smaller font size */
+    }
+}
+
+
 
 button {
     margin-top: 10px; 
 }
 
-.profile-picture {
-    width: 40px; /* Set your desired size */
-    height: 40px;
-    border-radius: 50%; /* Makes the image circular */
-    object-fit: cover; /* Ensures the image covers the area without distortion */
+.message {
+    display: flex; /* Use flexbox for alignment */
+    align-items: center; /* Center items vertically */
+    margin-bottom: 10px; /* Space between messages */
 }
+
+.profile-picture {
+    width: 40px; 
+    height: 40px;
+    border-radius: 50%; 
+    object-fit: cover; 
+    margin-right: 5px; /* Space between the picture and username */
+}
+
 
 
 .container {
@@ -354,37 +515,36 @@ button {
 }
 
 #reload-button {
-    position: absolute; /* Use absolute positioning */
-    background-color: #42464d; /* Dark button background */
-    border: none; /* No border */
-    width: 120px; /* Set width */
-    height: 50px; /* Set height */
-    color: #ffffff; /* Button text color */
-    cursor: pointer; /* Cursor style */
-    z-index: 1000; /* Stack order */
-    transition: background-color 0.3s, transform 0.2s; /* Transition effects */
-    font-size: 14px; /* Font size */
-    display: flex; /* Use flexbox for alignment */
-    align-items: center; /* Vertical alignment */
-    justify-content: center; /* Horizontal alignment */
-    top: 5px; /* Set y-coordinate */
-    right: 420px; /* Set x-coordinate */
-    text-transform: uppercase; /* Uppercase text */
-    font-weight: bold; /* Bold text */
-    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.4); /* Box shadow */
-    border-radius: 0; /* No border-radius for a rectangular shape */
+    position: absolute; 
+    background-color: #42464d; 
+    border: none; 
+    width: 120px; 
+    height: 50px; 
+    color: #ffffff; 
+    cursor: pointer; 
+    z-index: 1000; 
+    transition: background-color 0.3s, transform 0.2s; 
+    font-size: 14px; 
+    display: flex; 
+    align-items: center; 
+    justify-content: center; 
+    top: 5px; 
+    right: calc(5% + 290px); /* Move left slightly using calc */
+    text-transform: uppercase; 
+    font-weight: bold; 
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.4); 
+    border-radius: 0; 
 }
 
 #reload-button:hover {
-    background-color: #4f545c; /* Lighter on hover */
-    transform: scale(1.05); /* Slightly scale on hover */
+    background-color: #4f545c; 
+    transform: scale(1.05); 
 }
 
 #reload-button:active {
-    background-color: #3a3a3a; /* Darker on active */
-    transform: scale(0.98); /* Slightly scale down on active */
+    background-color: #3a3a3a; 
+    transform: scale(0.98); 
 }
-
 
 
 #adminButton {
@@ -392,8 +552,8 @@ button {
     background-color: #42464d; /* Dark button background */
     color: #ffffff; /* Button text color */
     border: none;
-    width: 150px; /* Set width to 50px for a square button */
-    height: 50px; /* Set height to 50px for a square button */
+    width: 150px; /* Set width */
+    height: 50px; /* Set height */
     cursor: pointer;
     z-index: 1000;
     padding: 10px 15px; /* Adjusted padding for visual balance */
@@ -402,7 +562,7 @@ button {
     align-items: center;
     justify-content: center;
     top: 5px; /* Set y-coordinate */
-    right: 230px; /* Set x-coordinate */
+    right: calc(5% + 130px); /* Adjusted right position based on button width */
     box-shadow: 0 2px 5px rgba(0, 0, 0, 0.4); /* Updated box shadow */
     transition: background-color 0.3s, transform 0.2s; /* Smooth transitions */
 }
@@ -415,18 +575,6 @@ button {
 #adminButton:active {
     background-color: #3a3a3a; /* Darker background on active */
     transform: scale(0.98); /* Slight scale effect on active */
-}
-
-
-
-#adminButton:hover {
-    background-color: #444;
-    transform: scale(1.05);
-}
-
-#adminButton:active {
-    background-color: #3a3a3a;
-    transform: scale(0.98);
 }
 
 
@@ -564,7 +712,7 @@ button {
     align-items: center; /* Vertical alignment */
     justify-content: center; /* Horizontal alignment */
     top: 5px; /* Set y-coordinate */
-    right: 600px; /* Set x-coordinate (adjust as needed) */
+    right: 550px; /* Set x-coordinate (adjust as needed) */
     text-transform: uppercase; /* Uppercase text */
     font-weight: bold; /* Bold text */
     box-shadow: 0 2px 5px rgba(0, 0, 0, 0.4); /* Box shadow */
@@ -777,81 +925,160 @@ sendButton.addEventListener('click', () => {
     
 
 
-    function fetchMessages() {
-        fetch('/get_messages')
-            .then(response => response.json())
-            .then(messages => {
-                messages.forEach(msg => {
-                    const messageId = msg.timestamp; // Assuming timestamp is unique for each message
-                    if (!Array.from(chatBox.children).some(child => child.dataset.timestamp === messageId)) {
-                        chatBox.appendChild(createMessageElement(msg));
-                    }
-                });
-                chatBox.scrollTop = chatBox.scrollHeight; 
-            });
+
+let currentMessages = [];
+const loadedMediaMessages = new Set(); // To keep track of loaded media messages
+
+function fetchMessages() {
+    fetch('/data/chatlogs.json')
+        .then(response => {
+            if (!response.ok) {
+                console.error('Chatlogs not found. Clearing chat box.');
+                clearChatBox(); // Clear the chat box if chatlogs.json is not found
+                return;
+            }
+            return response.json();
+        })
+        .then(data => {
+            const newMessages = data.messages || [];
+            updateMessages(newMessages);
+            currentMessages = newMessages; // Update the current messages
+        })
+        .catch(error => {
+            console.error('Error loading messages:', error);
+            clearChatBox(); // Clear the chat box on error
+        });
+}
+
+// Function to clear the chat box
+function clearChatBox() {
+    while (chatBox.firstChild) {
+        chatBox.removeChild(chatBox.firstChild);
+    }
+}
+
+// Function to update messages based on new data
+function updateMessages(newMessages) {
+    const existingTimestamps = new Set(Array.from(chatBox.children).map(child => child.dataset.timestamp));
+
+    // Check for existing messages and update them accordingly
+    Array.from(chatBox.children).forEach(child => {
+        const childTimestamp = child.dataset.timestamp;
+        const newMessage = newMessages.find(msg => msg.timestamp === childTimestamp);
+
+        if (newMessage) {
+            // If the message exists, check if it has changed, but skip video/embed/iframe messages
+            if (!containsMediaTags(newMessage.message) && child.innerHTML !== createMessageElement(newMessage).innerHTML) {
+                child.innerHTML = createMessageElement(newMessage).innerHTML; // Update content if changed
+            }
+        } else {
+            // If the message doesn't exist in the new data and is not a media message, remove it
+            if (!containsMediaTags(child.innerHTML)) {
+                chatBox.removeChild(child); // Remove messages not present in the new data and not media
+            }
+        }
+    });
+
+    // Add new messages that are not currently displayed
+    newMessages.forEach(msg => {
+        const messageId = msg.timestamp;
+
+        // Load all messages initially, including media messages only if not loaded before
+        if (!existingTimestamps.has(messageId)) {
+            if (containsMediaTags(msg.message)) {
+                if (!loadedMediaMessages.has(messageId)) {
+                    chatBox.appendChild(createMessageElement(msg)); // Append new media message
+                    loadedMediaMessages.add(messageId); // Mark this media message as loaded
+                }
+            } else {
+                chatBox.appendChild(createMessageElement(msg)); // Append new text message
+            }
+        }
+    });
+
+    // Scroll to the bottom of the chatbox
+    chatBox.scrollTop = chatBox.scrollHeight;
+}
+
+// Function to check if a message contains video, embed, or iframe tags
+function containsMediaTags(message) {
+    return message.includes('<video') || message.includes('<embed') || message.includes('<iframe');
+}
+
+// Fetch messages every 500 ms
+setInterval(fetchMessages, 500);
+
+
+let typingUsers = new Set();
+let typingTimeouts = new Map();
+
+socket.on('typing', function(data) {
+    // Add the user to the set of typing users
+    typingUsers.add(data.username);
+    updateTypingIndicator(); // Update the indicator with the current set of typing users
+
+    // Clear any existing timeout for this user
+    if (typingTimeouts.has(data.username)) {
+        clearTimeout(typingTimeouts.get(data.username));
     }
 
+    // Set a timeout to remove the user from the set after 2 seconds
+    typingTimeouts.set(data.username, setTimeout(() => {
+        typingUsers.delete(data.username);
+        updateTypingIndicator(); // Update the indicator after removal
+    }, 2000));
+});
 
-                let typingUsers = new Set();
-                let typingTimeouts = new Map();
+// Update the typing indicator display
+function updateTypingIndicator() {
+    if (typingUsers.size > 0) {
+        typingIndicator.textContent = `${Array.from(typingUsers).join(', ')} ${typingUsers.size > 1 ? 'are' : 'is'} typing...`;
+    } else {
+        typingIndicator.textContent = ''; // Clear the indicator if no one is typing
+    }
+}
 
-                socket.on('typing', function(data) {
-                    typingUsers.add(data.username);
-                    updateTypingIndicator(data.username);
+// Handle errors from the server
+socket.on('error', function(data) {
+    warningMessage.textContent = data.error;
+    warningMessage.style.display = 'block';
+    setTimeout(() => {
+        warningMessage.style.display = 'none';
+    }, 3000);
+});
 
-                    if (typingTimeouts.has(data.username)) {
-                        clearTimeout(typingTimeouts.get(data.username));
-                    }
+// Send message when the send button is clicked
+document.getElementById('send-button').addEventListener('click', sendMessage);
 
-                    typingTimeouts.set(data.username, setTimeout(() => {
-                        typingUsers.delete(data.username);
-                        updateTypingIndicator();
-                    }, 2000));
-                });
+let typingInterval;
 
-                function updateTypingIndicator(username) {
-                    if (username) {
-                        typingIndicator.textContent = `${Array.from(typingUsers).join(', ')} ${typingUsers.size > 1 ? 'are' : 'is'} typing...`;
-                    } else {
-                        typingIndicator.textContent = '';
-                    }
-                }
+// When the input box is focused, emit typing events
+document.getElementById('message-input').addEventListener('focus', function() {
+    socket.emit('typing');
+    typingInterval = setInterval(() => {
+        socket.emit('typing');
+    }, 2000);
+});
 
-                socket.on('error', function(data) {
-                    warningMessage.textContent = data.error;
-                    warningMessage.style.display = 'block';
-                    setTimeout(() => {
-                        warningMessage.style.display = 'none';
-                    }, 3000);
-                });
+// Clear the typing interval when the input box loses focus
+document.getElementById('message-input').addEventListener('blur', function() {
+    clearInterval(typingInterval);
+});
 
-                document.getElementById('send-button').addEventListener('click', sendMessage);
-                let typingInterval;
-
-                document.getElementById('message-input').addEventListener('focus', function() {
-                    socket.emit('typing');
-                    typingInterval = setInterval(() => {
-                        socket.emit('typing');
-                    }, 2000);
-                });
-
-                document.getElementById('message-input').addEventListener('blur', function() {
-                    clearInterval(typingInterval);
-                });
-
-                document.getElementById('message-input').addEventListener('keydown', function(e) {
+// Handle 'Enter' key for sending messages or inserting new lines
+document.getElementById('message-input').addEventListener('keydown', function(e) {
     if (e.key === 'Enter' && !e.shiftKey) {
-        e.preventDefault(); 
-        sendMessage(); 
+        e.preventDefault();
+        sendMessage();
     } else if (e.key === 'Enter' && e.shiftKey) {
-
         const start = this.selectionStart;
         const end = this.selectionEnd;
         this.value = this.value.substring(0, start) + '\n' + this.value.substring(end);
         this.selectionStart = this.selectionEnd = start + 1;
-        e.preventDefault(); 
+        e.preventDefault();
     }
 });
+
 
                 document.getElementById('upload-button').addEventListener('click', function() {
                     fileInput.click();
@@ -1020,18 +1247,16 @@ function formatTimestamp(timestamp) {
     }
 }
 
+// Example: Explicitly setting the timestamp
+const specificTimestamp = new Date('2024-10-06T14:30:00').getTime(); // Adjust the date and time as needed
+console.log(formatTimestamp(specificTimestamp));
+
+
 function createMessageElement(msg) {
     const div = document.createElement('div');
     div.className = 'message';
-
-    const formattedMessage = formatLinks(msg.message); 
-    const wrappedMessage = wrapLongMessage(formattedMessage, 85);
+    
     const formattedTime = formatTimestamp(msg.timestamp);
-
-    const usernameStyle = (msg.username === 'George' || msg.username === 'CERTIFIEDL0YALIST' || msg.username === 'certifiedloyalist') 
-    ? 'color: red; font-weight: bold;' 
-    : '';
-
     const profilePictureUrl = `/static/pfps/${msg.username.toLowerCase()}.png`; 
     const defaultProfilePictureUrl = '/static/boring/default.png'; 
 
@@ -1042,21 +1267,46 @@ function createMessageElement(msg) {
         img.src = defaultProfilePictureUrl; 
     };
 
-    div.innerHTML = `
-        <div class="message-content" style="display: flex; align-items: center; justify-content: space-between;">
-            <div style="display: flex; align-items: center;">
-                <img src="${profilePictureUrl}" alt="${msg.username}'s profile picture" class="profile-picture" style="margin-right: 8px;" onerror="this.src='${defaultProfilePictureUrl}';">
-                <div>
-                    <span class="username" style="${usernameStyle}">${msg.username}:</span>
-                    ${wrappedMessage}
+    // Check if the message contains a media file
+    if (msg.file_url) {
+        // Create media message element
+        div.classList.add('media-message'); // Optional class for media messages
+        const mediaElement = document.createElement('img'); // Assuming media is an image
+        mediaElement.src = msg.file_url; // URL of the media file
+        mediaElement.alt = `${msg.username}'s media`;
+        mediaElement.style.maxWidth = '300px'; // Optional: Limit the width of media
+        mediaElement.style.borderRadius = '8px'; // Optional: Add some styling
+        div.appendChild(mediaElement);
+    } else {
+        // Create text message element
+        const formattedMessage = formatLinks(msg.message); 
+        const wrappedMessage = wrapLongMessage(formattedMessage, 85);
+        
+        const usernameStyle = (msg.username === 'George' || msg.username === 'CERTIFIEDL0YALIST' || msg.username === 'certifiedloyalist') 
+            ? 'color: red; font-weight: bold;' 
+            : '';
+
+        div.innerHTML = `
+            <div class="message-content" style="display: flex; align-items: center; justify-content: space-between;">
+                <div style="display: flex; align-items: center;">
+                    <img src="${profilePictureUrl}" alt="${msg.username}'s profile picture" class="profile-picture" style="margin-right: 8px;" onerror="this.src='${defaultProfilePictureUrl}';">
+                    <div>
+                        <span class="username" style="${usernameStyle}">${msg.username}:</span>
+                        ${wrappedMessage}
+                    </div>
                 </div>
+                <span class="timestamp">${formattedTime}</span>
             </div>
-            <span class="timestamp">${formattedTime}</span>
-        </div>
-    `;
+        `;
+    }
 
     return div;
 }
+
+
+
+
+
 
 
 
