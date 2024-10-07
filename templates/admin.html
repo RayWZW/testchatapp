@@ -6,51 +6,57 @@
     <title>Admin Panel</title>
     <style>
         body {
-            background: linear-gradient(135deg, #1e1e2f, #5c5c7a);
+            background: linear-gradient(135deg, #2d2d44, #535373);
             color: #ffffff;
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             margin: 0;
             padding: 0;
+            overflow-x: hidden;
         }
         .container {
-            padding: 20px;
+            padding: 40px;
             max-width: 1200px;
             margin: auto;
         }
         .header {
             text-align: center;
-            margin-bottom: 20px;
+            margin-bottom: 40px;
         }
         .header h1 {
             margin: 0;
-            font-size: 2.5rem;
+            font-size: 3rem;
             font-weight: bold;
-            text-shadow: 1px 1px 5px rgba(0, 0, 0, 0.5);
+            text-shadow: 2px 2px 10px rgba(0, 0, 0, 0.7);
         }
         .user-count-card {
-            background: rgba(255, 255, 255, 0.1);
+            background: rgba(255, 255, 255, 0.2);
             border-radius: 10px;
-            height: 60px; 
-            padding: 10px; 
+            height: 100px;
+            padding: 20px;
             color: #e0e0e0;
-            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
-            margin-bottom: 20px; 
-            position: relative;
-            text-align: center;
+            box-shadow: 0 6px 15px rgba(0, 0, 0, 0.5);
+            margin-bottom: 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: transform 0.3s;
         }
-        .user-count-card::after {
-            content: attr(data-user-count); 
-            font-size: 2rem; 
-            color: #e0e0e0; 
-            position: absolute;
-            top: 10px;
-            left: 50%;
-            transform: translateX(-50%);
+        .user-count-card:hover {
+            transform: translateY(-5px);
+        }
+        .user-count-card h2 {
+            margin: 0;
+            font-size: 2rem;
+        }
+        .user-count {
+            font-size: 2.5rem;
+            color: #ffe600;
+            font-weight: bold;
         }
         .user-grid {
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-            gap: 20px;
+            gap: 30px;
         }
         .user-card {
             background: rgba(255, 255, 255, 0.1);
@@ -58,21 +64,22 @@
             padding: 20px;
             position: relative;
             color: #ffffff;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
+            box-shadow: 0 6px 15px rgba(0, 0, 0, 0.5);
             transition: transform 0.3s;
         }
         .user-card:hover {
-            transform: translateY(-5px);
+            transform: scale(1.05);
         }
         .user-card h2 {
             margin-top: 0;
-            font-size: 1.5rem;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+            font-size: 1.6rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.3);
             padding-bottom: 10px;
         }
         .user-card .details {
             margin-top: 10px;
             font-size: 0.9rem;
+            line-height: 1.5;
         }
         .user-card .menu {
             position: absolute;
@@ -80,13 +87,18 @@
             right: 10px;
             cursor: pointer;
             font-size: 1.5rem;
+            color: #ffe600;
+            transition: color 0.3s;
+        }
+        .user-card .menu:hover {
+            color: #ff4d00;
         }
         .user-card .menu-content {
             display: none;
             position: absolute;
             top: 30px;
             right: 0;
-            background: rgba(255, 255, 255, 0.1);
+            background: rgba(255, 255, 255, 0.2);
             border-radius: 5px;
             box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
             padding: 10px;
@@ -101,28 +113,37 @@
             text-align: left;
             display: block;
             width: 100%;
+            transition: background-color 0.3s;
         }
         .user-card .menu-content button:hover {
             background-color: rgba(255, 255, 255, 0.2);
         }
         .clear-chats {
             text-align: center;
-            margin-top: 20px;
+            margin-top: 40px;
         }
         .clear-chats button {
-            padding: 10px 20px; 
+            padding: 12px 25px;
             background: linear-gradient(135deg, #6b5b95, #feb236);
             border: none;
             color: white;
-            border-radius: 5px; 
-            font-size: 1rem;
+            border-radius: 5px;
+            font-size: 1.1rem;
             font-weight: bold;
             box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
             transition: background-color 0.3s, transform 0.3s;
         }
         .clear-chats button:hover {
-            background: linear-gradient(135deg, #feb236, #6b5b95); 
+            background: linear-gradient(135deg, #feb236, #6b5b95);
             transform: translateY(-2px);
+        }
+        @keyframes bounce {
+            0%, 100% {
+                transform: translateY(0);
+            }
+            50% {
+                transform: translateY(-10px);
+            }
         }
     </style>
 </head>
@@ -131,8 +152,9 @@
         <div class="header">
             <h1>Admin Panel</h1>
         </div>
-        <div class="user-count-card" data-user-count="{{ users|length }}">
+        <div class="user-count-card">
             <h2>Total Users</h2>
+            <div class="user-count">{{ users|length }}</div>
         </div>
         <div class="user-grid">
             {% for username, details in users.items() %}
