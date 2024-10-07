@@ -25,3 +25,4 @@
 
 then install the requirements.txt then start the flask server and use loophole or some other reverse proxy to make it live 
 my sites at https://thugchat.ddns.net
+![ScreenShot](image.png)
