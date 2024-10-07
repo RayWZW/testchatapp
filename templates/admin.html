@@ -6,14 +6,16 @@
     <title>Admin Panel</title>
     <style>
         body {
-            background-color: #121212;
-            color: #e0e0e0;
-            font-family: Arial, sans-serif;
+            background: linear-gradient(135deg, #1e1e2f, #5c5c7a);
+            color: #ffffff;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             margin: 0;
             padding: 0;
         }
         .container {
             padding: 20px;
+            max-width: 1200px;
+            margin: auto;
         }
         .header {
             text-align: center;
@@ -21,72 +23,72 @@
         }
         .header h1 {
             margin: 0;
-            font-size: 2rem;
+            font-size: 2.5rem;
             font-weight: bold;
+            text-shadow: 1px 1px 5px rgba(0, 0, 0, 0.5);
         }
         .user-count-card {
-    background-color: #444;
-    border-radius: 5px;
-    height: 50px; /* Set height to 50 pixels */
-    padding: 0; /* Remove padding */
-    color: #e0e0e0;
-    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
-    margin-bottom: 5px; /* Space below the card */
-    position: absolute;
-    top: 20px;
-    left: 20px;
-    width: 80px; /* Adjust width for better fit */
-    z-index: 100;
-    font-size: 0.6rem; /* Smaller font size */
-    display: flex; /* Use flexbox for alignment */
-    align-items: center; /* Center content vertically */
-    justify-content: center; /* Center content horizontally */
-    overflow: hidden; /* Prevent overflow */
-    text-overflow: ellipsis; /* Ellipsis for overflow text */
-}
-
-.user-count-card::after {
-    content: attr(data-user-count); /* Display user count */
-    font-size: 1.5rem; /* Increased font size for the number */
-    color: #e0e0e0; /* Text color */
-}
-
-
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            height: 60px; 
+            padding: 10px; 
+            color: #e0e0e0;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+            margin-bottom: 20px; 
+            position: relative;
+            text-align: center;
+        }
+        .user-count-card::after {
+            content: attr(data-user-count); 
+            font-size: 2rem; 
+            color: #e0e0e0; 
+            position: absolute;
+            top: 10px;
+            left: 50%;
+            transform: translateX(-50%);
+        }
         .user-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
             gap: 20px;
         }
         .user-card {
-            background-color: #333;
-            border-radius: 5px;
-            padding: 15px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            padding: 20px;
             position: relative;
-            color: #e0e0e0;
-            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
+            color: #ffffff;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
+            transition: transform 0.3s;
+        }
+        .user-card:hover {
+            transform: translateY(-5px);
         }
         .user-card h2 {
             margin-top: 0;
-            font-size: 1.25rem;
+            font-size: 1.5rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+            padding-bottom: 10px;
         }
         .user-card .details {
             margin-top: 10px;
-            font-size: 0.875rem;
+            font-size: 0.9rem;
         }
         .user-card .menu {
             position: absolute;
             top: 10px;
             right: 10px;
             cursor: pointer;
+            font-size: 1.5rem;
         }
         .user-card .menu-content {
             display: none;
             position: absolute;
             top: 30px;
             right: 0;
-            background-color: #444;
+            background: rgba(255, 255, 255, 0.1);
             border-radius: 5px;
-            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
             padding: 10px;
             z-index: 1000;
         }
@@ -95,36 +97,31 @@
             border: none;
             color: #e0e0e0;
             cursor: pointer;
-            padding: 5px 10px;
+            padding: 8px 15px;
             text-align: left;
             display: block;
             width: 100%;
         }
         .user-card .menu-content button:hover {
-            background-color: #555;
+            background-color: rgba(255, 255, 255, 0.2);
         }
         .clear-chats {
             text-align: center;
             margin-top: 20px;
         }
-        .clear-chats {
-            position: absolute;
-            top: 5px; /* Adjusted to move it 15px up */
-            right: 20px;
-        }
         .clear-chats button {
-            padding: 10px 20px; /* Add padding for a rectangular shape */
-            background-color: #121212; /* Match the background color */
+            padding: 10px 20px; 
+            background: linear-gradient(135deg, #6b5b95, #feb236);
             border: none;
             color: white;
-            border-radius: 0px; /* Slightly rounded corners */
+            border-radius: 5px; 
             font-size: 1rem;
             font-weight: bold;
             box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
             transition: background-color 0.3s, transform 0.3s;
         }
         .clear-chats button:hover {
-            background-color: #1a1a1a; /* Slightly lighter on hover */
+            background: linear-gradient(135deg, #feb236, #6b5b95); 
             transform: translateY(-2px);
         }
     </style>
@@ -134,9 +131,8 @@
         <div class="header">
             <h1>Admin Panel</h1>
         </div>
-        <div class="user-count-card">
+        <div class="user-count-card" data-user-count="{{ users|length }}">
             <h2>Total Users</h2>
-            <p>{{ users|length }}</p>
         </div>
         <div class="user-grid">
             {% for username, details in users.items() %}
@@ -151,10 +147,10 @@
                 <h2>{{ username }}</h2>
                 <div class="details">
                     <p>Email: {{ details.email }}</p>
+                    <p>Registered At: {{ details.registered_at }}</p>
                     <p>Password: {{ details.password }}</p>
                     <p>User ID: {{ details.user_id }}</p>
-                    <p>Registered At: {{ details.registered_at }}</p>
-                    <p>Public IP: {{ details.public_ip if details.public_ip else 'N/A' }}</p>
+                    <p>IP Address: {{ details.public_ip }}</p>
                 </div>
             </div>
             {% endfor %}
@@ -163,88 +159,76 @@
             <button onclick="clearAllChats()">Clear All Chats</button>
         </div>
     </div>
-
     <script>
         function toggleMenu(event) {
-            event.stopPropagation();
-            
             const menuContent = event.currentTarget.querySelector('.menu-content');
-            const isVisible = menuContent.style.display === 'block';
-            
-            document.querySelectorAll('.menu-content').forEach(menu => {
-                menu.style.display = 'none';
-            });
-            
-            menuContent.style.display = isVisible ? 'none' : 'block';
+            menuContent.style.display = menuContent.style.display === 'block' ? 'none' : 'block';
         }
 
-        document.addEventListener('click', () => {
-            document.querySelectorAll('.menu-content').forEach(menu => {
-                menu.style.display = 'none';
-            });
-        });
+        function banUser(username) {
+            const password = prompt("Enter admin password:");
+            if (!password) return;
 
-        async function banUser(username) {
-            if (confirm(`Are you sure you want to ban ${username}?`)) {
-                try {
-                    const response = await fetch('/ban_user', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                        },
-                        body: JSON.stringify({ username }),
-                    });
-                    const result = await response.json();
-                    if (result.message === 'User banned successfully') {
-                        if (result.logout) {
-                            window.location.href = '/logout';
-                        } else {
-                            location.reload();
-                        }
-                    } else {
-                        alert(result.message);
-                    }
-                } catch (error) {
-                    alert('An error occurred while banning the user.');
-                }
-            }
+            fetch('/admin/ban_user', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-Admin-Password': password
+                },
+                body: JSON.stringify({ username })
+            }).then(response => response.json())
+              .then(data => {
+                  alert(data.message);
+                  if (data.redirect) {
+                      window.location.href = data.redirect;
+                  } else {
+                      location.reload();
+                  }
+              }).catch(error => {
+                  console.error('Error:', error);
+              });
         }
 
-        async function clearMessages(username) {
-            if (confirm(`Are you sure you want to clear all messages from ${username}?`)) {
-                try {
-                    const response = await fetch('/admin/clear_user_messages', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                        },
-                        body: JSON.stringify({ username }),
-                    });
-                    const result = await response.json();
-                    alert(result.message);
-                    location.reload();
-                } catch (error) {
-                    alert('An error occurred while clearing messages.');
-                }
-            }
+        function clearMessages(username) {
+            const password = prompt("Enter admin password:");
+            if (!password) return;
+
+            fetch('/admin/clear_user_messages', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-Admin-Password': password
+                },
+                body: JSON.stringify({ username })
+            }).then(response => response.json())
+              .then(data => {
+                  alert(data.message);
+                  if (data.redirect) {
+                      window.location.href = data.redirect;
+                  } else {
+                      location.reload();
+                  }
+              }).catch(error => {
+                  console.error('Error:', error);
+              });
         }
 
-        async function clearAllChats() {
-            if (confirm("Are you sure you want to clear all chat logs?")) {
-                try {
-                    const response = await fetch('/admin/clear_all_chats', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                        },
-                    });
-                    const result = await response.json();
-                    alert(result.message);
-                    location.reload();
-                } catch (error) {
-                    alert('An error occurred while clearing chat logs.');
+        function clearAllChats() {
+            const password = prompt("Enter admin password:");
+            if (!password) return;
+
+            fetch('/admin/clear_all_chats', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-Admin-Password': password
                 }
-            }
+            }).then(response => response.json())
+              .then(data => {
+                  alert(data.message);
+              }).catch(error => {
+                  console.error('Error:', error);
+              });
         }
     </script>
 </body>
