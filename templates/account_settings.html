@@ -6,59 +6,111 @@
     <title>Account Settings</title>
     <style>
         body {
-            background-color: #121212;
-            color: #e0e0e0;
             font-family: Arial, sans-serif;
+            background-color: #2f3136;
+            color: #dcddde;
             margin: 0;
-            padding: 0;
+            padding: 20px;
         }
-        h1 {
-            color: #ffffff;
-        }
-        form {
-            background-color: #1e1e1e;
+
+        .settings-container {
+            max-width: 600px;
+            margin: auto;
+            background-color: #40444b;
             padding: 20px;
             border-radius: 8px;
-            max-width: 500px;
-            margin: 20px auto;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
         }
-        label {
-            display: block;
-            margin: 10px 0 5px;
-            color: #e0e0e0;
+
+        h2 {
+            margin-bottom: 20px;
         }
-        input[type="text"], input[type="email"] {
-            width: 100%;
-            padding: 10px;
-            border: 1px solid #333;
-            border-radius: 4px;
-            background-color: #333;
-            color: #e0e0e0;
+
+        .username-display {
+            margin: 10px 0;
+            font-size: 1.1em;
         }
+
+        .change-pfp-container {
+            margin-top: 20px;
+        }
+
+        #pfp-input {
+            margin-bottom: 10px;
+            padding: 5px;
+            border: 1px solid #555;
+            background-color: #3a3c3f;
+            color: #dcddde;
+            border-radius: 5px;
+        }
+
         button {
-            background-color: #6200ee;
-            color: #ffffff;
+            background-color: #7289da;
+            color: #fff;
             border: none;
-            padding: 10px 20px;
-            border-radius: 4px;
+            padding: 10px 15px;
+            border-radius: 5px;
             cursor: pointer;
-            font-size: 16px;
+            font-size: 1em;
         }
+
         button:hover {
-            background-color: #3700b3;
+            background-color: #5b6e9a;
         }
-        .flash {
-            color: #ff3b30;
+
+        .profile-picture {
+            width: 100px; /* Adjust as needed */
+            height: 100px; /* Adjust as needed */
+            border-radius: 50%; /* Circular profile picture */
+            object-fit: cover; /* Maintain aspect ratio */
+            margin-top: 10px;
         }
     </style>
 </head>
 <body>
-    <h1>Account Settings for {{ userid }}</h1>
-    <form action="/update_account_settings" method="post">
-        <label for="username">New Username:</label>
-        <input type="text" id="username" name="username" value="{{ userid }}" required>
+    <div class="settings-container">
+        <h2>Account Settings</h2>
+        <p class="username-display">Logged in as: <strong>{{ username }}</strong></p>
         
-        <button type="submit">Update</button>
-    </form>
+        <div class="change-pfp-container">
+            <h3>Change Profile Picture</h3>
+            <form id="change-pfp-form" enctype="multipart/form-data">
+                <input type="file" id="pfp-input" accept="image/*" required>
+                <button type="submit">Upload</button>
+            </form>
+            <img id="current-pfp" src="{{ url_for('static', filename='pfps/' + username + '.png') }}" alt="Current Profile Picture" class="profile-picture">
+        </div>
+    </div>
+
+    <script>
+        document.getElementById('change-pfp-form').addEventListener('submit', function(event) {
+            event.preventDefault();
+
+            const fileInput = document.getElementById('pfp-input');
+            const file = fileInput.files[0];
+
+            if (file) {
+                const formData = new FormData();
+                formData.append('pfp', file);
+
+                fetch('/upload_pfp', {
+                    method: 'POST',
+                    body: formData,
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.error) {
+                        alert(data.error);
+                    } else {
+                        document.getElementById('current-pfp').src = data.url + '?timestamp=' + new Date().getTime(); // Prevent caching
+                        alert(data.message);
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                });
+            }
+        });
+    </script>
 </body>
 </html>
