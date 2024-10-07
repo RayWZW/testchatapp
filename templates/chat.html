@@ -937,9 +937,11 @@ sendButton.addEventListener('click', () => {
 function fetchMessages() {
     fetch('/data/chatlogs.json')
         .then(response => {
+            // If the response is not OK, empty the chatbox and log the error
             if (!response.ok) {
-                console.error('Chatlogs not found. Unable to fetch messages.');
-                return;
+                chatBox.innerHTML = '';  // Empty the chatbox
+                console.error('Chatlogs not found. Chatbox emptied.');
+                return;  // Exit the function
             }
             return response.json();
         })
@@ -977,7 +979,10 @@ function fetchMessages() {
             // Scroll to the bottom of the chatbox
             chatBox.scrollTop = chatBox.scrollHeight;
         })
-        .catch(error => console.error('Error loading messages:', error));
+        .catch(error => {
+            chatBox.innerHTML = '';  // Empty the chatbox on fetch error
+            console.error('Error loading messages:', error);
+        });
 }
 
 setInterval(fetchMessages, 500);
