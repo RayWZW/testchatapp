@@ -9,7 +9,7 @@ import mimetypes
 from flask_socketio import disconnect, leave_room
 from utils.utils import load_json_file, save_json_file, generate_unique_user_id
 from utils.register import register_bp
-from utils.message import handle_message, handle_typing
+from utils.message import handle_message, delete_message  # Adjusted import
 from utils.admin import admin_bp
 from utils.commands import commands_bp
 from utils.forgot_password import password_reset_bp
@@ -60,6 +60,14 @@ def block_requests():
 @app.route('/data/user_accounts', methods=['POST'])
 def handle_user_accounts():
     return jsonify({'message': 'Request successful'})
+
+@socketio.on('send_message')
+def on_send_message(message):
+    handle_message(message)  # Call the function from message.py
+
+@socketio.on('delete_message_request')
+def on_delete_message_request(timestamp):
+    delete_message(timestamp)
 
 @app.before_request
 def before_request():
@@ -126,7 +134,16 @@ def upload_pfp():
         'url': url_for('static', filename=f'pfps/{username.lower()}.png')
     })
 
-
+@app.route('/data/chatlogs.json', methods=['GET'])
+def get_chatlogs():
+    try:
+        with open('data/chatlogs.json', 'r') as f:
+            chatlogs = json.load(f)
+        return jsonify(chatlogs), 200
+    except FileNotFoundError:
+        return jsonify({'error': 'File not found'}), 404
+    except json.JSONDecodeError:
+        return jsonify({'error': 'Invalid JSON format'}), 400
 
 def resize_image(input_path, output_path):
     with Image.open(input_path) as img:
@@ -451,19 +468,6 @@ def webhook(id):
     return jsonify({"status": "success", "id": id, "username": username, "message": message}), 200
 
 
-import threading
-import sys
-
-def restart_app():
-    while True:
-        time.sleep(600)  # Sleep for 10 minutes
-        try:
-            os.execl(sys.executable, sys.executable, *sys.argv)
-        except Exception as e:
-            print(f"Error while trying to restart the app: {e}")
-
-# Start the restart thread
-threading.Thread(target=restart_app, daemon=True).start()
 
 from flask_socketio import SocketIO, emit
 import time
