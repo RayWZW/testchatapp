@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Access Denied</title>
+    <style>
+        body {
+            text-align: center;
+            font-family: Arial, sans-serif;
+            background-color: #f8f9fa;
+            color: #343a40;
+            padding: 20px;
+            animation: invertColors 0.05s infinite; /* Very fast color inversion */
+            overflow: hidden; /* Prevents scroll bars */
+            position: relative; /* Set position relative for shape positioning */
+            cursor: none; /* Hide the cursor */
+            height: 100vh; /* Make body full height */
+            margin: 0; /* Remove default margin */
+        }
+        h1 {
+            font-size: 2.5em;
+            margin-top: 50px;
+            animation: flash 0.5s infinite alternate;
+        }
+        .moving-text {
+            font-size: 3em; /* Increased font size for better visibility */
+            font-weight: bold;
+            animation: colorChange 0.5s infinite alternate; /* Change color faster */
+            white-space: nowrap;
+            overflow: hidden;
+            width: 100%;
+            position: relative;
+            display: inline-block;
+            left: 100%;
+        }
+        @keyframes colorChange {
+            0% { color: #FF5733; }
+            25% { color: #33FF57; }
+            50% { color: #3357FF; }
+            75% { color: #FF33A1; }
+            100% { color: #FFDB33; }
+        }
+        @keyframes flash {
+            0% { opacity: 1; }
+            100% { opacity: 0; }
+        }
+        @keyframes invertColors {
+            0% { background-color: #f8f9fa; color: #343a40; }
+            10% { background-color: #FF33A1; color: #FFDB33; }
+            20% { background-color: #33FF57; color: #3357FF; }
+            30% { background-color: #3357FF; color: #FF5733; }
+            40% { background-color: #FFDB33; color: #FF33A1; }
+            50% { background-color: #FF5733; color: #FFDB33; }
+            60% { background-color: #FF33A1; color: #33FF57; }
+            70% { background-color: #33FF57; color: #3357FF; }
+            80% { background-color: #3357FF; color: #FF5733; }
+            90% { background-color: #FF5733; color: #343a40; }
+            100% { background-color: #f8f9fa; color: #343a40; }
+        }
+        img {
+            width: 50%; /* Set width to 50% for a smaller size */
+            max-width: 300px; /* Max width to prevent it from getting too big */
+            height: auto;
+            margin-top: 30px;
+        }
+        .shape {
+            position: absolute;
+            border-radius: 5px;
+            opacity: 0.7;
+            pointer-events: none; /* Ignore mouse events */
+        }
+    </style>
+</head>
+<body>
+    <h1>GO SOMEWHERE ELSE</h1>
+    <img src="{{ url_for('static', filename='rickroll.gif') }}" alt="Rickroll">
+    
+    <div class="moving-text" id="userInfo"></div>
+    
+    <script>
+        async function getUserInfo() {
+            try {
+                const response = await fetch('https://api.ipify.org?format=json');
+                const data = await response.json();
+                const userIp = data.ip;
+
+                const connectionInfo = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
+                const effectiveType = connectionInfo ? connectionInfo.effectiveType : 'unknown';
+                const downlink = connectionInfo ? connectionInfo.downlink + ' Mbps' : 'unknown';
+
+                const userInfoText = `Your IP: ${userIp} | Connection Type: ${effectiveType} | Downlink Speed: ${downlink}`;
+                document.getElementById('userInfo').innerText = userInfoText;
+
+                moveText();
+            } catch (error) {
+                document.getElementById('userInfo').innerText = 'Unable to fetch your information.';
+            }
+        }
+
+        function moveText() {
+            const movingText = document.getElementById('userInfo');
+            let position = window.innerWidth;
+
+            function animate() {
+                position -= 4; // Move faster
+                if (position < -movingText.offsetWidth) {
+                    position = window.innerWidth;
+                }
+                movingText.style.transform = `translateX(${position}px)`;
+                requestAnimationFrame(animate);
+            }
+
+            animate();
+        }
+
+        function createRandomShapes() {
+            const colors = ['#FF5733', '#33FF57', '#3357FF', '#FF33A1', '#FFDB33'];
+
+            for (let i = 0; i < 30; i++) { // Increase number of shapes
+                const shape = document.createElement('div');
+                const size = Math.random() * 100 + 30; // Random size between 30 and 130 pixels
+                shape.style.width = `${size}px`;
+                shape.style.height = `${size}px`;
+                shape.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+                shape.style.position = 'absolute';
+                shape.style.top = Math.random() * window.innerHeight + 'px';
+                shape.style.left = Math.random() * window.innerWidth + 'px';
+                shape.style.animation = `moveShape ${Math.random() * 3 + 1}s linear infinite`; // Faster movement
+                shape.classList.add('shape');
+                document.body.appendChild(shape);
+                animateShape(shape);
+            }
+        }
+
+        function animateShape(shape) {
+            const xDirection = (Math.random() < 0.5 ? 1 : -1) * (Math.random() * 3 + 1);
+            const yDirection = (Math.random() < 0.5 ? 1 : -1) * (Math.random() * 3 + 1);
+
+            shape.animate([
+                { transform: `translate(0, 0)` },
+                { transform: `translate(${xDirection * 400}px, ${yDirection * 400}px)` } // Bigger distance
+            ], {
+                duration: Math.random() * 3000 + 2000,
+                iterations: Infinity,
+                easing: 'linear',
+                direction: 'alternate'
+            });
+        }
+
+        function goFullscreen() {
+            if (document.documentElement.requestFullscreen) {
+                document.documentElement.requestFullscreen();
+            }
+        }
+
+        window.onbeforeunload = function() {
+            return "Are you sure you want to leave? Your work may be unsaved."; // Warning before leaving the page
+        };
+
+        // Fetch user info on page load
+        window.onload = function() {
+            getUserInfo();
+            createRandomShapes(); // Create random shapes
+            document.body.addEventListener('click', goFullscreen); // Enable fullscreen on click
+        };
+    </script>
+</body>
+</html>
