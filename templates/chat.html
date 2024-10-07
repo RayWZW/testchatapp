@@ -891,27 +891,33 @@ sendButton.addEventListener('click', () => {
             chatBox.scrollTop = chatBox.scrollHeight;
         });
 
-    socket.on('message', function(msg) {
-        const messageId = msg.timestamp; // Assuming timestamp is unique for each message
-        if (!Array.from(chatBox.children).some(child => child.dataset.timestamp === messageId)) {
-            chatBox.appendChild(createMessageElement(msg));
-            chatBox.scrollTop = chatBox.scrollHeight;
+        socket.on('message', function(msg) {
+    const messageId = msg.timestamp; // Assuming timestamp is unique for each message
 
-            const videos = document.querySelectorAll('video');
-            let isPlaying = false;
+    // Fetch all messages from the server every time a new message is received
+    fetchTaggedMessages();
 
-            videos.forEach(video => {
-                if (!video.paused) {
-                    isPlaying = true;
-                }
-            });
+    // Check if the message is already displayed in the chatbox
+    if (!Array.from(chatBox.children).some(child => child.dataset.timestamp === messageId)) {
+        chatBox.appendChild(createMessageElement(msg));
+        chatBox.scrollTop = chatBox.scrollHeight;
 
-            if (!isPlaying) {
-                notifySound.play().catch(error => {
-                    console.error('Error playing sound:', error);
-                });
+        const videos = document.querySelectorAll('video');
+        let isPlaying = false;
+
+        videos.forEach(video => {
+            if (!video.paused) {
+                isPlaying = true;
             }
+        });
+
+        if (!isPlaying) {
+            notifySound.play().catch(error => {
+                console.error('Error playing sound:', error);
+            });
         }
+    }
+
 
         setTimeout(() => {
             if (msg.type === 'file') {
@@ -925,160 +931,181 @@ sendButton.addEventListener('click', () => {
     
 
 
-
-let currentMessages = [];
-const loadedMediaMessages = new Set(); // To keep track of loaded media messages
-
-function fetchMessages() {
-    fetch('/data/chatlogs.json')
+    function fetchTaggedMessages() {
+    fetch('/data/chatlogs.json') // Load messages from the server endpoint
         .then(response => {
             if (!response.ok) {
-                console.error('Chatlogs not found. Clearing chat box.');
-                clearChatBox(); // Clear the chat box if chatlogs.json is not found
-                return;
+                console.error('Chatlogs not found.'); // Log the error
+                return; // Exit the function
             }
             return response.json();
         })
         .then(data => {
-            const newMessages = data.messages || [];
-            updateMessages(newMessages);
-            currentMessages = newMessages; // Update the current messages
-        })
-        .catch(error => {
-            console.error('Error loading messages:', error);
-            clearChatBox(); // Clear the chat box on error
-        });
-}
+            const messages = data.messages || []; // Get messages or default to an empty array
 
-// Function to clear the chat box
-function clearChatBox() {
-    while (chatBox.firstChild) {
-        chatBox.removeChild(chatBox.firstChild);
-    }
-}
+            // Filter messages to get only those containing <video> or <iframe>
+            const taggedMessages = messages.filter(msg => 
+                msg.message.includes('<video') || msg.message.includes('<iframe')
+            );
 
-// Function to update messages based on new data
-function updateMessages(newMessages) {
-    const existingTimestamps = new Set(Array.from(chatBox.children).map(child => child.dataset.timestamp));
-
-    // Check for existing messages and update them accordingly
-    Array.from(chatBox.children).forEach(child => {
-        const childTimestamp = child.dataset.timestamp;
-        const newMessage = newMessages.find(msg => msg.timestamp === childTimestamp);
-
-        if (newMessage) {
-            // If the message exists, check if it has changed, but skip video/embed/iframe messages
-            if (!containsMediaTags(newMessage.message) && child.innerHTML !== createMessageElement(newMessage).innerHTML) {
-                child.innerHTML = createMessageElement(newMessage).innerHTML; // Update content if changed
-            }
-        } else {
-            // If the message doesn't exist in the new data and is not a media message, remove it
-            if (!containsMediaTags(child.innerHTML)) {
-                chatBox.removeChild(child); // Remove messages not present in the new data and not media
-            }
-        }
-    });
-
-    // Add new messages that are not currently displayed
-    newMessages.forEach(msg => {
-        const messageId = msg.timestamp;
-
-        // Load all messages initially, including media messages only if not loaded before
-        if (!existingTimestamps.has(messageId)) {
-            if (containsMediaTags(msg.message)) {
-                if (!loadedMediaMessages.has(messageId)) {
-                    chatBox.appendChild(createMessageElement(msg)); // Append new media message
-                    loadedMediaMessages.add(messageId); // Mark this media message as loaded
+            // Preserve existing tagged message IDs
+            const currentTaggedMessageIds = new Set();
+            Array.from(chatBox.children).forEach(child => {
+                if (child.classList.contains('media-message')) {
+                    currentTaggedMessageIds.add(child.dataset.timestamp); // Track media message IDs
                 }
-            } else {
-                chatBox.appendChild(createMessageElement(msg)); // Append new text message
+            });
+
+            // Clear non-tagged messages but keep tagged messages
+            Array.from(chatBox.children).forEach(child => {
+                const messageId = child.dataset.timestamp;
+                if (!currentTaggedMessageIds.has(messageId)) {
+                    chatBox.removeChild(child); // Remove non-tagged messages
+                }
+            });
+
+            // Append new tagged messages to the chatbox
+            taggedMessages.forEach(msg => {
+                const existingElement = Array.from(chatBox.children).find(child => child.dataset.timestamp === msg.timestamp);
+                if (!existingElement) {
+                    chatBox.appendChild(createMessageElement(msg)); // Append new tagged message
+                }
+            });
+
+            // Scroll to the bottom of the chatbox
+            chatBox.scrollTop = chatBox.scrollHeight; 
+        })
+        .catch(error => console.error('Error loading messages:', error)); // Error handling
+}
+
+
+function fetchNonTaggedMessages() {
+    fetch('/data/chatlogs.json') // Load messages from the server endpoint
+        .then(response => {
+            if (!response.ok) {
+                // If the chatlogs.json is not found, clear the chatbox
+                chatBox.innerHTML = ''; // Clear current messages
+                console.error('Chatlogs not found. Chatbox emptied.'); // Log the error
+                return; // Exit the function
             }
-        }
-    });
+            return response.json();
+        })
+        .then(data => {
+            const messages = data.messages || []; // Get messages or default to an empty array
 
-    // Scroll to the bottom of the chatbox
-    chatBox.scrollTop = chatBox.scrollHeight;
+            // Create a set of current media message timestamps to preserve them
+            const currentMediaMessageIds = new Set();
+
+            // Check for existing messages in chatbox and track media messages
+            Array.from(chatBox.children).forEach(child => {
+                const messageId = child.dataset.timestamp;
+                if (child.classList.contains('media-message')) {
+                    currentMediaMessageIds.add(messageId); // Track media message IDs
+                }
+            });
+
+            // Clear the chatbox of non-tagged messages but keep media messages
+            Array.from(chatBox.children).forEach(child => {
+                const messageId = child.dataset.timestamp;
+                // Remove only non-tagged messages
+                if (!currentMediaMessageIds.has(messageId) && !child.innerHTML.includes('<video') && !child.innerHTML.includes('<iframe')) {
+                    chatBox.removeChild(child); // Remove non-tagged messages
+                }
+            });
+
+            // Append each new non-tagged message to the chatbox
+            messages.forEach(msg => {
+                const messageId = msg.timestamp;
+
+                // Check if message does NOT contain <video> or <iframe>
+                if (!msg.message.includes('<video') && !msg.message.includes('<iframe')) {
+                    const existingElement = Array.from(chatBox.children).find(child => child.dataset.timestamp === messageId);
+                    if (!existingElement) {
+                        chatBox.appendChild(createMessageElement(msg)); // Append new message
+                    } else if (msg.message !== '') {
+                        // Update existing message if it's a text message
+                        existingElement.innerHTML = createMessageElement(msg).innerHTML; // Update the content
+                    }
+                }
+            });
+
+            // Scroll to the bottom of the chatbox
+            chatBox.scrollTop = chatBox.scrollHeight; 
+        })
+        .catch(error => console.error('Error loading messages:', error)); // Error handling
 }
 
-// Function to check if a message contains video, embed, or iframe tags
-function containsMediaTags(message) {
-    return message.includes('<video') || message.includes('<embed') || message.includes('<iframe');
-}
-
-// Fetch messages every 500 ms
-setInterval(fetchMessages, 500);
+// Fetch non-tagged messages every 500 ms
+setInterval(fetchNonTaggedMessages, 500);
 
 
-let typingUsers = new Set();
-let typingTimeouts = new Map();
 
-socket.on('typing', function(data) {
-    // Add the user to the set of typing users
-    typingUsers.add(data.username);
-    updateTypingIndicator(); // Update the indicator with the current set of typing users
 
-    // Clear any existing timeout for this user
-    if (typingTimeouts.has(data.username)) {
-        clearTimeout(typingTimeouts.get(data.username));
-    }
 
-    // Set a timeout to remove the user from the set after 2 seconds
-    typingTimeouts.set(data.username, setTimeout(() => {
-        typingUsers.delete(data.username);
-        updateTypingIndicator(); // Update the indicator after removal
-    }, 2000));
-});
 
-// Update the typing indicator display
-function updateTypingIndicator() {
-    if (typingUsers.size > 0) {
-        typingIndicator.textContent = `${Array.from(typingUsers).join(', ')} ${typingUsers.size > 1 ? 'are' : 'is'} typing...`;
-    } else {
-        typingIndicator.textContent = ''; // Clear the indicator if no one is typing
-    }
-}
 
-// Handle errors from the server
-socket.on('error', function(data) {
-    warningMessage.textContent = data.error;
-    warningMessage.style.display = 'block';
-    setTimeout(() => {
-        warningMessage.style.display = 'none';
-    }, 3000);
-});
 
-// Send message when the send button is clicked
-document.getElementById('send-button').addEventListener('click', sendMessage);
 
-let typingInterval;
+                let typingUsers = new Set();
+                let typingTimeouts = new Map();
 
-// When the input box is focused, emit typing events
-document.getElementById('message-input').addEventListener('focus', function() {
-    socket.emit('typing');
-    typingInterval = setInterval(() => {
-        socket.emit('typing');
-    }, 2000);
-});
+                socket.on('typing', function(data) {
+                    typingUsers.add(data.username);
+                    updateTypingIndicator(data.username);
 
-// Clear the typing interval when the input box loses focus
-document.getElementById('message-input').addEventListener('blur', function() {
-    clearInterval(typingInterval);
-});
+                    if (typingTimeouts.has(data.username)) {
+                        clearTimeout(typingTimeouts.get(data.username));
+                    }
 
-// Handle 'Enter' key for sending messages or inserting new lines
-document.getElementById('message-input').addEventListener('keydown', function(e) {
+                    typingTimeouts.set(data.username, setTimeout(() => {
+                        typingUsers.delete(data.username);
+                        updateTypingIndicator();
+                    }, 2000));
+                });
+
+                function updateTypingIndicator(username) {
+                    if (username) {
+                        typingIndicator.textContent = `${Array.from(typingUsers).join(', ')} ${typingUsers.size > 1 ? 'are' : 'is'} typing...`;
+                    } else {
+                        typingIndicator.textContent = '';
+                    }
+                }
+
+                socket.on('error', function(data) {
+                    warningMessage.textContent = data.error;
+                    warningMessage.style.display = 'block';
+                    setTimeout(() => {
+                        warningMessage.style.display = 'none';
+                    }, 3000);
+                });
+
+                document.getElementById('send-button').addEventListener('click', sendMessage);
+                let typingInterval;
+
+                document.getElementById('message-input').addEventListener('focus', function() {
+                    socket.emit('typing');
+                    typingInterval = setInterval(() => {
+                        socket.emit('typing');
+                    }, 2000);
+                });
+
+                document.getElementById('message-input').addEventListener('blur', function() {
+                    clearInterval(typingInterval);
+                });
+
+                document.getElementById('message-input').addEventListener('keydown', function(e) {
     if (e.key === 'Enter' && !e.shiftKey) {
-        e.preventDefault();
-        sendMessage();
+        e.preventDefault(); 
+        sendMessage(); 
     } else if (e.key === 'Enter' && e.shiftKey) {
+
         const start = this.selectionStart;
         const end = this.selectionEnd;
         this.value = this.value.substring(0, start) + '\n' + this.value.substring(end);
         this.selectionStart = this.selectionEnd = start + 1;
-        e.preventDefault();
+        e.preventDefault(); 
     }
 });
-
 
                 document.getElementById('upload-button').addEventListener('click', function() {
                     fileInput.click();
