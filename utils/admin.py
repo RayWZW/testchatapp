@@ -11,6 +11,8 @@ BANNED_USERS_FILE = 'data/banned.json'
 ADMINS_FILE = 'data/admins.json'
 ADMIN_PASSWORD_FILE = 'data/admin_password.json'
 
+ADMIN_PASSWORD = 'fr78h34r78yr'
+
 def is_admin(username):
     admins = load_json_file(ADMINS_FILE)
     return username in admins
@@ -19,8 +21,12 @@ def get_admin_password():
     data = load_json_file(ADMIN_PASSWORD_FILE)
     return data.get('password', '')
 
+def authenticate_request():
+    password = request.headers.get('X-Admin-Password')
+    return password == ADMIN_PASSWORD
+
 def ban_user(username):
-    if 'username' not in session or not is_admin(session['username']):
+    if 'username' not in session or not is_admin(session['username']) or not authenticate_request():
         return jsonify({'message': 'Unauthorized'}), 403
 
     users = load_json_file(USER_ACCOUNTS_FILE)
@@ -46,13 +52,12 @@ def ban_user(username):
     })
 
 def clear_user_messages(username):
-    if 'username' not in session or not is_admin(session['username']):
+    if 'username' not in session or not is_admin(session['username']) or not authenticate_request():
         return jsonify({'message': 'Unauthorized'}), 403
 
     chat_logs = load_json_file(CHAT_LOGS_FILE)
     messages = chat_logs.get('messages', [])
 
-    # Filter out messages from the specified user
     chat_logs['messages'] = [msg for msg in messages if msg['username'] != username]
 
     save_json_file(CHAT_LOGS_FILE, chat_logs)
@@ -105,11 +110,10 @@ def clear_user_messages_route():
 
 @admin_bp.route('/clear_all_chats', methods=['POST'])
 def clear_all_chats():
-    if 'username' not in session or not is_admin(session['username']):
+    if 'username' not in session or not is_admin(session['username']) or not authenticate_request():
         return jsonify({'message': 'Unauthorized'}), 403
 
     if os.path.exists(CHAT_LOGS_FILE):
         os.remove(CHAT_LOGS_FILE)
 
     return jsonify({'message': 'All chat logs cleared successfully'})
-
