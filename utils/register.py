@@ -51,6 +51,11 @@ def register():
         users = load_json_file(USER_ACCOUNTS_FILE)
         banned_users = load_json_file(BANNED_USERS_FILE)
 
+        # Check if the IP is in banned users
+        if any(banned_user['public_ip'] == public_ip for banned_user in banned_users.values()):
+            flash('Registration from this IP address is blocked due to a ban.')
+            return render_template('register.html')
+
         if username in banned_users:
             flash('This user is banned and cannot register again')
             return render_template('register.html')
@@ -99,6 +104,7 @@ def register():
         return redirect(url_for('register.verify', username=username))
 
     return render_template('register.html')
+
 
 @register_bp.route('/verify/<username>', methods=['GET', 'POST'])
 def verify(username):
