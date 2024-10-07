@@ -46,7 +46,17 @@ ADMIN_PASSWORD_FILE = 'data/admin_password.json'
 CODES_FILE = 'data/codes.json'
 TEMP_USER_ACCOUNTS_FILE = 'data/temp_useraccounts.json'
 
+@app.before_request
+def block_requests():
+    # Define the paths to block
+    blocked_paths = ['/data/user_accounts.json']
+    
+    if request.path in blocked_paths:
+        return render_template('getclowned.html'), 403  # Render the blocked page with a 403 status code
 
+@app.route('/data/user_accounts', methods=['POST'])
+def handle_user_accounts():
+    return jsonify({'message': 'Request successful'})
 
 @app.before_request
 def before_request():
