@@ -23,6 +23,8 @@
    ```bash
    git clone https://github.com/RayWZW/testchatapp
 
-then install the requirements.txt then start the flask server and use loophole or some other reverse proxy to make it live 
-my sites at https://thugchat.ddns.net
+then install the requirements.txt then start the flask server and use loophole or some other reverse proxy to make it live.
+IF YOU WANNA SUPPORT MY PROJECT MAKE AN ACCOUNT AT https://thugchat.ddns.net
+
+
 ![ScreenShot](image.png)
