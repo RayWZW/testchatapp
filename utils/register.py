@@ -3,22 +3,27 @@ from datetime import datetime
 import os
 import random
 import smtplib
+from werkzeug.utils import secure_filename
+from PIL import Image
 from utils.utils import load_json_file, save_json_file, generate_unique_user_id
 
 USER_ACCOUNTS_FILE = 'data/useraccounts.json'
 TEMP_USER_ACCOUNTS_FILE = 'data/temp_useraccounts.json'
 BANNED_USERS_FILE = 'data/banned.json'
+ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg'}
 
 register_bp = Blueprint('register', __name__)
+
+def allowed_file(filename):
+    return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
 def send_verification_email(email, code):
     smtp_server = "smtp.fastmail.com"
     port = 587
-    username = "thugverify11@fastmail.com"  # Your FastMail email address
-    password = "28642x4c2p8q5d74"  # Your app-specific password
+    username = "thugverify11@fastmail.com"
+    password = "28642x4c2p8q5d74"
     subject = "THUG-CHAT Verification"
     body = f"Your verification code is: {code}"
-
     message = f'From: {username}\nTo: {email}\nSubject: {subject}\n\n{body}'
 
     try:
@@ -30,16 +35,13 @@ def send_verification_email(email, code):
     except Exception as e:
         print("Failed to send email:", e)
 
-
-
-
 @register_bp.route('/register', methods=['GET', 'POST'])
 def register():
     if request.method == 'POST':
         username = request.form['username']
         password = request.form['password']
         email = request.form['email']
-        public_ip = request.form['public_ip']  # Get the public IP address
+        public_ip = request.form['public_ip']
         timestamp = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
 
         if len(username) < 6 or len(password) < 6:
@@ -61,6 +63,18 @@ def register():
             flash('An account with this email already exists')
             return render_template('register.html')
 
+        profile_picture = request.files.get('pfp')
+        if profile_picture and allowed_file(profile_picture.filename):
+            os.makedirs('static/pfps', exist_ok=True)
+            filename = secure_filename(f"{username}.png")
+            file_path = os.path.join('static/pfps', filename)
+
+            img = Image.open(profile_picture)
+            img = img.resize((50, 50))  # Resize to 50x50
+            img.save(file_path)
+        else:
+            flash('Invalid profile picture. Please upload a valid image file.')
+
         verification_code = random.randint(100000, 999999)
         send_verification_email(email, verification_code)
 
@@ -68,7 +82,7 @@ def register():
         temporary_users[username] = {
             'password': password,
             'email': email,
-            'public_ip': public_ip,  # Save the public IP address
+            'public_ip': public_ip,
             'registered_at': timestamp,
             'verified': False,
             'verification_code': verification_code,
@@ -79,7 +93,6 @@ def register():
         return redirect(url_for('register.verify', username=username))
 
     return render_template('register.html')
-
 
 @register_bp.route('/verify/<username>', methods=['GET', 'POST'])
 def verify(username):
