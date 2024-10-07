@@ -4,6 +4,7 @@ import json
 from authlib.integrations.flask_client import OAuth
 import os
 from datetime import datetime
+from PIL import Image
 import mimetypes
 from flask_socketio import disconnect, leave_room
 from utils.utils import load_json_file, save_json_file, generate_unique_user_id
@@ -99,7 +100,39 @@ def get_admin_password():
     data = load_json_file(ADMIN_PASSWORD_FILE)
     return data.get('password', '')  # Default to an empty string if not found
 
+@app.route('/upload_pfp', methods=['POST'])
+def upload_pfp():
+    if 'username' not in session:
+        return jsonify({'error': 'User not logged in'}), 403
 
+    if 'pfp' not in request.files:
+        return jsonify({'error': 'No file provided'}), 400
+
+    file = request.files['pfp']
+    username = session['username']
+    if file.filename == '':
+        return jsonify({'error': 'No file selected'}), 400
+
+    # Save the uploaded image temporarily
+    temp_path = f'static/temp/{file.filename}'
+    file.save(temp_path)
+
+    # Resize the image and save it
+    output_path = f'static/pfps/{username}.png'
+    resize_image(temp_path, output_path)
+
+    # Remove the temporary file
+    os.remove(temp_path)
+
+    return jsonify({'message': 'Profile picture uploaded successfully!', 'url': url_for('static', filename=f'pfps/{username}.png')})
+
+
+def resize_image(input_path, output_path):
+    with Image.open(input_path) as img:
+        img = img.resize((50, 50), Image.ANTIALIAS)  # Resize to 50x50
+        img.save(output_path)
+
+        
 @app.route('/admin', methods=['GET', 'POST'])
 def admin():
     if 'admin_authenticated' not in session:
