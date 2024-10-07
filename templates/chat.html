@@ -896,11 +896,27 @@ function uploadFile(file) {
     xhr.send(formData);
 }
 
-            function formatTimestamp(timestamp) {
-                const date = new Date(timestamp);
-                const options = { hour: '2-digit', minute: '2-digit', hour12: true };
-                return date.toLocaleTimeString([], options);
-            }
+function formatTimestamp(timestamp) {
+    const date = new Date(timestamp);
+    const now = new Date();
+
+    const isToday = date.toDateString() === now.toDateString();
+    const isYesterday = new Date(now.setDate(now.getDate() - 1)).toDateString() === date.toDateString();
+
+    const timeOptions = { hour: '2-digit', minute: '2-digit', hour12: true };
+    const timeString = date.toLocaleTimeString([], timeOptions);
+
+    if (isToday) {
+        return `Today at ${timeString}`;
+    } else if (isYesterday) {
+        return `Yesterday at ${timeString}`;
+    } else {
+        const dateOptions = { month: 'short', day: 'numeric' };
+        const dateString = date.toLocaleDateString([], dateOptions);
+        return `${dateString} at ${timeString}`;
+    }
+}
+
 
             function createMessageElement(msg) {
     const div = document.createElement('div');

