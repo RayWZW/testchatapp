@@ -11,14 +11,12 @@ CHAT_LOGS_FILE = 'data/chatlogs.json'
 message_times = {}
 cooldown_users = {}
 
-# Blocked attributes and event handlers
 MALICIOUS_ATTRIBUTES = [
     'onerror', 'onclick', 'onmouseover', 'onmouseout',
     'onsubmit', 'onfocus', 'onblur', 'onchange', 'onkeydown', 'onkeyup',
-    'window.onload'  # Blocking window.onload directly
+    'window.onload'
 ]
 
-# Pattern to block complete HTML documents
 BLOCKED_HTML_TAGS = re.compile(r'<html|<head|<body', re.IGNORECASE)
 
 def remove_malicious_attributes(message):
@@ -27,7 +25,7 @@ def remove_malicious_attributes(message):
     return message
 
 def contains_complete_html(message):
-    return bool(BLOCKED_HTML_TAGS.search(message))  # Check if the message contains complete HTML tags
+    return bool(BLOCKED_HTML_TAGS.search(message))
 
 def handle_message(message):
     username = session.get('username')
@@ -43,42 +41,36 @@ def handle_message(message):
 
     original_message = message
 
-    # Check if the message is a file message
     if is_file_message(original_message):
-        # Proceed without HTML checks for file messages
         formatted_message = {
-            'timestamp': datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
+            'timestamp': datetime.now().strftime('%Y-%m-%d %H:%M:%S.%f')[:-3],
             'username': username,
             'message': '',
             'file_url': message['file_url'],
             'file_type': message['file_type']
         }
     elif isinstance(original_message, str):
-        # Check for complete HTML documents
         if contains_complete_html(original_message):
             emit('error', {'error': 'Your message contains complete HTML and is not allowed.'}, room=request.sid)
             return
 
-        # Sanitize the message by removing malicious attributes
         sanitized_message = remove_malicious_attributes(original_message)
         if sanitized_message != original_message:
             emit('error', {'error': 'Your message contained malicious attributes and has been sanitized.'}, room=request.sid)
             original_message = sanitized_message
 
-        # Format message for non-file uploads
         formatted_message = {
-            'timestamp': datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
+            'timestamp': datetime.now().strftime('%Y-%m-%d %H:%M:%S.%f')[:-3],
             'username': username,
             'message': original_message
         }
     else:
-        return  # Handle unexpected message types gracefully
+        return
 
     now = datetime.now()
 
     if username not in message_times:
         message_times[username] = []
-
     if username not in cooldown_users:
         cooldown_users[username] = False
 
@@ -99,6 +91,7 @@ def handle_message(message):
     chat_logs = load_json_file(CHAT_LOGS_FILE)
     if 'messages' not in chat_logs:
         chat_logs['messages'] = []
+    
     chat_logs['messages'].append(formatted_message)
     save_json_file(CHAT_LOGS_FILE, chat_logs)
 
@@ -113,4 +106,13 @@ def handle_typing():
         emit('typing', {'username': username}, broadcast=True)
 
 def is_file_message(message):
-    return isinstance(message, dict) and 'file_url' in message  # Ensure it is a dict and contains 'file_url'
+    return isinstance(message, dict) and 'file_url' in message
+
+def delete_message(timestamp):
+    chat_logs = load_json_file(CHAT_LOGS_FILE)
+
+    if 'messages' in chat_logs:
+        chat_logs['messages'] = [msg for msg in chat_logs['messages'] if msg['timestamp'] != timestamp]
+        save_json_file(CHAT_LOGS_FILE, chat_logs)
+
+    emit('delete_message', timestamp, broadcast=True)
