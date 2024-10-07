@@ -6,8 +6,8 @@
     <title>User Information</title>
     <style>
         body {
-            font-family: Arial, sans-serif;
-            background-color: #121212;
+            font-family: 'Helvetica Neue', Arial, sans-serif;
+            background: linear-gradient(135deg, #2c2f33, #23272a); /* Gradient background */
             color: #e0e0e0;
             margin: 0;
             padding: 20px;
@@ -17,19 +17,30 @@
             margin: 0 auto;
         }
         .user-info {
-            background-color: #1c1c1c;
+            background-color: #3a3c40; /* Darker background for user info */
             padding: 20px;
             border-radius: 8px;
             box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+            transition: transform 0.3s;
+        }
+        .user-info:hover {
+            transform: scale(1.02); /* Subtle scale effect on hover */
         }
         .user-info h2 {
             margin-top: 0;
+            font-size: 24px; /* Increased font size */
+            color: #ffffff; /* Title color */
+        }
+        .user-info p {
+            margin: 10px 0;
+            font-size: 16px; /* Font size for info */
         }
         .back-link {
             display: inline-block;
             margin-bottom: 20px;
             color: #007bff;
             text-decoration: none;
+            font-size: 16px; /* Font size for the back link */
         }
         .back-link:hover {
             text-decoration: underline;
@@ -42,7 +53,6 @@
         <div class="user-info">
             <h2>User Information</h2>
             <p><strong>Username:</strong> {{ username }}</p>
-            <p><strong>Email:</strong> <span id="email">Loading...</span></p>
             <p><strong>Created At:</strong> <span id="created-at">Loading...</span></p>
         </div>
     </div>
@@ -53,21 +63,15 @@
                 .then(userInfo => {
                     if (userInfo.error) {
                         document.getElementById('created-at').textContent = 'Error loading user info';
-                        document.getElementById('email').textContent = 'Error loading user info';
                     } else {
-                        document.getElementById('created-at').textContent = userInfo.registered_at || 'N/A';
-                        document.getElementById('email').textContent = maskEmail(userInfo.email || 'N/A');
+                        document.getElementById('created-at').textContent = formatDate(userInfo.registered_at) || 'N/A';
                     }
                 });
         });
 
-        function maskEmail(email) {
-            const [localPart, domain] = email.split('@');
-            if (localPart.length <= 2) {
-                return email;  // If the email local part is too short, show as is
-            }
-            const maskedLocalPart = localPart.slice(0, 2) + '***';
-            return `${maskedLocalPart}@${domain}`;
+        function formatDate(timestamp) {
+            const date = new Date(timestamp);
+            return `${date.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })} at ${date.toLocaleString('en-US', { hour: 'numeric', hour12: true }).replace(/:\d{1,2}$/, '')}`; // Format to include the date and hour with AM/PM
         }
     </script>
 </body>
