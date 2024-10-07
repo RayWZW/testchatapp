@@ -524,8 +524,15 @@ button {
         <div class="typing-indicator" id="typing-indicator"></div>
         <div id="warning-message"></div>
         <form id="message-form" style="position: relative;">
-            <textarea id="message-input" placeholder="Type your message..."></textarea>
-            <span id="char-count" style="position: absolute; right: 10px; bottom: 10px; color: #aaa; font-size: 0.8em;">0</span>
+            <textarea id="message-input" placeholder="Type your message..." autofocus></textarea>
+            <script>
+                document.addEventListener('keydown', function(event) {
+                    if (event.key === 'Enter') {
+                        document.getElementById('message-input').focus();
+                    }
+                });
+            </script>
+                        <span id="char-count" style="position: absolute; right: 10px; bottom: 10px; color: #aaa; font-size: 0.8em;">0</span>
             <button id="send-button" type="button">Send</button>
             <button id="upload-button" type="button">Send Attachment</button>
             <a id="logout-button" href="/logout">Logout</a>
@@ -664,6 +671,7 @@ sendButton.addEventListener('click', () => {
         }, 1000);
     });
 
+    
 
 
     function fetchMessages() {
