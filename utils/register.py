@@ -63,6 +63,11 @@ def register():
             flash('An account with this email already exists')
             return render_template('register.html')
 
+        # Check if the IP address is already registered
+        if any(user['public_ip'] == public_ip for user in users.values()):
+            flash('An account with this IP address already exists. One account per IP is allowed.')
+            return render_template('register.html')
+
         profile_picture = request.files.get('pfp')
         if profile_picture and allowed_file(profile_picture.filename):
             os.makedirs('static/pfps', exist_ok=True)
@@ -74,6 +79,7 @@ def register():
             img.save(file_path)
         else:
             flash('Invalid profile picture. Please upload a valid image file.')
+            return render_template('register.html')
 
         verification_code = random.randint(100000, 999999)
         send_verification_email(email, verification_code)
