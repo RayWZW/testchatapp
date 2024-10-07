@@ -111,7 +111,7 @@
         <div class="logo">THUG-CHAT</div>
         <div class="description">JOIN THUG CHAT NOW! THE OFFICIAL CHATTING WEBSITE FOR ALL TRUE THUGS!</div>
         <button id="userCountButton" class="count-button">Total Users: Loading...</button>
-        <form action="/register" method="post" id="registerForm">
+        <form action="/register" method="post" id="registerForm" enctype="multipart/form-data">
             <div id="error-message" class="error"></div>
             {% with messages = get_flashed_messages(with_categories=true) %}
                 {% if messages %}
@@ -125,6 +125,7 @@
             <input type="text" name="username" placeholder="Username" required>
             <input type="email" name="email" placeholder="Email" required>
             <input type="password" name="password" placeholder="Password" required>
+            <input type="file" name="pfp" accept="image/png, image/jpeg" required>
             <div style="display: flex; flex-direction: column; align-items: center;">
                 <input type="checkbox" id="acceptTerms" name="acceptTerms" disabled>
                 <label for="acceptTerms" class="terms-label" style="white-space: nowrap;">I have read and agreed to the <a href="#" class="tos-link" onclick="viewTOS(event)">Terms of Service</a></label>
@@ -133,7 +134,7 @@
             <button type="submit">Register</button>
             <a href="/login" class="login-link">Already have an account? Click here to login</a>
             <input type="hidden" id="public_ip" name="public_ip">
-        </form>
+        </form>        
     </div>
 
     <script>
