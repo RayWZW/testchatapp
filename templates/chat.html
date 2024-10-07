@@ -183,68 +183,82 @@ button {
 }
 
 #send-button, #upload-button {
-    display: flex; /* Use flexbox for centering */
-    align-items: center; /* Center text vertically */
-    justify-content: center; /* Center text horizontally */
-    height: 100px; /* Set height to 100px */
-    padding: 0 20px; /* Adjust padding for horizontal spacing */
+    display: flex; 
+    align-items: center; 
+    justify-content: center; 
+    height: 50px; /* Reduced height for better fit on mobile */
+    padding: 0 20px; 
     border: none;
-    color: #ffffff; /* White text color for better contrast */
+    color: #ffffff; 
     cursor: pointer;
-    margin-left: 10px; /* Space between buttons */
-    flex-shrink: 0;
+    margin-left: 10px; 
+    flex-shrink: 0; 
     transition: background-color 0.3s, box-shadow 0.3s, transform 0.2s;
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
-    border-radius: 0; /* Straight edges */
-    font-size: 14px; /* Consistent font size */
+    border-radius: 0; 
+    font-size: 14px; 
+    max-width: 120px; /* Limit the maximum width of buttons */
 }
 
 #send-button, #upload-button {
-    background-color: #4a90e2; /* Softer blue for send/upload buttons */
+    background-color: #4a90e2; 
 }
 
 #send-button:hover, #upload-button:hover {
-    background-color: #3a80c3; /* Darker blue on hover */
+    background-color: #3a80c3; 
     box-shadow: 0 6px 12px rgba(0, 0, 0, 0.2);
 }
 
 #send-button:active, #upload-button:active {
-    background-color: #2f65a0; /* Even darker blue when active */
+    background-color: #2f65a0; 
     transform: translateY(2px);
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
 }
 
 #logout-button {
-    display: flex; /* Use flexbox for centering */
-    align-items: center; /* Center text vertically */
-    justify-content: center; /* Center text horizontally */
-    height: 100px; /* Set height to 100px */
-    padding: 0 20px; /* Adjust padding for horizontal spacing */
+    display: flex; 
+    align-items: center; 
+    justify-content: center; 
+    height: 50px; /* Reduced height for better fit on mobile */
+    padding: 0 20px; 
     border: none;
-    background-color: #d9534f; /* Bright red background for visibility */
-    color: #ffffff; /* White text color for better contrast */
+    background-color: #d9534f; 
+    color: #ffffff; 
     cursor: pointer;
-    margin-left: 10px; /* Space between buttons */
-    margin-top: 10px; /* Lower it by 10px */
-    flex-shrink: 0;
+    margin-left: 10px; 
+    margin-top: 10px; 
+    flex-shrink: 0; 
     transition: background-color 0.3s, box-shadow 0.3s, transform 0.2s;
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
-    border-radius: 0; /* Straight edges */
-    font-size: 14px; /* Consistent font size */
-    text-decoration: none; /* Remove underline */
-    font-weight: bold; /* Make text bold */
-    text-transform: uppercase; /* Convert text to uppercase */
+    border-radius: 0; 
+    font-size: 14px; 
+    text-decoration: none; 
+    font-weight: bold; 
+    text-transform: uppercase; 
+    max-width: 120px; /* Limit the maximum width of the logout button */
 }
 
 #logout-button:hover {
-    background-color: #c9302c; /* Darker red on hover */
+    background-color: #c9302c; 
 }
 
 #logout-button:active {
-    background-color: #a52c2c; /* Even darker red when active */
+    background-color: #a52c2c; 
     transform: translateY(2px);
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
 }
+
+@media (max-width: 768px) {
+    #send-button, #upload-button, #logout-button {
+        flex: 1; /* Allow buttons to grow in width if necessary */
+        min-width: 100px; /* Set a minimum width for buttons */
+    }
+    
+    #message-form {
+        flex-wrap: wrap; /* Allow buttons to wrap on smaller screens */
+    }
+}
+
 
 
 
