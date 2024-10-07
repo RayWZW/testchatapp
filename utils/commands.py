@@ -206,10 +206,9 @@ def get_help_text():
     !restart <password> - Restarts the server (admin password required)
     !listusers - Lists the current users
     !getuserinfo <username> - Gets information about a specific user
-    !createuser <username> <password> <email> - Creates a new user
-    !removeuser <username> <admin_password> - Removes a user
     !calculate <expression> - Evaluates a mathematical expression (supports +, -, *, /)
     !dice <sides> - Rolls a dice with a specified number of sides
     !webreq "<webhook_url>" "<message>" - Sends a message to the specified webhook
     !autocomplete <partial_command> - Suggests available commands based on input
     """
+
