@@ -188,8 +188,10 @@ def index():
         chat_logs = load_json_file(CHAT_LOGS_FILE)
         messages = chat_logs.get('messages', [])
         users = load_json_file(USER_ACCOUNTS_FILE)
-        return render_template('chat.html', messages=messages, users=list(users.keys()))
+        username = session['username']  # Get the username from the session
+        return render_template('chat.html', messages=messages, users=list(users.keys()), username=username)
     return redirect(url_for('login'))
+
 
 @app.route('/get_user_info')
 def get_user_info():
@@ -396,11 +398,47 @@ def webhook(id):
     return jsonify({"status": "success", "id": id, "username": username, "message": message}), 200
 
 
+import threading
+import sys
 
+def restart_app():
+    while True:
+        time.sleep(600)  # Sleep for 5 minutes
+        os.execl(sys.executable, sys.executable, *sys.argv)
+
+threading.Thread(target=restart_app, daemon=True).start()
+
+from flask_socketio import SocketIO, emit
+import time
+
+# Dictionary to keep track of blocked IPs
+blocked_ips = {}
 
 @socketio.on('message')
 def socket_handle_message(message):
+    client_ip = request.remote_addr  # Get the client's IP address
+
+    # Check if the client IP is blocked
+    if client_ip in blocked_ips:
+        block_time, block_until = blocked_ips[client_ip]
+        if time.time() < block_until:  # If the block time is still active
+            print(f"Message rejected from {client_ip}: Blocked until {block_until}.")
+            emit('error', {'message': 'Your IP has been temporarily blocked due to spam. Please wait before sending more messages.'})
+            return  # Reject the message
+
+        # Remove the IP from the blocked list if the block duration has expired
+        del blocked_ips[client_ip]
+
+    # Check if the message is a string and its length exceeds 10,000 characters
+    if isinstance(message, str) and len(message) > 20000:
+        print(f"Message too long from {client_ip}, rejecting and blocking for 10 seconds.")
+        # Block this IP for the next 10 seconds
+        blocked_ips[client_ip] = (time.time(), time.time() + 10)
+        emit('error', {'message': 'Your message is too long. You have been blocked for 10 seconds.'})
+        return  # Reject the message
+
     handle_message(message)
+
 
 @socketio.on('typing')
 def socket_handle_typing():
