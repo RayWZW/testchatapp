@@ -118,6 +118,19 @@
         .user-card .menu-content button:hover {
             background-color: rgba(255, 255, 255, 0.2);
         }
+        .role-management {
+            margin-top: 10px;
+            display: flex;
+            gap: 10px;
+        }
+        .role-management select,
+        .role-management button {
+            padding: 5px;
+            border-radius: 5px;
+            border: none;
+            font-size: 0.9rem;
+            cursor: pointer;
+        }
         .clear-chats {
             text-align: center;
             margin-top: 40px;
@@ -173,6 +186,18 @@
                     <p>Password: {{ details.password }}</p>
                     <p>User ID: {{ details.user_id }}</p>
                     <p>IP Address: {{ details.public_ip }}</p>
+                    <p>Role: {{ details.role if details.role else 'NONE' }}</p>
+                </div>
+                <div class="role-management">
+                    <select id="roleSelect_{{ username }}">
+                        <option value="">Select Role</option>
+                        <option value="admin">Admin</option>
+                        <option value="moderator">Moderator</option>
+                        <option value="owner">Owner</option>
+                        <option value='W THUG'>W THUG</option>
+                    </select>
+                    <button onclick="addRole('{{ username }}')">Add Role</button>
+                    <button onclick="removeRole('{{ username }}')">Remove Role</button>
                 </div>
             </div>
             {% endfor %}
@@ -182,29 +207,28 @@
         </div>
     </div>
     <script>
-function formatDate(dateString) {
-    const optionsDate = { year: 'numeric', month: 'long', day: 'numeric' };
-    const optionsTime = { hour: 'numeric', minute: 'numeric', hour12: true };
-    const date = new Date(dateString);
-    const formattedDate = date.toLocaleDateString('en-US', optionsDate);
-    const formattedTime = date.toLocaleTimeString('en-US', optionsTime);
-    return `${formattedDate} at ${formattedTime}`;
-}
-
-
+        function formatDate(dateString) {
+            const optionsDate = { year: 'numeric', month: 'long', day: 'numeric' };
+            const optionsTime = { hour: 'numeric', minute: 'numeric', hour12: true };
+            const date = new Date(dateString);
+            const formattedDate = date.toLocaleDateString('en-US', optionsDate);
+            const formattedTime = date.toLocaleTimeString('en-US', optionsTime);
+            return `${formattedDate} at ${formattedTime}`;
+        }
+    
         function sortUsers() {
             const userGrid = document.getElementById('user-grid');
             const userCards = Array.from(userGrid.children);
-
+    
             userCards.sort((a, b) => {
                 const dateA = new Date(a.getAttribute('data-registered-at'));
                 const dateB = new Date(b.getAttribute('data-registered-at'));
                 return dateA - dateB;
             });
-
+    
             userCards.forEach(card => userGrid.appendChild(card));
         }
-
+    
         function displayFormattedDates() {
             const dateElements = document.querySelectorAll('.formatted-date');
             dateElements.forEach(element => {
@@ -212,21 +236,40 @@ function formatDate(dateString) {
                 element.textContent = formatDate(registeredAt);
             });
         }
-
+    
+        function loadUserRoles() {
+            const userCards = document.querySelectorAll('.user-card');
+            userCards.forEach(card => {
+                const username = card.getAttribute('data-username');
+                fetch(`/admin/users/get_roles?username=${username}`)
+                    .then(response => response.json())
+                    .then(data => {
+                        const roleContainer = card.querySelector('.role-container'); // Ensure your user card has a .role-container
+                        if (data.roles && roleContainer) {
+                            roleContainer.textContent = data.roles.join(', '); // Assuming roles is an array of strings
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error loading roles:', error);
+                    });
+            });
+        }
+    
         document.addEventListener('DOMContentLoaded', () => {
             displayFormattedDates();
             sortUsers();
+            loadUserRoles(); // Load user roles after the DOM is ready
         });
-
+    
         function toggleMenu(event) {
             const menuContent = event.currentTarget.querySelector('.menu-content');
             menuContent.style.display = menuContent.style.display === 'block' ? 'none' : 'block';
         }
-
+    
         function banUser(username) {
             const password = prompt("Enter admin password:");
             if (!password) return;
-
+    
             fetch('/admin/users/ban', {
                 method: 'POST',
                 headers: {
@@ -246,11 +289,11 @@ function formatDate(dateString) {
                   console.error('Error:', error);
               });
         }
-
+    
         function clearMessages(username) {
             const password = prompt("Enter admin password:");
             if (!password) return;
-
+    
             fetch('/admin/users/clear_messages', {
                 method: 'POST',
                 headers: {
@@ -270,11 +313,61 @@ function formatDate(dateString) {
                   console.error('Error:', error);
               });
         }
-
+    
+        function addRole(username) {
+            const select = document.getElementById(`roleSelect_${username}`);
+            const role = select.value;
+            const password = prompt("Enter admin password:");
+            if (!password || !role) return;
+    
+            fetch('/roles/add_role', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-Admin-Password': password
+                },
+                body: JSON.stringify({ username, role })
+            }).then(response => response.json())
+              .then(data => {
+                  alert(data.message);
+                  if (data.redirect) {
+                      window.location.href = data.redirect;
+                  } else {
+                      location.reload();
+                  }
+              }).catch(error => {
+                  console.error('Error:', error);
+              });
+        }
+    
+        function removeRole(username) {
+            const password = prompt("Enter admin password:");
+            if (!password) return;
+    
+            fetch('/roles/remove_role', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-Admin-Password': password
+                },
+                body: JSON.stringify({ username })
+            }).then(response => response.json())
+              .then(data => {
+                  alert(data.message);
+                  if (data.redirect) {
+                      window.location.href = data.redirect;
+                  } else {
+                      location.reload();
+                  }
+              }).catch(error => {
+                  console.error('Error:', error);
+              });
+        }
+    
         function clearAllChats() {
             const password = prompt("Enter admin password:");
             if (!password) return;
-
+    
             fetch('/admin/chats/clear_all', {
                 method: 'POST',
                 headers: {
@@ -289,5 +382,6 @@ function formatDate(dateString) {
               });
         }
     </script>
+    
 </body>
 </html>
