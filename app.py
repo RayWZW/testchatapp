@@ -21,6 +21,8 @@ from routes.accsettings import accsettings_bp
 from routes.userinfo import userinfo_bp
 from utils.login import login_bp
 from routes.logout import logout_bp
+from utils.roles import roles_bp
+
 
 
 
@@ -44,6 +46,7 @@ app.register_blueprint(accsettings_bp)
 app.register_blueprint(userinfo_bp)
 app.register_blueprint(login_bp)
 app.register_blueprint(logout_bp)
+app.register_blueprint(roles_bp, url_prefix='/roles')
 
 
 
