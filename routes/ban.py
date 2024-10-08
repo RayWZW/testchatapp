@@ -1,9 +1,9 @@
 from flask import Blueprint, session, jsonify, request
 from utils.utils import load_json_file, save_json_file
-from app import USER_ACCOUNTS_FILE, BANNED_USERS_FILE  # Import constants from app
+from app import USER_ACCOUNTS_FILE, BANNED_USERS_FILE  
 
 ban_bp = Blueprint('ban', __name__)
-active_sessions = {}  # Assume this is defined elsewhere in your application
+active_sessions = {}  
 
 def is_admin(username):
     admins = load_json_file('data/admins.json')
@@ -22,10 +22,8 @@ def ban_user():
     if username not in users:
         return jsonify({'message': 'User not found'}), 404
 
-    # Retrieve user details
     user_details = users[username]
 
-    # Add to banned users
     banned_users = load_json_file(BANNED_USERS_FILE)
     banned_users[username] = {
         'password': user_details['password'],
@@ -35,16 +33,13 @@ def ban_user():
     }
     save_json_file(BANNED_USERS_FILE, banned_users)
 
-    # Remove from user accounts
     del users[username]
     save_json_file(USER_ACCOUNTS_FILE, users)
 
-    # Invalidate all sessions of the banned user
     if username in active_sessions:
         for session_id in active_sessions[username]:
             socketio.disconnect(sid=session_id)
 
-    # Log out the banned user if they are currently logged in
     if username in session:
         session.pop(username, None)
         return jsonify({
