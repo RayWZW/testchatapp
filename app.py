@@ -7,7 +7,7 @@ from datetime import datetime
 from PIL import Image
 import mimetypes
 from flask_socketio import disconnect, leave_room
-from utils.utils import load_json_file, save_json_file, generate_unique_user_id
+from utils.utils import load_json_file, save_json_file, require_verification, is_verified, is_admin, get_admin_password, resize_image, generate_unique_user_id
 from utils.register import register_bp
 from utils.message import handle_message, delete_message, handle_typing  # Adjusted import
 from utils.admin import admin_bp
@@ -21,6 +21,7 @@ from routes.accsettings import accsettings_bp
 from routes.userinfo import userinfo_bp
 from utils.login import login_bp
 from routes.logout import logout_bp
+
 
 
 
@@ -73,7 +74,7 @@ app.config['PFP_FOLDER'] = PFP_FOLDER
 @app.before_request
 def block_requests():
     # Define the paths to block
-    blocked_paths = ['/data/user_accounts.json']
+    blocked_paths = ['/data/useraccounts.json']
     
     if request.path in blocked_paths:
         return render_template('getclowned.html'), 403  # Render the blocked page with a 403 status code
@@ -102,48 +103,6 @@ def before_request():
     else:
         # Redirect to HTTPS
         return redirect(request.url.replace("http://", "https://"), code=301)
-
-def require_verification(f):
-    @wraps(f)
-    def decorated_function(*args, **kwargs):
-        if 'username' in session and not is_verified(session['username']):
-            flash('You must verify your email before accessing this page.')
-            return redirect(url_for('verify', username=session['username']))
-        return f(*args, **kwargs)
-    return decorated_function
-
-def is_verified(username):
-    users = load_json_file(USER_ACCOUNTS_FILE)
-    return users.get(username, {}).get('verified', False)
-
-
-def load_json_file(filepath):
-    if os.path.exists(filepath):
-        with open(filepath, 'r') as file:
-            return json.load(file)
-    return {}
-
-def save_json_file(filepath, data):
-    with open(filepath, 'w') as file:
-        json.dump(data, file, indent=4)
-
-def is_admin(username):
-    admins = load_json_file(ADMINS_FILE)
-    return username in admins
-
-def get_admin_password():
-    """Retrieve the admin password from admin_password.json."""
-    data = load_json_file(ADMIN_PASSWORD_FILE)
-    return data.get('password', '')  # Default to an empty string if not found
-
-    
-
-
-def resize_image(input_path, output_path):
-    with Image.open(input_path) as img:
-        img = img.resize((50, 50), Image.ANTIALIAS)  # Resize to 50x50
-        img.save(output_path)
-
 
 @app.route('/')
 def index():
