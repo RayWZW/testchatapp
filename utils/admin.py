@@ -1,4 +1,3 @@
-# utils/admin.py
 from flask import Blueprint, session, redirect, url_for, flash, request, render_template, jsonify
 from utils.utils import load_json_file, save_json_file
 import os
@@ -11,7 +10,7 @@ BANNED_USERS_FILE = 'data/banned.json'
 ADMINS_FILE = 'data/admins.json'
 ADMIN_PASSWORD_FILE = 'data/admin_password.json'
 
-ADMIN_PASSWORD = 'fr78h34r78yr'
+ADMIN_PASSWORD = '&89u98u543r89u453rereded'
 
 def is_admin(username):
     admins = load_json_file(ADMINS_FILE)
