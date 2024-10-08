@@ -9,11 +9,21 @@ import mimetypes
 from flask_socketio import disconnect, leave_room
 from utils.utils import load_json_file, save_json_file, generate_unique_user_id
 from utils.register import register_bp
-from utils.message import handle_message, delete_message  # Adjusted import
+from utils.message import handle_message, delete_message, handle_typing  # Adjusted import
 from utils.admin import admin_bp
 from utils.commands import commands_bp
 from utils.forgot_password import password_reset_bp
 from utils.files import files_bp
+from routes.useraccounts import useraccounts_bp
+from routes.uploadpfp import upload_pfp_bp
+from routes.getchatlogs import getchatlogs_bp
+from routes.accsettings import accsettings_bp
+from routes.userinfo import userinfo_bp
+from utils.login import login_bp
+from routes.logout import logout_bp
+
+
+
 
 
 
@@ -26,6 +36,14 @@ app.register_blueprint(admin_bp, url_prefix='/admin')
 app.register_blueprint(commands_bp)
 app.register_blueprint(password_reset_bp)
 app.register_blueprint(files_bp)
+app.register_blueprint(useraccounts_bp)
+app.register_blueprint(upload_pfp_bp)
+app.register_blueprint(getchatlogs_bp)
+app.register_blueprint(accsettings_bp)
+app.register_blueprint(userinfo_bp)
+app.register_blueprint(login_bp)
+app.register_blueprint(logout_bp)
+
 
 
 from flask_session import Session
@@ -39,14 +57,17 @@ Session(app)
 active_sessions = {}
 
 
-USER_ACCOUNTS_FILE = 'data/useraccounts.json'
-CHAT_LOGS_FILE = 'data/chatlogs.json'
-BANNED_USERS_FILE = 'data/banned.json'
-ADMINS_FILE = 'data/admins.json'
-ADMIN_PASSWORD_FILE = 'data/admin_password.json'
-CODES_FILE = 'data/codes.json'
-TEMP_USER_ACCOUNTS_FILE = 'data/temp_useraccounts.json'
-PFP_FOLDER = 'static/pfps/'
+with open('constants/paths.json') as f:
+    paths = json.load(f)
+
+USER_ACCOUNTS_FILE = paths["USER_ACCOUNTS_FILE"]
+CHAT_LOGS_FILE = paths["CHAT_LOGS_FILE"]
+BANNED_USERS_FILE = paths["BANNED_USERS_FILE"]
+ADMINS_FILE = paths["ADMINS_FILE"]
+ADMIN_PASSWORD_FILE = paths["ADMIN_PASSWORD_FILE"]
+CODES_FILE = paths["CODES_FILE"]
+TEMP_USER_ACCOUNTS_FILE = paths["TEMP_USER_ACCOUNTS_FILE"]
+PFP_FOLDER = paths["PFP_FOLDER"]
 app.config['PFP_FOLDER'] = PFP_FOLDER
 
 @app.before_request
@@ -57,13 +78,18 @@ def block_requests():
     if request.path in blocked_paths:
         return render_template('getclowned.html'), 403  # Render the blocked page with a 403 status code
 
-@app.route('/data/user_accounts', methods=['POST'])
-def handle_user_accounts():
-    return jsonify({'message': 'Request successful'})
+
 
 @socketio.on('send_message')
 def on_send_message(message):
     handle_message(message)  # Call the function from message.py
+
+@socketio.on('send_command')  
+def handle_send_command(data):
+    username = data['username']  
+    command = data['command']      
+    response = handle_command(command, username)  
+    emit('response', {'message': response})    
 
 @socketio.on('delete_message_request')
 def on_delete_message_request(timestamp):
@@ -110,146 +136,13 @@ def get_admin_password():
     data = load_json_file(ADMIN_PASSWORD_FILE)
     return data.get('password', '')  # Default to an empty string if not found
 
-@app.route('/upload_pfp', methods=['POST'])
-def upload_pfp():
-    if 'pfp' not in request.files:
-        return jsonify({'error': 'No file part'}), 400
-
-    file = request.files['pfp']
     
-    if file.filename == '':
-        return jsonify({'error': 'No selected file'}), 400
 
-    username = session.get('username')  # Retrieve the username from the session
-    if username is None:
-        return jsonify({'error': 'User not logged in'}), 401
-
-    file_path = os.path.join(app.config['PFP_FOLDER'], f"{username.lower()}.png")
-
-    # Save the new profile picture
-    file.save(file_path)
-
-    return jsonify({
-        'message': 'Profile picture updated successfully!',
-        'url': url_for('static', filename=f'pfps/{username.lower()}.png')
-    })
-
-@app.route('/data/chatlogs.json', methods=['GET'])
-def get_chatlogs():
-    try:
-        with open('data/chatlogs.json', 'r') as f:
-            chatlogs = json.load(f)
-        return jsonify(chatlogs), 200
-    except FileNotFoundError:
-        return jsonify({'error': 'File not found'}), 404
-    except json.JSONDecodeError:
-        return jsonify({'error': 'Invalid JSON format'}), 400
 
 def resize_image(input_path, output_path):
     with Image.open(input_path) as img:
         img = img.resize((50, 50), Image.ANTIALIAS)  # Resize to 50x50
         img.save(output_path)
-
-@app.route('/account_settings', methods=['GET', 'POST'])
-def account_settings():
-    if 'username' not in session:
-        return redirect(url_for('login'))  # Redirect if not logged in
-
-    username = session['username']  # Get the username from the session
-    return render_template('account_settings.html', username=username)  # Render the account settings page
-
-
-
-@app.route('/admin', methods=['GET', 'POST'])
-def admin():
-    if 'admin_authenticated' not in session:
-        return redirect(url_for('admin_login'))
-
-    # Load user accounts data
-    users = load_json_file(USER_ACCOUNTS_FILE)
-    return render_template('admin.html', users=users)
-
-@app.route('/.well-known/pki-validation/<filename>')
-def serve_verification_file(filename):
-    return send_from_directory(os.path.join(app.static_folder, '.well-known/pki-validation'), filename)
-
-
-@app.route('/admin_login', methods=['GET', 'POST'])
-def admin_login():
-    if request.method == 'POST':
-        username = request.form['username']
-        password = request.form['password']
-
-        # Validate against admins.json
-        if is_admin(username):
-            # Check password
-            if password == get_admin_password():
-                session['admin_authenticated'] = True  # Set a session variable to indicate authentication
-                session['username'] = username  # Store the username in the session
-                return redirect(url_for('admin'))
-            else:
-                flash('Invalid admin password')
-        else:
-            flash('Invalid admin credentials')
-    
-    return render_template('admin_login.html')
-
-
-
-@app.route('/admin_logout')
-def admin_logout():
-    session.pop('username', None)
-    return redirect(url_for('admin_login'))
-
-@app.route('/ban_user', methods=['POST'])
-def ban_user():
-    if 'username' not in session or not is_admin(session['username']):
-        return jsonify({'message': 'Unauthorized'}), 403
-
-    username = request.json.get('username')
-    if not username:
-        return jsonify({'message': 'No username provided'}), 400
-
-    users = load_json_file(USER_ACCOUNTS_FILE)
-    if username not in users:
-        return jsonify({'message': 'User not found'}), 404
-
-    # Retrieve user details
-    user_details = users[username]
-
-    # Add to banned users
-    banned_users = load_json_file(BANNED_USERS_FILE)
-    banned_users[username] = {
-        'password': user_details['password'],
-        'email': user_details['email'],
-        'registered_at': user_details['registered_at'],
-        'public_ip': user_details.get('public_ip', '')
-    }
-    save_json_file(BANNED_USERS_FILE, banned_users)
-
-    # Remove from user accounts
-    del users[username]
-    save_json_file(USER_ACCOUNTS_FILE, users)
-
-    # Invalidate all sessions of the banned user
-    if username in active_sessions:
-        for session_id in active_sessions[username]:
-            socketio.disconnect(sid=session_id)
-
-    # Log out the banned user if they are currently logged in
-    if username in session:
-        session.pop(username, None)
-        return jsonify({
-            'message': 'User banned and deleted successfully',
-            'redirect': '/logout'
-        })
-
-    return jsonify({
-        'message': 'User banned and deleted successfully',
-        'redirect': None
-    })
-
-
 
 
 @app.route('/')
@@ -260,27 +153,7 @@ def index():
         users = load_json_file(USER_ACCOUNTS_FILE)
         username = session['username']  # Get the username from the session
         return render_template('chat.html', messages=messages, users=list(users.keys()), username=username)
-    return redirect(url_for('login'))
-
-
-@app.route('/get_user_info')
-def get_user_info():
-    username = request.args.get('username')
-    if not username:
-        return jsonify({'error': 'No username provided'}), 400
-
-    users = load_json_file(USER_ACCOUNTS_FILE)
-    if username not in users:
-        return jsonify({'error': 'User not found'}), 404
-
-    # Example: sending username, email, and registration timestamp
-    user_info = {
-        'username': username,
-        'email': users[username].get('email', 'N/A'),
-        'registered_at': users[username].get('registered_at', 'N/A')
-    }
-    return jsonify(user_info)
-
+    return redirect(url_for('login.login'))
 
 @app.route('/userinfo-<username>')
 def user_info(username):
@@ -290,124 +163,7 @@ def user_info(username):
 
     # Pass username to the template
     return render_template('userinfo.html', username=username)
-
-failed_attempts = {}
-verification_codes = {}
-
-@app.route('/login', methods=['GET', 'POST'])
-def login():
-    if request.method == 'POST':
-        username = request.form.get('username')
-        password = request.form.get('password')
-        users = load_json_file(USER_ACCOUNTS_FILE)
-        user = users.get(username)
-
-        if user is None:
-            flash('User not found.')
-            return render_template('login.html')
-
-        if user['password'] == password:
-            session['username'] = username
-            return redirect(url_for('index'))
-
-        if username not in failed_attempts:
-            failed_attempts[username] = {'count': 0, 'locked': False}
-
-        failed_attempts[username]['count'] += 1
-
-        if failed_attempts[username]['count'] >= 3:
-            failed_attempts[username]['locked'] = True
-            verification_code = str(random.randint(100000, 999999))
-            verification_codes[username] = verification_code
-            send_verification_email(user['email'], verification_code)
-            flash('Too many failed attempts. A verification code has been sent to your email.')
-            return redirect(url_for('locked_screen'))
-
-        flash('Invalid credentials. Try again.')
-
-    return render_template('login.html')
-
-
-
-@app.route('/locked', methods=['GET', 'POST'])
-def locked_screen():
-    username = session.get('username')
-
-    if request.method == 'POST':
-        verification_code_input = request.form.get('verification_code')
-
-        if username in verification_codes and verification_codes[username] == verification_code_input:
-            failed_attempts[username] = {'count': 0, 'locked': False}
-            return redirect(url_for('index'))
-        else:
-            flash('Incorrect verification code.')
-
-    return render_template('locked.html')
-
-
-
-
-
-
-        # Validate credentials
-    if user and user['password'] == password:
-            # Reset failed attempts after successful login
-            failed_attempts[username] = {'count': 0, 'locked': False}
-            session['username'] = username
-            session_cookie_name = app.config.get('SESSION_COOKIE_NAME', 'session')
-            session_id = session.get('_id', request.cookies.get(session_cookie_name))
-            active_sessions[username] = session_id
-            return redirect(url_for('index'))
-    else:
-            # Increment failed attempt counter
-            if username not in failed_attempts:
-                failed_attempts[username] = {'count': 0, 'locked': False}
-
-            failed_attempts[username]['count'] += 1
-
-            if failed_attempts[username]['count'] >= 4:
-                failed_attempts[username]['locked'] = True
-                verification_code = str(random.randint(100000, 999999))  # Generate random 6-digit code
-                verification_codes[username] = verification_code
-                if user and 'email' in user:
-                    send_verification_email(user['email'], verification_code)
-                flash('Too many failed attempts. A verification code has been sent to your email.')
-                return render_template('login.html', requires_verification=True)
-            else:
-                flash('Invalid credentials. Try again.')
-
-    return render_template('login.html', requires_verification=False)
-
-
-
-
-
-def generate_unique_user_id(users):
-    """Generate a unique 10-digit user ID that does not exist in the users data."""
-    while True:
-        user_id = str(random.randint(1000000000, 9999999999))
-        if not any(user_id == user_data.get('user_id') for user_data in users.values()):
-            return user_id
-        
-def send_verification_email(email, code):
-    smtp_server = "smtp.fastmail.com"
-    port = 587
-    username = "thugverify11@fastmail.com"  # Your FastMail email address
-    password = "28642x4c2p8q5d74"  # Your app-specific password
-    subject = "THUG-CHAT Verification"
-    body = f"Someone tried to login to your account too many times incorrectly. You must verify your account again to access it, here is your code: {code}"
-
-    message = f'From: {username}\nTo: {email}\nSubject: {subject}\n\n{body}'
-
-    try:
-        with smtplib.SMTP(smtp_server, port) as server:
-            server.starttls()
-            server.login(username, password)
-            server.sendmail(username, email, message)
-        print("Email sent successfully!")
-    except Exception as e:
-        print("Failed to send email:", e)
-   
+  
 
 
 import smtplib
@@ -427,14 +183,6 @@ def verify_route(username):
 def tos():
     return render_template('tos.html')
 
-
-@app.route('/logout')
-def logout():
-    username = session.get('username')
-    if username in active_sessions:
-        del active_sessions[username]
-    session.pop('username', None)
-    return redirect(url_for('login'))
 
 
 @app.route('/get_user_accounts')
@@ -474,6 +222,8 @@ import time
 
 # Dictionary to keep track of blocked IPs
 blocked_ips = {}
+
+
 
 @socketio.on('message')
 def socket_handle_message(message):
