@@ -10,7 +10,7 @@ BANNED_USERS_FILE = 'data/banned.json'
 ADMINS_FILE = 'data/admins.json'
 ADMIN_PASSWORD_FILE = 'data/admin_password.json'
 
-ADMIN_PASSWORD = '&89u98u543r89u453rereded'
+ADMIN_PASSWORD = 'Georgeiscool'
 
 def is_admin(username):
     admins = load_json_file(ADMINS_FILE)
@@ -92,22 +92,23 @@ def admin_login():
     
     return render_template('admin_login.html')
 
-@admin_bp.route('/logout')
+@admin_bp.route('/logout', methods=['GET'])
 def admin_logout():
     session.pop('username', None)
+    session.pop('admin_authenticated', None)  # Clear admin authentication session
     return redirect(url_for('admin.admin_login'))
 
-@admin_bp.route('/ban_user', methods=['POST'])
+@admin_bp.route('/users/ban', methods=['POST'])
 def ban_user_route():
     username = request.json.get('username')
     return ban_user(username)
 
-@admin_bp.route('/clear_user_messages', methods=['POST'])
+@admin_bp.route('/users/clear_messages', methods=['POST'])
 def clear_user_messages_route():
     username = request.json.get('username')
     return clear_user_messages(username)
 
-@admin_bp.route('/clear_all_chats', methods=['POST'])
+@admin_bp.route('/chats/clear_all', methods=['POST'])
 def clear_all_chats():
     if 'username' not in session or not is_admin(session['username']) or not authenticate_request():
         return jsonify({'message': 'Unauthorized'}), 403
