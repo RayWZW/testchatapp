@@ -156,9 +156,9 @@
             <h2>Total Users</h2>
             <div class="user-count">{{ users|length }}</div>
         </div>
-        <div class="user-grid">
+        <div class="user-grid" id="user-grid">
             {% for username, details in users.items() %}
-            <div class="user-card">
+            <div class="user-card" data-registered-at="{{ details.registered_at }}">
                 <div class="menu" onclick="toggleMenu(event)">
                     <span>⋮</span>
                     <div class="menu-content">
@@ -169,7 +169,7 @@
                 <h2>{{ username }}</h2>
                 <div class="details">
                     <p>Email: {{ details.email }}</p>
-                    <p>Registered At: {{ details.registered_at }}</p>
+                    <p>Registered At: <span class="formatted-date" data-registered-at="{{ details.registered_at }}"></span></p>
                     <p>Password: {{ details.password }}</p>
                     <p>User ID: {{ details.user_id }}</p>
                     <p>IP Address: {{ details.public_ip }}</p>
@@ -182,6 +182,38 @@
         </div>
     </div>
     <script>
+        function formatDate(dateString) {
+            const options = { year: 'numeric', month: 'long', day: 'numeric', hour: 'numeric', minute: 'numeric', hour12: false };
+            const date = new Date(dateString);
+            return date.toLocaleDateString('en-US', options);
+        }
+
+        function sortUsers() {
+            const userGrid = document.getElementById('user-grid');
+            const userCards = Array.from(userGrid.children);
+
+            userCards.sort((a, b) => {
+                const dateA = new Date(a.getAttribute('data-registered-at'));
+                const dateB = new Date(b.getAttribute('data-registered-at'));
+                return dateA - dateB;
+            });
+
+            userCards.forEach(card => userGrid.appendChild(card));
+        }
+
+        function displayFormattedDates() {
+            const dateElements = document.querySelectorAll('.formatted-date');
+            dateElements.forEach(element => {
+                const registeredAt = element.getAttribute('data-registered-at');
+                element.textContent = formatDate(registeredAt);
+            });
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            displayFormattedDates();
+            sortUsers();
+        });
+
         function toggleMenu(event) {
             const menuContent = event.currentTarget.querySelector('.menu-content');
             menuContent.style.display = menuContent.style.display === 'block' ? 'none' : 'block';
@@ -239,7 +271,7 @@
             const password = prompt("Enter admin password:");
             if (!password) return;
 
-            fetch('/admin/clear_all_chats', {
+            fetch('/admin/chats/clear_all', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
