@@ -985,16 +985,7 @@ function fetchMessages() {
         });
 }
 
-setInterval(fetchMessages, 500);
-
-
-
-
-
-
-
-
-
+setInterval(fetchMessages, 1000);
 
                 let typingUsers = new Set();
                 let typingTimeouts = new Map();
@@ -1056,6 +1047,9 @@ setInterval(fetchMessages, 500);
         e.preventDefault(); 
     }
 });
+
+
+
 
                 document.getElementById('upload-button').addEventListener('click', function() {
                     fileInput.click();
@@ -1229,10 +1223,21 @@ const specificTimestamp = new Date('2024-10-06T14:30:00').getTime(); // Adjust t
 console.log(formatTimestamp(specificTimestamp));
 
 
+function coloredText(message) {
+    // Check if the message starts and ends with "RR"
+    if (message.startsWith('RR') && message.endsWith('RR')) {
+        // Remove the "RR" from the start and end
+        const innerMessage = message.slice(2, -2);
+        // Return the message with red color applied
+        return `<span style="color: red; font-weight: bold;">${innerMessage}</span>`;
+    }
+    return message; // Return the original message if it doesn't meet the condition
+}
+
 function createMessageElement(msg) {
     const div = document.createElement('div');
     div.className = 'message';
-    
+
     const formattedTime = formatTimestamp(msg.timestamp);
     const profilePictureUrl = `/static/pfps/${msg.username.toLowerCase()}.png`; 
     const defaultProfilePictureUrl = '/static/boring/default.png'; 
@@ -1244,24 +1249,29 @@ function createMessageElement(msg) {
         img.src = defaultProfilePictureUrl; 
     };
 
-    // Check if the message contains a media file
     if (msg.file_url) {
-        // Create media message element
-        div.classList.add('media-message'); // Optional class for media messages
-        const mediaElement = document.createElement('img'); // Assuming media is an image
-        mediaElement.src = msg.file_url; // URL of the media file
+        div.classList.add('media-message'); 
+        const mediaElement = document.createElement('img'); 
+        mediaElement.src = msg.file_url; 
         mediaElement.alt = `${msg.username}'s media`;
-        mediaElement.style.maxWidth = '300px'; // Optional: Limit the width of media
-        mediaElement.style.borderRadius = '8px'; // Optional: Add some styling
+        mediaElement.style.maxWidth = '300px'; 
+        mediaElement.style.borderRadius = '8px'; 
         div.appendChild(mediaElement);
     } else {
-        // Create text message element
-        const formattedMessage = formatLinks(msg.message); 
+
+        let formattedMessage = formatLinks(msg.message);
+        formattedMessage = coloredText(formattedMessage); 
         const wrappedMessage = wrapLongMessage(formattedMessage, 85);
-        
-        const usernameStyle = (msg.username === 'George' || msg.username === 'CERTIFIEDL0YALIST' || msg.username === 'certifiedloyalist') 
-            ? 'color: red; font-weight: bold;' 
-            : '';
+
+        let usernameStyle = '';
+
+        if (msg.username === 'Stronomy') {
+            usernameStyle = 'color: blue; font-weight: bold;'; 
+        } else if (msg.username === 'lef123') {
+            usernameStyle = 'color: green; font-weight: bold;'; 
+        } else if (msg.username === 'George' || msg.username === 'CERTIFIEDL0YALIST' || msg.username === 'certifiedloyalist') {
+            usernameStyle = 'color: red; font-weight: bold;'; 
+        }
 
         div.innerHTML = `
             <div class="message-content" style="display: flex; align-items: center; justify-content: space-between;">
@@ -1279,13 +1289,6 @@ function createMessageElement(msg) {
 
     return div;
 }
-
-
-
-
-
-
-
 
 
 
