@@ -69,7 +69,7 @@
 <body>
     <div class="login-container">
         <h2>Admin Login</h2>
-        <form action="/admin_login" method="post">
+        <form action="/admin/login" method="post">
             {% with messages = get_flashed_messages(with_categories=true) %}
                 {% if messages %}
                     <div class="error">
