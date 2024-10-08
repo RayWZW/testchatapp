@@ -1,0 +1,12 @@
+{
+    "USER_ACCOUNTS_FILE": "data/useraccounts.json",
+    "CHAT_LOGS_FILE": "data/chatlogs.json",
+    "BANNED_USERS_FILE": "data/banned.json",
+    "ADMINS_FILE": "data/admins.json",
+    "ADMIN_PASSWORD_FILE": "data/admin_password.json",
+    "CODES_FILE": "data/codes.json",
+    "TEMP_USER_ACCOUNTS_FILE": "data/temp_useraccounts.json",
+    "PFP_FOLDER": "static/pfps/",
+    "SSL_CERTIFICATE": "certificate.crt",
+    "SSL_PRIVATE_KEY": "private.key"
+}
