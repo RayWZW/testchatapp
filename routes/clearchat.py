@@ -1,6 +1,6 @@
 from flask import Blueprint, jsonify
 import os
-from app import CHAT_LOGS_FILE  # Import CHAT_LOGS_FILE from your app module
+from app import CHAT_LOGS_FILE  
 
 clearchat_bp = Blueprint('clearchat', __name__)
 
@@ -8,7 +8,7 @@ clearchat_bp = Blueprint('clearchat', __name__)
 def clear_chatlogs():
     try:
         if os.path.exists(CHAT_LOGS_FILE):
-            os.remove(CHAT_LOGS_FILE)  # Delete the file
+            os.remove(CHAT_LOGS_FILE)  
             return jsonify({"message": "Chatlogs deleted successfully"}), 200
         else:
             return jsonify({"error": "Chatlogs file not found"}), 404
