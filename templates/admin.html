@@ -182,11 +182,15 @@
         </div>
     </div>
     <script>
-        function formatDate(dateString) {
-            const options = { year: 'numeric', month: 'long', day: 'numeric', hour: 'numeric', minute: 'numeric', hour12: false };
-            const date = new Date(dateString);
-            return date.toLocaleDateString('en-US', options);
-        }
+function formatDate(dateString) {
+    const optionsDate = { year: 'numeric', month: 'long', day: 'numeric' };
+    const optionsTime = { hour: 'numeric', minute: 'numeric', hour12: true };
+    const date = new Date(dateString);
+    const formattedDate = date.toLocaleDateString('en-US', optionsDate);
+    const formattedTime = date.toLocaleTimeString('en-US', optionsTime);
+    return `${formattedDate} at ${formattedTime}`;
+}
+
 
         function sortUsers() {
             const userGrid = document.getElementById('user-grid');
