@@ -784,6 +784,7 @@ button {
     <script src="https://cdn.socket.io/4.0.1/socket.io.min.js"></script>
     <script>
         const socket = io();
+        let cachedUserRoles = null;
         const notifySound = new Audio('static/notify.mp3');
         notifySound.preload = 'auto';
 
@@ -937,23 +938,22 @@ sendButton.addEventListener('click', () => {
 function fetchMessages() {
     fetch('/data/chatlogs.json')
         .then(response => {
-            // If the response is not OK, empty the chatbox and log the error
+            
             if (!response.ok) {
-                chatBox.innerHTML = '';  // Empty the chatbox
+                chatBox.innerHTML = ''; 
                 console.error('Chatlogs not found. Chatbox emptied.');
-                return;  // Exit the function
+                return;  
             }
             return response.json();
         })
         .then(data => {
             const messages = data.messages || [];
 
-            // If messages haven't changed, do nothing
+           
             if (JSON.stringify(messages) === JSON.stringify(previousMessages)) {
-                return; // No change, exit the function
+                return; 
             }
 
-            // Remove messages that are no longer in the new data
             Array.from(chatBox.children).forEach(child => {
                 const messageId = child.dataset.timestamp;
                 if (!messages.some(msg => msg.timestamp === messageId)) {
@@ -961,7 +961,6 @@ function fetchMessages() {
                 }
             });
 
-            // Add new messages or update existing ones
             messages.forEach(msg => {
                 const messageId = msg.timestamp;
                 const existingElement = Array.from(chatBox.children).find(child => child.dataset.timestamp === messageId);
@@ -973,19 +972,17 @@ function fetchMessages() {
                 }
             });
 
-            // Update the previous messages to the current ones
             previousMessages = messages;
 
-            // Scroll to the bottom of the chatbox
             chatBox.scrollTop = chatBox.scrollHeight;
         })
         .catch(error => {
-            chatBox.innerHTML = '';  // Empty the chatbox on fetch error
+            chatBox.innerHTML = '';  
             console.error('Error loading messages:', error);
         });
 }
 
-setInterval(fetchMessages, 1000);
+setInterval(fetchMessages, 5000);
 
                 let typingUsers = new Set();
                 let typingTimeouts = new Map();
@@ -1206,6 +1203,9 @@ function formatTimestamp(timestamp) {
 
     const timeOptions = { hour: '2-digit', minute: '2-digit', hour12: true };
     const timeString = date.toLocaleTimeString([], timeOptions);
+    
+    const year = date.getFullYear();
+    const currentYear = now.getFullYear();
 
     if (isToday) {
         return `Today at ${timeString}`;
@@ -1214,26 +1214,82 @@ function formatTimestamp(timestamp) {
     } else {
         const dateOptions = { month: 'short', day: 'numeric' };
         const dateString = date.toLocaleDateString([], dateOptions);
-        return `${dateString} at ${timeString}`;
+
+        if (year !== currentYear) {
+            return `${dateString}, ${year} at ${timeString}`;
+        } else {
+            return `${dateString} at ${timeString}`;
+        }
     }
 }
 
-// Example: Explicitly setting the timestamp
+
 const specificTimestamp = new Date('2024-10-06T14:30:00').getTime(); // Adjust the date and time as needed
 console.log(formatTimestamp(specificTimestamp));
 
 
 function coloredText(message) {
-    // Check if the message starts and ends with "RR"
     if (message.startsWith('RR') && message.endsWith('RR')) {
-        // Remove the "RR" from the start and end
         const innerMessage = message.slice(2, -2);
-        // Return the message with red color applied
         return `<span style="color: red; font-weight: bold;">${innerMessage}</span>`;
     }
-    return message; // Return the original message if it doesn't meet the condition
+    return message; 
 }
 
+async function fetchUserRoles() {
+    if (cachedUserRoles) {
+        return cachedUserRoles; // Return cached roles if available
+    }
+
+    try {
+        const response = await fetch('https://thugchat.ddns.net/roles/data/userroles.json');
+        if (!response.ok) {
+            throw new Error('Network response was not ok');
+        }
+        const data = await response.json();
+        cachedUserRoles = data; // Cache the roles for future use
+        return data;
+    } catch (error) {
+        console.error('Failed to fetch user roles:', error);
+        return {}; // Return an empty object if there's an error
+    }
+}
+
+async function colorNames(username) {
+    const userRoles = await fetchUserRoles();
+    const roleColorMapping = {
+        'owner': 'blue',    
+        'admin': 'red',    
+        'moderator': 'green', 
+        'W THUG': 'cyan'    
+    };
+
+    if (userRoles[username] && Array.isArray(userRoles[username].additionalRoles)) {
+        const roles = userRoles[username].additionalRoles;
+
+
+        if (roles.includes('owner')) {
+            return roleColorMapping['owner']; 
+        }
+        if (roles.includes('admin')) {
+            return roleColorMapping['admin']; 
+        if (roles.includes('moderator')) {
+            return roleColorMapping['moderator']; 
+        }
+        if (roles.includes('W THUG')) {
+            return roleColorMapping['W THUG']; 
+        }
+    }
+
+    return 'white';
+}
+
+
+
+
+
+
+    
 function createMessageElement(msg) {
     const div = document.createElement('div');
     div.className = 'message';
@@ -1258,37 +1314,33 @@ function createMessageElement(msg) {
         mediaElement.style.borderRadius = '8px'; 
         div.appendChild(mediaElement);
     } else {
-
         let formattedMessage = formatLinks(msg.message);
         formattedMessage = coloredText(formattedMessage); 
         const wrappedMessage = wrapLongMessage(formattedMessage, 85);
 
-        let usernameStyle = '';
+        // Use .then() to handle the promise from colorNames
+        colorNames(msg.username).then(usernameColor => {
+            const usernameStyle = `color: ${usernameColor}; font-weight: bold;`;
 
-        if (msg.username === 'Stronomy') {
-            usernameStyle = 'color: blue; font-weight: bold;'; 
-        } else if (msg.username === 'lef123') {
-            usernameStyle = 'color: green; font-weight: bold;'; 
-        } else if (msg.username === 'George' || msg.username === 'CERTIFIEDL0YALIST' || msg.username === 'certifiedloyalist') {
-            usernameStyle = 'color: red; font-weight: bold;'; 
-        }
-
-        div.innerHTML = `
-            <div class="message-content" style="display: flex; align-items: center; justify-content: space-between;">
-                <div style="display: flex; align-items: center;">
-                    <img src="${profilePictureUrl}" alt="${msg.username}'s profile picture" class="profile-picture" style="margin-right: 8px;" onerror="this.src='${defaultProfilePictureUrl}';">
-                    <div>
-                        <span class="username" style="${usernameStyle}">${msg.username}:</span>
-                        ${wrappedMessage}
+            div.innerHTML = `
+                <div class="message-content" style="display: flex; align-items: center; justify-content: space-between;">
+                    <div style="display: flex; align-items: center;">
+                        <img src="${profilePictureUrl}" alt="${msg.username}'s profile picture" class="profile-picture" style="margin-right: 8px;" onerror="this.src='${defaultProfilePictureUrl}';">
+                        <div>
+                            <span class="username" style="${usernameStyle}">${msg.username}:</span>
+                            ${wrappedMessage}
+                        </div>
                     </div>
+                    <span class="timestamp">${formattedTime}</span>
                 </div>
-                <span class="timestamp">${formattedTime}</span>
-            </div>
-        `;
+            `;
+        });
     }
 
     return div;
 }
+
+
 
 
 
@@ -1309,15 +1361,13 @@ function createMessageElement(msg) {
 
             function getMediaMessage(file, fileUrl) {
     const fileName = file.name;
-    const fileExtension = fileName.split('.').pop().toLowerCase(); // Ensure it's lowercase
+    const fileExtension = fileName.split('.').pop().toLowerCase(); 
     let mediaMessage = '';
 
     if (file.type.startsWith('image/')) {
         if (fileExtension === 'gif') {
-            // GIF files should display normally
             mediaMessage = `<img src="${fileUrl}" alt="Uploaded GIF">`;
         } else {
-            // Other image files
             mediaMessage = `<img src="${fileUrl}" alt="Uploaded image">`;
         }
     } else if (file.type.startsWith('video/') || fileExtension === 'mov') {
@@ -1330,11 +1380,6 @@ function createMessageElement(msg) {
 
     return mediaMessage;
 }
-
-
-
-
-
 
         });
     </script>
