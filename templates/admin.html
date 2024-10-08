@@ -223,7 +223,7 @@
             const password = prompt("Enter admin password:");
             if (!password) return;
 
-            fetch('/admin/ban_user', {
+            fetch('/admin/users/ban', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -247,7 +247,7 @@
             const password = prompt("Enter admin password:");
             if (!password) return;
 
-            fetch('/admin/clear_user_messages', {
+            fetch('/admin/users/clear_messages', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
