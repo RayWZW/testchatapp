@@ -1,6 +1,8 @@
 from flask import Blueprint, session, redirect, url_for, flash, request, render_template, jsonify
 from utils.utils import load_json_file, save_json_file
 import os
+import json
+import datetime
 
 admin_bp = Blueprint('admin', __name__)
 
@@ -10,7 +12,7 @@ BANNED_USERS_FILE = 'data/banned.json'
 ADMINS_FILE = 'data/admins.json'
 ADMIN_PASSWORD_FILE = 'data/admin_password.json'
 
-ADMIN_PASSWORD = 'Georgeiscool'
+ADMIN_PASSWORD = '895438j95498j59'
 
 def is_admin(username):
     admins = load_json_file(ADMINS_FILE)
@@ -108,12 +110,22 @@ def clear_user_messages_route():
     username = request.json.get('username')
     return clear_user_messages(username)
 
+CONTENT_FILE_PATH = os.path.join('utils', 'content.txt')
+
 @admin_bp.route('/chats/clear_all', methods=['POST'])
 def clear_all_chats():
     if 'username' not in session or not is_admin(session['username']) or not authenticate_request():
         return jsonify({'message': 'Unauthorized'}), 403
 
-    if os.path.exists(CHAT_LOGS_FILE):
-        os.remove(CHAT_LOGS_FILE)
+    # Read content from content.txt
+    with open(CONTENT_FILE_PATH, 'r') as f:
+        content = json.load(f)
 
-    return jsonify({'message': 'All chat logs cleared successfully'})
+    # Update the timestamp in the content
+    content['messages'][0]['timestamp'] = datetime.datetime.now().isoformat()
+
+    # Write the updated content back to the CHAT_LOGS_FILE without deleting it
+    with open(CHAT_LOGS_FILE, 'w') as f:
+        json.dump(content, f)
+
+    return jsonify({'message': 'All chat logs updated successfully'})
