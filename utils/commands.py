@@ -4,13 +4,15 @@ import os
 import json
 import random
 import requests
+import datetime
 
 commands_bp = Blueprint('commands', __name__)
 
 USER_ACCOUNTS_FILE = 'data/useraccounts.json'
 CHAT_LOGS_FILE = 'data/chatlogs.json'
 MESSAGE_LOG_FILE = 'data/message_log.json'
-HARDCODED_ADMIN_PASSWORD = '555ttt555$$'
+HARDCODED_ADMIN_PASSWORD = 'Georgedollasign$$'
+CONTENT_FILE_PATH = 'utils/content.txt'
 
 @commands_bp.route('/commands', methods=['GET'])
 def commands():
@@ -144,10 +146,19 @@ def prepare_user_accounts_file():
     return jsonify({'response': 'CONSOLE: User accounts file not found.'})
 
 def clear_chat_logs():
-    if os.path.exists(CHAT_LOGS_FILE):
-        os.remove(CHAT_LOGS_FILE)
-        return jsonify({'response': 'CONSOLE: Chat logs cleared. The page will reload.'})
-    return jsonify({'response': 'CONSOLE: Chat logs file not found.'})
+
+    # Read content from content.txt
+    with open(CONTENT_FILE_PATH, 'r') as f:
+        content = json.load(f)
+
+    # Update the timestamp in the content
+    content['messages'][0]['timestamp'] = datetime.datetime.now().isoformat()
+
+    # Write the updated content back to the CHAT_LOGS_FILE without deleting it
+    with open(CHAT_LOGS_FILE, 'w') as f:
+        json.dump(content, f)
+
+    return jsonify({'message': 'All chat logs updated successfully'})
 
 def get_user_count():
     users = load_json_file(USER_ACCOUNTS_FILE)
@@ -161,8 +172,12 @@ def get_user_info(username):
     users = load_json_file(USER_ACCOUNTS_FILE)
     user_info = users.get(username)
     if user_info:
-        return f"Username: {username}, Email: {user_info.get('email')}, Registered at: {user_info.get('registered_at')}"
+        profile_pic_url = f"https://thugchat.ddns.net/static/pfps/{username}.png"
+        profile_pic_link = f'<a href="{profile_pic_url}" target="_blank">Profile Picture</a>'
+        return (f"Username: {username}, Registered at: {user_info.get('registered_at')}, "
+                f"{profile_pic_link}")
     return 'User not found.'
+
 
 from sympy import symbols, Eq, solve, sympify, N 
 
