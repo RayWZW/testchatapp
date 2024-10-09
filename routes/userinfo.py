@@ -3,7 +3,7 @@ from utils.utils import load_json_file
 
 userinfo_bp = Blueprint('userinfo', __name__)
 
-USER_ACCOUNTS_FILE = 'data/useraccounts.json'  
+USER_ACCOUNTS_FILE = 'data/useraccounts.json'  # Define the constant here
 
 @userinfo_bp.route('/get_user_info', methods=['GET'])
 def get_user_info():
