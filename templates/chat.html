@@ -923,13 +923,23 @@ sendButton.addEventListener('click', () => {
 
 
 
-        setTimeout(() => {
-            if (msg.type === 'file') {
-                window.scrollTo(0, document.body.scrollHeight);
-            } else {
-                chatBox.scrollTop = chatBox.scrollHeight;
-            }
-        }, 23);
+    setTimeout(() => {
+    const scrollTimes = 5; // Number of times to scroll
+    const scrollAmount = 100; // Amount to scroll in pixels
+
+    const scrollDown = () => {
+        window.scrollTo(0, document.body.scrollHeight); // Always scroll to the bottom for all message types
+        chatBox.scrollTop = chatBox.scrollHeight; // Ensure chat box scrolls to the bottom
+
+        // Check if we've scrolled the desired number of times
+        if (--scrollTimes > 0) {
+            setTimeout(scrollDown, 100); // Scroll again after 100 ms
+        }
+    };
+
+    scrollDown(); // Start scrolling
+}, 100);
+
     });
 
     
@@ -976,7 +986,10 @@ function fetchMessages() {
 
             chatBox.appendChild(fragment);
             previousMessages = messages;
-            chatBox.scrollTop = chatBox.scrollHeight;
+
+            setTimeout(() => {
+                chatBox.scrollTop = chatBox.scrollHeight; // Scroll down after 100 ms
+            }, 100);
         })
         .catch(error => {
             chatBox.innerHTML = 'Error loading messages. Please try again later.';
@@ -984,10 +997,18 @@ function fetchMessages() {
         });
 }
 
+
 socket.on('chat_logs_update', function(chatLogs) {
     console.log("Received chat logs update:", chatLogs); // Debugging line
-    fetchMessages(); // Call the function to fetch messages
+    fetchMessages().then(() => {
+        setTimeout(() => {
+            // Scroll to the bottom after a 100 ms delay
+            chatBox.scrollTop = chatBox.scrollHeight;
+        }, 100);
+    });
 });
+
+
 
 
                 let typingUsers = new Set();
