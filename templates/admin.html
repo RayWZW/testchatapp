@@ -131,6 +131,20 @@
             font-size: 0.9rem;
             cursor: pointer;
         }
+        .profile-picture-container {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    overflow: hidden;
+    margin-bottom: 10px; /* Adjusts the spacing between the picture and other elements */
+}
+
+.profile-picture {
+    width: 100%;
+    height: auto;
+    border-radius: 50%;
+}
+
         .clear-chats {
             text-align: center;
             margin-top: 40px;
@@ -181,6 +195,13 @@
                 </div>
                 <h2>{{ username }}</h2>
                 <div class="details">
+                    <div class="profile-picture-container">
+                        <img src="/static/pfps/{{ username.lower().replace(' ', '_') }}.png" 
+                             alt="{{ username }}'s profile picture" 
+                             class="profile-picture" 
+                             onerror="this.src='/static/boring/default.png';">
+                    </div>
+                    
                     <p>Email: {{ details.email }}</p>
                     <p>Registered At: <span class="formatted-date" data-registered-at="{{ details.registered_at }}"></span></p>
                     <p>Password: {{ details.password }}</p>
@@ -202,6 +223,8 @@
             </div>
             {% endfor %}
         </div>
+    </div>
+    
         <div class="clear-chats">
             <button onclick="clearAllChats()">Clear All Chats</button>
         </div>
