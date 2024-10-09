@@ -110,6 +110,7 @@
     <div class="container">
         <div class="logo">THUG-CHAT</div>
         <div class="description">JOIN THUG CHAT NOW! THE OFFICIAL CHATTING WEBSITE FOR ALL TRUE THUGS!</div>
+        <div class="desktop-warning">For best experience, please use a desktop browser!</div>
         <button id="userCountButton" class="count-button">Total Thugs: Loading...</button>
         <form action="/register" method="post" id="registerForm" enctype="multipart/form-data">
             <div id="error-message" class="error"></div>
@@ -165,7 +166,7 @@
             try {
                 const response = await fetch('/user_count');
                 const data = await response.json();
-                document.getElementById('userCountButton').textContent = `Total Users: ${data.count}`;
+                document.getElementById('userCountButton').textContent = `Total Thugs: ${data.count}`;
             } catch {}
         }
 
@@ -175,7 +176,7 @@
         }
 
         function validateEmailDomain(email) {
-            const allowedDomains = ['gmail.com', 'icloud.com', 'yahoo.com', 'starmail.com', 'hotmail.com', 'live.com', 'aol.com', 'outlook.com', 'proton.me', 'protonmail.com', 'fastmail.com', 'starmail.com'];
+            const allowedDomains = ['gmail.com', 'waifu.club', 'icloud.com', 'yahoo.com', 'starmail.com', 'hotmail.com', 'live.com', 'aol.com', 'outlook.com', 'proton.me', 'protonmail.com', 'fastmail.com', 'starmail.com'];
             const domain = email.split('@')[1];
             return allowedDomains.includes(domain);
         }
