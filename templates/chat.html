@@ -1264,7 +1264,7 @@ async function fetchUserRoles() {
     }
 }
 
-async function colorNames(username) {
+async function updateRoles(username) {
     const userRoles = await fetchUserRoles(); // Fetch user roles asynchronously
     const roleColorMapping = {
         'owner': 'blue',
@@ -1295,13 +1295,8 @@ async function colorNames(username) {
         }
     }
 
-    return 'white'; // Default color if username not found or no relevant role
+    return 'white'; 
 }
-
-
-
-
-
 
 
     
@@ -1310,50 +1305,61 @@ function createMessageElement(msg) {
     div.className = 'message';
 
     const formattedTime = formatTimestamp(msg.timestamp);
-    const profilePictureUrl = `/static/pfps/${msg.username.toLowerCase()}.png`; 
-    const defaultProfilePictureUrl = '/static/boring/default.png'; 
+    const username = msg.username.toLowerCase();
+    const profilePictureUrlPng = `/static/pfps/${username}.png`;
+    const defaultProfilePictureUrl = '/static/boring/default.png';
 
     const img = new Image();
-    img.src = profilePictureUrl;
+    img.src = profilePictureUrlPng;
 
-    img.onerror = function() {
-        img.src = defaultProfilePictureUrl; 
+    img.onload = function() {
+        console.log(`Loaded PNG: ${img.src}`);
+        renderMessage();
     };
 
-    if (msg.file_url) {
-        div.classList.add('media-message'); 
-        const mediaElement = document.createElement('img'); 
-        mediaElement.src = msg.file_url; 
-        mediaElement.alt = `${msg.username}'s media`;
-        mediaElement.style.maxWidth = '300px'; 
-        mediaElement.style.borderRadius = '8px'; 
-        div.appendChild(mediaElement);
-    } else {
-        let formattedMessage = formatLinks(msg.message);
-        formattedMessage = coloredText(formattedMessage); 
-        const wrappedMessage = wrapLongMessage(formattedMessage, 85);
+    img.onerror = function() {
+        img.src = defaultProfilePictureUrl;
+        console.log(`Loaded Default: ${img.src}`);
+        renderMessage();
+    };
 
-        // Use .then() to handle the promise from colorNames
-        colorNames(msg.username).then(usernameColor => {
-            const usernameStyle = `color: ${usernameColor}; font-weight: bold;`;
+    function renderMessage() {
+        if (msg.file_url) {
+            div.classList.add('media-message');
+            const mediaElement = document.createElement('img');
+            mediaElement.src = msg.file_url;
+            mediaElement.alt = `${msg.username}'s media`;
+            mediaElement.style.maxWidth = '300px';
+            mediaElement.style.borderRadius = '8px';
+            div.appendChild(mediaElement);
+        } else {
+            let formattedMessage = formatLinks(msg.message);
+            formattedMessage = coloredText(formattedMessage);
+            const wrappedMessage = wrapLongMessage(formattedMessage, 85);
 
-            div.innerHTML = `
-                <div class="message-content" style="display: flex; align-items: center; justify-content: space-between;">
-                    <div style="display: flex; align-items: center;">
-                        <img src="${profilePictureUrl}" alt="${msg.username}'s profile picture" class="profile-picture" style="margin-right: 8px;" onerror="this.src='${defaultProfilePictureUrl}';">
-                        <div>
-                            <span class="username" style="${usernameStyle}">${msg.username}:</span>
-                            ${wrappedMessage}
+            updateRoles(msg.username).then(usernameColor => {
+                const usernameStyle = `color: ${usernameColor}; font-weight: bold;`;
+
+                div.innerHTML = `
+                    <div class="message-content" style="display: flex; align-items: center; justify-content: space-between;">
+                        <div style="display: flex; align-items: center;">
+                            <img src="${img.src}" alt="${msg.username}'s profile picture" class="profile-picture" style="margin-right: 8px;">
+                            <div>
+                                <span class="username" style="${usernameStyle}">${msg.username}:</span>
+                                ${wrappedMessage}
+                            </div>
                         </div>
+                        <span class="timestamp">${formattedTime}</span>
                     </div>
-                    <span class="timestamp">${formattedTime}</span>
-                </div>
-            `;
-        });
+                `;
+            });
+        }
     }
 
     return div;
 }
+
+
 
 
 function handleWebSocketMessages(event) {
