@@ -21,10 +21,8 @@ class ChatLogWatcher:
                     print("Chat logs have changed, emitting update...")
                     self.socketio.emit('chat_logs_update', current_chat_logs, namespace='/')
                     self.last_chat_logs = current_chat_logs  # Update the last seen chat logs
-                else:
-                    print("No changes detected.")
+            
 
-                print(f"Current chat logs: {current_chat_logs}")
             except Exception as e:
                 print(f"Error reading chat logs: {e}")
 
