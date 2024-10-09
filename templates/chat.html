@@ -757,7 +757,6 @@ button {
         <div id="chat-container">
 
         <div id="chat-box">
-            <!-- Messages will be loaded here -->
         </div>
         <div class="typing-indicator" id="typing-indicator"></div>
         <div id="warning-message"></div>
@@ -783,15 +782,19 @@ button {
     </div>
     <script src="https://cdn.socket.io/4.0.1/socket.io.min.js"></script>
     <script>
-        const socket = io();
-        let cachedUserRoles = null;
-        const notifySound = new Audio('static/notify.mp3');
-        notifySound.preload = 'auto';
+    const socket = io();
+    let cachedUserRoles = null;
+    const notifySound = new Audio('static/notify.mp3');
+    notifySound.preload = 'auto';
 
-        document.addEventListener('DOMContentLoaded', function() {
-            const chatBox = document.getElementById('chat-box');
-            const messageInput = document.getElementById('message-input');
-            const sendButton = document.getElementById('send-button');
+    document.addEventListener('DOMContentLoaded', function() {
+        const chatBox = document.getElementById('chat-box');
+        const messageInput = document.getElementById('message-input');
+        const sendButton = document.getElementById('send-button');
+
+
+
+
 
 document.getElementById('adminButton').addEventListener('click', function() {
     window.open('/admin', '_blank'); 
@@ -938,23 +941,23 @@ sendButton.addEventListener('click', () => {
 function fetchMessages() {
     fetch('/data/chatlogs.json')
         .then(response => {
-            
             if (!response.ok) {
-                chatBox.innerHTML = ''; 
+                chatBox.innerHTML = '';
                 console.error('Chatlogs not found. Chatbox emptied.');
-                return;  
+                return;
             }
             return response.json();
         })
         .then(data => {
             const messages = data.messages || [];
-
-           
             if (JSON.stringify(messages) === JSON.stringify(previousMessages)) {
-                return; 
+                return;
             }
 
-            Array.from(chatBox.children).forEach(child => {
+            const fragment = document.createDocumentFragment();
+            const currentChildren = Array.from(chatBox.children);
+
+            currentChildren.forEach(child => {
                 const messageId = child.dataset.timestamp;
                 if (!messages.some(msg => msg.timestamp === messageId)) {
                     chatBox.removeChild(child);
@@ -963,26 +966,30 @@ function fetchMessages() {
 
             messages.forEach(msg => {
                 const messageId = msg.timestamp;
-                const existingElement = Array.from(chatBox.children).find(child => child.dataset.timestamp === messageId);
+                const existingElement = currentChildren.find(child => child.dataset.timestamp === messageId);
 
                 if (!existingElement) {
-                    chatBox.appendChild(createMessageElement(msg));
+                    fragment.appendChild(createMessageElement(msg));
                 } else if (existingElement.innerHTML !== createMessageElement(msg).innerHTML) {
                     existingElement.innerHTML = createMessageElement(msg).innerHTML;
                 }
             });
 
+            chatBox.appendChild(fragment);
             previousMessages = messages;
-
             chatBox.scrollTop = chatBox.scrollHeight;
         })
         .catch(error => {
-            chatBox.innerHTML = '';  
+            chatBox.innerHTML = 'Error loading messages. Please try again later.';
             console.error('Error loading messages:', error);
         });
 }
 
-setInterval(fetchMessages, 5000);
+socket.on('chat_logs_update', function(chatLogs) {
+    console.log("Received chat logs update:", chatLogs); // Debugging line
+    fetchMessages(); // Call the function to fetch messages
+});
+
 
                 let typingUsers = new Set();
                 let typingTimeouts = new Map();
@@ -1340,6 +1347,16 @@ function createMessageElement(msg) {
     }
 
     return div;
+}
+
+
+function handleWebSocketMessages(event) {
+    const msg = JSON.parse(event.data);
+    const messageElement = createMessageElement(msg);
+    
+    const chatContainer = document.getElementById('chat-container'); 
+    chatContainer.appendChild(messageElement);
+    chatContainer.scrollTop = chatContainer.scrollHeight; 
 }
 
 
