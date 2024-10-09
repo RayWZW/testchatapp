@@ -22,7 +22,8 @@ from routes.userinfo import userinfo_bp
 from utils.login import login_bp
 from routes.logout import logout_bp
 from utils.roles import roles_bp
-
+from utils.auto import auto_bp
+from utils.chatlog_updater import start_chatlog_watcher
 
 
 
@@ -31,7 +32,7 @@ from utils.roles import roles_bp
 
 
 app = Flask(__name__, static_folder='static')
-app.secret_key = 'your_secret_key'  # Change this to a secure key in production
+app.secret_key = '98ew5-e9e5-ef545ew-we15ew15ew'  # Change this to a secure key in production
 socketio = SocketIO(app)
 
 app.register_blueprint(register_bp)
@@ -49,6 +50,10 @@ app.register_blueprint(logout_bp)
 app.register_blueprint(roles_bp, url_prefix='/roles')
 
 
+import threading
+watcher_thread = threading.Thread(target=start_chatlog_watcher, args=(socketio,))
+watcher_thread.daemon = True
+watcher_thread.start()
 
 from flask_session import Session
 
