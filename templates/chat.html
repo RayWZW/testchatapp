@@ -904,7 +904,6 @@ sendButton.addEventListener('click', () => {
     // Check if the message is already displayed in the chatbox
     if (!Array.from(chatBox.children).some(child => child.dataset.timestamp === messageId)) {
         chatBox.appendChild(createMessageElement(msg));
-        chatBox.scrollTop = chatBox.scrollHeight;
 
         const videos = document.querySelectorAll('video');
         let isPlaying = false;
@@ -930,7 +929,7 @@ sendButton.addEventListener('click', () => {
             } else {
                 chatBox.scrollTop = chatBox.scrollHeight;
             }
-        }, 1000);
+        }, 23);
     });
 
     
@@ -1121,8 +1120,9 @@ function embedDiscordInvite(url) {
                 <img src="static/discordinvite.png" style="width: 200px; height: 400px; border-radius: 8px;"/>
             </a>`;
     }
-    return null;
+    return ''; // Return an empty string instead of null for better UI handling
 }
+
 
 
 function formatLinks(message) {
