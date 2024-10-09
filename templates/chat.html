@@ -892,7 +892,6 @@ sendButton.addEventListener('click', () => {
             messages.forEach(msg => {
                 chatBox.appendChild(createMessageElement(msg));
             });
-            chatBox.scrollTop = chatBox.scrollHeight;
         });
 
         socket.on('message', function(msg) {
@@ -921,24 +920,6 @@ sendButton.addEventListener('click', () => {
         }
     }
 
-
-
-    setTimeout(() => {
-    const scrollTimes = 5; // Number of times to scroll
-    const scrollAmount = 100; // Amount to scroll in pixels
-
-    const scrollDown = () => {
-        window.scrollTo(0, document.body.scrollHeight); // Always scroll to the bottom for all message types
-        chatBox.scrollTop = chatBox.scrollHeight; // Ensure chat box scrolls to the bottom
-
-        // Check if we've scrolled the desired number of times
-        if (--scrollTimes > 0) {
-            setTimeout(scrollDown, 100); // Scroll again after 100 ms
-        }
-    };
-
-    scrollDown(); // Start scrolling
-}, 100);
 
     });
 
@@ -1286,19 +1267,22 @@ async function fetchUserRoles() {
 async function colorNames(username) {
     const userRoles = await fetchUserRoles(); // Fetch user roles asynchronously
     const roleColorMapping = {
-        'owner': 'blue',    
-        'admin': 'red',    
-        'moderator': 'green', 
-        'W THUG': 'cyan'    
+        'owner': 'blue',
+        'admin': 'red',
+        'moderator': 'green',
+        'W THUG': 'cyan',
+        'SYSTEM': 'lime' // Add SYSTEM role with a color
     };
 
     // Check if userRoles has the username and if it has additionalRoles
     if (userRoles[username] && Array.isArray(userRoles[username].additionalRoles)) {
         const roles = userRoles[username].additionalRoles;
 
-
+        if (roles.includes('SYSTEM')) {
+            return `#00FF00`; // Return glowing green for SYSTEM role
+        }
         if (roles.includes('owner')) {
-            return roleColorMapping['owner']; 
+            return roleColorMapping['owner'];
         }
         if (roles.includes('admin')) {
             return roleColorMapping['admin']; // Return red if the user is an admin
@@ -1313,6 +1297,7 @@ async function colorNames(username) {
 
     return 'white'; // Default color if username not found or no relevant role
 }
+
 
 
 
