@@ -1,0 +1,9 @@
+{
+    "messages": [
+        {
+            "timestamp": "RIGHT NOW",
+            "username": "SYSTEM",
+            "message": "chat cleared successfully"
+        }
+    ]
+}
