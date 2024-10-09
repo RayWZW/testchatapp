@@ -27,4 +27,4 @@ then install the requirements.txt then start the flask server and use loophole o
 IF YOU WANNA SUPPORT MY PROJECT MAKE AN ACCOUNT AT https://thugchat.ddns.net
 
 
-![ScreenShot](image.png)
+![ScreenShot](s.png)
