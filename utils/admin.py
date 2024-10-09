@@ -12,7 +12,7 @@ BANNED_USERS_FILE = 'data/banned.json'
 ADMINS_FILE = 'data/admins.json'
 ADMIN_PASSWORD_FILE = 'data/admin_password.json'
 
-ADMIN_PASSWORD = '895438j95498j59'
+ADMIN_PASSWORD = 'BigDickNigger966'
 
 def is_admin(username):
     admins = load_json_file(ADMINS_FILE)
