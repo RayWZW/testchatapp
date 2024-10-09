@@ -32,7 +32,7 @@ from utils.chatlog_updater import start_chatlog_watcher
 
 
 app = Flask(__name__, static_folder='static')
-app.secret_key = '98ew5-e9e5-ef545ew-we15ew15ew'  # Change this to a secure key in production
+app.secret_key = '43r43r43r'  
 socketio = SocketIO(app)
 
 app.register_blueprint(register_bp)
