@@ -391,28 +391,31 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     
         function removeRole(username) {
-            const password = prompt("Enter admin password:");
-            if (!password) return;
-    
-            fetch('/roles/remove_role', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-Admin-Password': password
-                },
-                body: JSON.stringify({ username })
-            }).then(response => response.json())
-              .then(data => {
-                  alert(data.message);
-                  if (data.redirect) {
-                      window.location.href = data.redirect;
-                  } else {
-                      location.reload();
-                  }
-              }).catch(error => {
-                  console.error('Error:', error);
-              });
-        }
+    const select = document.getElementById(`roleSelect_${username}`);
+    const role = select.value; 
+    const password = prompt("Enter admin password:");
+    if (!password || !role) return;
+
+    fetch('/roles/remove_role', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-Admin-Password': password
+        },
+        body: JSON.stringify({ username, role }) 
+    }).then(response => response.json())
+      .then(data => {
+          alert(data.message);
+          if (data.success) {
+              location.reload();  // Reload to reflect the updated roles
+          } else {
+              alert(data.message);
+          }
+      }).catch(error => {
+          console.error('Error:', error);
+      });
+}
+
     
         function clearAllChats() {
             const password = prompt("Enter admin password:");
