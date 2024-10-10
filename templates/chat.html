@@ -4,7 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>THUG-CHAT</title>
-   <style>
+    <link rel="icon" href="static/websiteicon.png" type="image/png"> <!-- Adding website icon -->
+    <style>
 body {
     background-color: #36393e;
     color: #e0e0e0;
@@ -729,6 +730,32 @@ button {
     transform: scale(0.98); /* Slightly scale down on active */
 }
 
+.formatted-message {
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    padding: 10px;
+    background-color: #36393e; /* Updated background color */
+    color: white; /* Optional: change text color to improve contrast */
+    margin: 10px 20px; /* Adjust margin for spacing */
+    font-family: monospace;
+    max-width: 90%; /* Optional: limit the width to prevent overflow */
+    margin-left: calc(100px + 20px); /* Move the box 100px right plus the existing 20px margin */
+    margin-right: auto; /* Keep right margin auto for centering */
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2); /* Optional: add a subtle shadow for depth */
+}
+
+.formatted-message pre {
+    margin: 0;
+    overflow: auto; /* Ensures the code block is scrollable if it overflows */
+}
+
+.link {
+    color: lightblue; /* Change link color for better visibility against the dark background */
+    text-decoration: underline;
+}
+
+
+
 
 </style>
 
@@ -1122,7 +1149,7 @@ function embedDiscordInvite(url) {
                 <img src="static/discordinvite.png" style="width: 200px; height: 400px; border-radius: 8px;"/>
             </a>`;
     }
-    return ''; // Return an empty string instead of null for better UI handling
+    return '';
 }
 
 
@@ -1139,12 +1166,36 @@ function formatLinks(message) {
     });
 }
 
-function formatMessage(message) {
-    message = message
+function formatCodeBlocks(message) {
+    // Check if the message starts and ends with "```"
+    if (message.startsWith('```') && message.endsWith('```')) {
+        const innerMessage = message.slice(3, -3).trim(); // Extract inner message without the backticks
+        return `<div class="formatted-message"><pre><code>${escapeHtml(innerMessage)}</code></pre></div>`;
+    }
 
-    message = formatLinks(message);
+    // If it doesn't meet the condition, return the original message
     return message;
 }
+
+
+function escapeHtml(html) {
+    const escapeChars = {
+        '&': '&amp;',
+        '<': '&lt;',
+        '>': '&gt;',
+        '"': '&quot;',
+        "'": '&#39;',
+    };
+    return html.replace(/[&<>"']/g, char => escapeChars[char]);
+}
+
+function formatMessage(message) {
+    return formatCodeBlocks(message);
+    message = formatLinks(message);
+    message = formatCodeBlocks(message);
+    return `<div class="formatted-message">${message}</div>`;
+}
+
 
 function showCustomAlert(message) {
     const alertBox = document.getElementById('customAlert');
@@ -1335,6 +1386,7 @@ function createMessageElement(msg) {
         } else {
             let formattedMessage = formatLinks(msg.message);
             formattedMessage = coloredText(formattedMessage);
+            formattedMessage = formatCodeBlocks(formattedMessage);
             const wrappedMessage = wrapLongMessage(formattedMessage, 85);
 
             updateRoles(msg.username).then(usernameColor => {
