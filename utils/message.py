@@ -13,12 +13,60 @@ cooldown_users = {}
 
 # Regex patterns to identify potentially harmful JavaScript code
 MALICIOUS_JAVASCRIPT = re.compile(r'(javascript:|on\w+=|<script.*?>|<\/script>|eval\(|alert\(|document\.)', re.IGNORECASE)
+TRANSFORM_PROPERTY = re.compile(r'transform:\s*[^;]*;', re.IGNORECASE)
+ONLOAD_ONERROR = re.compile(r'\s*(onload|onerror)\s*=\s*["\']?[^"\']*["\']?', re.IGNORECASE)
 
 def contains_javascript_code(message):
     return bool(MALICIOUS_JAVASCRIPT.search(message))
 
 def remove_javascript_code(message):
     return re.sub(MALICIOUS_JAVASCRIPT, '', message)
+
+def contains_transform_property(message):
+    return bool(TRANSFORM_PROPERTY.search(message))
+
+def remove_transform_property(message):
+    return re.sub(TRANSFORM_PROPERTY, '', message)
+
+def contains_onload_or_onerror(message):
+    return bool(ONLOAD_ONERROR.search(message))
+
+def remove_onload_or_onerror(message):
+    return re.sub(ONLOAD_ONERROR, '', message)
+
+def resize_large_embeds(message, max_width=1000, max_height=1000):
+    def replace_size(match):
+        tag = match.group(1)
+        width = int(match.group(2)) if match.group(2) else None
+        height = int(match.group(3)) if match.group(3) else None
+
+        # Calculate new width and height while preserving the aspect ratio
+        if width is not None and height is not None:
+            aspect_ratio = width / height
+
+            # Resize based on max allowed dimensions
+            if width > max_width or height > max_height:
+                if width > height:
+                    new_width = max_width
+                    new_height = int(new_width / aspect_ratio)
+                else:
+                    new_height = max_height
+                    new_width = int(new_height * aspect_ratio)
+
+                return f'<{tag} width="{new_width}" height="{new_height}" style="border: none; display: block;"></{tag}>'
+
+        return match.group(0)  # Return original match if no resize needed
+
+    # Replace oversized embeds in the message, including iframes and videos
+    resized_message = re.sub(
+        r'<(iframe|video|embed|div|img)\s+[^>]*width\s*=\s*["\']?(\d+)["\']?\s*[^>]*height\s*=\s*["\']?(\d+)["\']?[^>]*>',
+        replace_size,
+        message,
+        flags=re.IGNORECASE
+    )
+
+    return resized_message
+
 
 def handle_message(message):
     username = session.get('username')
@@ -34,6 +82,16 @@ def handle_message(message):
 
     original_message = message
 
+    # Check and sanitize the message
+    if contains_onload_or_onerror(original_message):
+        original_message = remove_onload_or_onerror(original_message)
+
+    if contains_transform_property(original_message):
+        original_message = remove_transform_property(original_message)
+
+    # Resize large embeds before processing the message
+    resized_message = resize_large_embeds(original_message)
+
     if is_file_message(original_message):
         formatted_message = {
             'timestamp': datetime.now().strftime('%Y-%m-%d %H:%M:%S.%f')[:-3],
@@ -42,13 +100,13 @@ def handle_message(message):
             'file_url': message['file_url'],
             'file_type': message['file_type']
         }
-    elif isinstance(original_message, str):
-        if contains_javascript_code(original_message):
+    elif isinstance(resized_message, str):
+        if contains_javascript_code(resized_message):
             emit('error', {'error': 'Your message contains harmful JavaScript and is not allowed.'}, room=request.sid)
             return
 
         # Remove any harmful JavaScript code
-        sanitized_message = remove_javascript_code(original_message)
+        sanitized_message = remove_javascript_code(resized_message)
 
         formatted_message = {
             'timestamp': datetime.now().strftime('%Y-%m-%d %H:%M:%S.%f')[:-3],
