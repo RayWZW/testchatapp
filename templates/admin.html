@@ -145,6 +145,20 @@
     border-radius: 50%;
 }
 
+.search-bar {
+    margin-bottom: 30px;
+    text-align: center;
+}
+.search-bar input {
+    padding: 10px;
+    width: 300px;
+    border: none;
+    border-radius: 5px;
+    font-size: 1rem;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
+}
+
+
         .clear-chats {
             text-align: center;
             margin-top: 40px;
@@ -179,6 +193,10 @@
         <div class="header">
             <h1>Admin Panel</h1>
         </div>
+        <div class="search-bar">
+            <input type="text" id="searchInput" placeholder="Search for users..." onkeyup="filterUsers()">
+        </div>
+        
         <div class="user-count-card">
             <h2>Total Users</h2>
             <div class="user-count">{{ users|length }}</div>
@@ -412,6 +430,24 @@ document.addEventListener('DOMContentLoaded', () => {
                   console.error('Error:', error);
               });
         }
+
+        function filterUsers() {
+    const input = document.getElementById("searchInput");
+    const filter = input.value.toLowerCase();
+    const userCards = document.querySelectorAll(".user-card");
+
+    userCards.forEach(card => {
+        const username = card.getAttribute("data-username").toLowerCase();
+        const registeredAt = card.getAttribute("data-registered-at").toLowerCase();
+
+        if (username.includes(filter) || registeredAt.includes(filter)) {
+            card.style.display = "";
+        } else {
+            card.style.display = "none";
+        }
+    });
+}
+ 
     
     </script>
     
