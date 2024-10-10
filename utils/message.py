@@ -36,24 +36,13 @@ def remove_onload_or_onerror(message):
 
 def resize_large_embeds(message, max_width=1000, max_height=1000):
     def replace_size(match):
-        tag = match.group(1)
         width = int(match.group(2)) if match.group(2) else None
         height = int(match.group(3)) if match.group(3) else None
 
-        # Calculate new width and height while preserving the aspect ratio
+        # Check if the width or height exceeds the limits
         if width is not None and height is not None:
-            aspect_ratio = width / height
-
-            # Resize based on max allowed dimensions
             if width > max_width or height > max_height:
-                if width > height:
-                    new_width = max_width
-                    new_height = int(new_width / aspect_ratio)
-                else:
-                    new_height = max_height
-                    new_width = int(new_height * aspect_ratio)
-
-                return f'<{tag} width="{new_width}" height="{new_height}" style="border: none; display: block;"></{tag}>'
+                return "ERROR!! TOO LARGE"  # Return an error message for oversized embeds
 
         return match.group(0)  # Return original match if no resize needed
 
@@ -66,7 +55,6 @@ def resize_large_embeds(message, max_width=1000, max_height=1000):
     )
 
     return resized_message
-
 
 def handle_message(message):
     username = session.get('username')
@@ -91,6 +79,11 @@ def handle_message(message):
 
     # Resize large embeds before processing the message
     resized_message = resize_large_embeds(original_message)
+
+    # Check if the resized message indicates it's too large
+    if resized_message == "ERROR!! TOO LARGE":
+        emit('error', {'error': 'Your embed is too large and is not allowed.'}, room=request.sid)
+        return  # Do not save to chat logs or continue processing
 
     if is_file_message(original_message):
         formatted_message = {
@@ -140,7 +133,8 @@ def handle_message(message):
     chat_logs = load_json_file(CHAT_LOGS_FILE)
     if 'messages' not in chat_logs:
         chat_logs['messages'] = []
-    
+
+    # Only save the message if it is not an oversized embed
     chat_logs['messages'].append(formatted_message)
     save_json_file(CHAT_LOGS_FILE, chat_logs)
 
