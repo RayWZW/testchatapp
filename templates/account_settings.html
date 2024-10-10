@@ -31,17 +31,20 @@
             font-size: 1.1em;
         }
 
-        .change-pfp-container {
+        .change-pfp-container,
+        .edit-bio-container {
             margin-top: 20px;
         }
 
-        #pfp-input {
+        #pfp-input,
+        #bio-input {
             margin-bottom: 10px;
             padding: 5px;
             border: 1px solid #555;
             background-color: #3a3c3f;
             color: #dcddde;
             border-radius: 5px;
+            width: 100%;
         }
 
         button {
@@ -59,10 +62,10 @@
         }
 
         .profile-picture {
-            width: 100px; /* Adjust as needed */
-            height: 100px; /* Adjust as needed */
-            border-radius: 50%; /* Circular profile picture */
-            object-fit: cover; /* Maintain aspect ratio */
+            width: 100px; 
+            height: 100px; 
+            border-radius: 50%; 
+            object-fit: cover; 
             margin-top: 10px;
         }
     </style>
@@ -79,6 +82,14 @@
                 <button type="submit">Upload</button>
             </form>
             <img id="current-pfp" src="{{ url_for('static', filename='pfps/' + username + '.png') }}" alt="Current Profile Picture" class="profile-picture">
+        </div>
+
+        <div class="edit-bio-container">
+            <h3>Edit Bio</h3>
+            <form id="edit-bio-form">
+                <textarea id="bio-input" rows="4" placeholder="Enter your bio..." required></textarea>
+                <button type="submit">Save Bio</button>
+            </form>
         </div>
     </div>
 
@@ -102,7 +113,7 @@
                     if (data.error) {
                         alert(data.error);
                     } else {
-                        document.getElementById('current-pfp').src = data.url + '?timestamp=' + new Date().getTime(); // Prevent caching
+                        document.getElementById('current-pfp').src = data.url + '?timestamp=' + new Date().getTime();
                         alert(data.message);
                     }
                 })
@@ -110,6 +121,32 @@
                     console.error('Error:', error);
                 });
             }
+        });
+
+        document.getElementById('edit-bio-form').addEventListener('submit', function(event) {
+            event.preventDefault();
+
+            const bioInput = document.getElementById('bio-input');
+            const bio = bioInput.value;
+
+            fetch('/update_bio', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ bio: bio }),
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.error) {
+                    alert(data.error);
+                } else {
+                    alert(data.message);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+            });
         });
     </script>
 </body>
