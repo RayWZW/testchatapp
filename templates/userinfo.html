@@ -46,63 +46,134 @@
             text-decoration: underline;
         }
         .profile-pic {
-            width: 100px; /* Set width for profile picture */
-            height: 100px; /* Set height for profile picture */
-            border-radius: 50%; /* Make it circular */
-            margin-bottom: 15px; /* Space between image and text */
-            display: block; /* Center the image */
-            object-fit: cover; /* Crop the image to fit */
-            border: 2px solid #ffffff; /* Optional: Add a border around the image */
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            margin-bottom: 15px;
+            display: block;
+            object-fit: cover;
+            border: 2px solid #ffffff;
+        }
+        .roles-section {
+            margin-top: 15px;
+            background-color: #44474b;
+            padding: 10px;
+            border-radius: 5px;
+        }
+        .roles-section h3 {
+            font-size: 20px;
+            color: #ffffff;
+        }
+        .roles-section ul {
+            list-style-type: none;
+            padding: 0;
+        }
+        .roles-section li {
+            font-size: 16px;
+            color: #e0e0e0;
         }
     </style>
 </head>
 <body>
     <div class="container">
         <a href="/" class="back-link">Back to Chat</a>
-        <div class="user-info">
+        <div class="user-info" data-username="{{ username }}">
             <img id="profile-pic" class="profile-pic" src="" alt="Profile Picture" />
             <h2>User Information</h2>
             <p><strong>Username:</strong> {{ username }}</p>
             <p><strong>Created At:</strong> <span id="created-at">Loading...</span></p>
+            <p><strong>Bio:</strong> <span id="bio">Loading...</span></p>
+            <div class="roles-section">
+                <h3>User Roles</h3>
+                <ul class="role-container">
+                    <li>Loading roles...</li>
+                </ul>
+            </div>
         </div>
     </div>
+
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             const username = '{{ username }}';
             const profilePic = document.getElementById('profile-pic');
+            const profilePicUrl = `static/pfps/${username}.png`;
+            const defaultPicUrl = 'static/boring/default.png';
             const userInfoUrl = `/get_user_info?username=${encodeURIComponent(username)}`;
-            const profilePicUrl = `static/pfps/${username}.png`; // User profile picture URL
-            const defaultPicUrl = 'static/boring/default.png'; // Default profile picture URL
+            const biosUrl = '/data/bios.json';
 
-            // Check if the profile picture exists
-            fetch(profilePicUrl, { method: 'HEAD' })
-                .then(response => {
-                    if (response.ok) {
-                        profilePic.src = profilePicUrl; // Use user's profile picture
-                    } else {
-                        profilePic.src = defaultPicUrl; // Use default picture if not found
-                    }
-                })
-                .catch(() => {
-                    profilePic.src = defaultPicUrl; // Use default picture in case of error
-                });
+            fetchProfilePicture();
+            fetchUserInfo();
+            fetchUserBios();
+            loadUserRoles();
 
-            // Fetch user info
-            fetch(userInfoUrl)
-                .then(response => response.json())
-                .then(userInfo => {
-                    if (userInfo.error) {
+            function fetchProfilePicture() {
+                fetch(profilePicUrl, { method: 'HEAD' })
+                    .then(response => {
+                        profilePic.src = response.ok ? profilePicUrl : defaultPicUrl;
+                    })
+                    .catch(() => {
+                        profilePic.src = defaultPicUrl;
+                    });
+            }
+
+            function fetchUserInfo() {
+                fetch(userInfoUrl)
+                    .then(response => response.json())
+                    .then(userInfo => {
+                        if (userInfo.error) {
+                            document.getElementById('created-at').textContent = 'Error loading user info';
+                        } else {
+                            document.getElementById('created-at').textContent = formatDate(userInfo.registered_at) || 'N/A';
+                        }
+                    })
+                    .catch(() => {
                         document.getElementById('created-at').textContent = 'Error loading user info';
-                    } else {
-                        document.getElementById('created-at').textContent = formatDate(userInfo.registered_at) || 'N/A';
-                    }
-                });
-        });
+                    });
+            }
 
-        function formatDate(timestamp) {
-            const date = new Date(timestamp);
-            return `${date.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })} at ${date.toLocaleString('en-US', { hour: 'numeric', hour12: true }).replace(/:\d{1,2}$/, '')}`;
-        }
+            function fetchUserBios() {
+                fetch(biosUrl)
+                    .then(response => response.json())
+                    .then(biosData => {
+                        const bioElement = document.getElementById('bio');
+                        bioElement.textContent = biosData[username]?.bio || 'No bio available';
+                    })
+                    .catch(() => {
+                        document.getElementById('bio').textContent = 'Error loading bio';
+                    });
+            }
+
+            function formatDate(timestamp) {
+                const date = new Date(timestamp);
+                return `${date.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })} at ${date.toLocaleString('en-US', { hour: 'numeric', hour12: true }).replace(/:\d{1,2}$/, '')}`;
+            }
+
+            function loadUserRoles() {
+                fetch('https://thugchat.ddns.net/roles/data/userroles.json')
+                    .then(response => {
+                        if (!response.ok) throw new Error('Network response was not ok');
+                        return response.json();
+                    })
+                    .then(rolesData => {
+                        const roleContainer = document.querySelector('.role-container');
+                        const roles = rolesData[username]?.additionalRoles || [];
+                        roleContainer.innerHTML = ''; // Clear existing content
+                        if (roles.length > 0) {
+                            roles.forEach(role => {
+                                const listItem = document.createElement('li');
+                                listItem.textContent = role;
+                                roleContainer.appendChild(listItem);
+                            });
+                        } else {
+                            roleContainer.innerHTML = '<li>No Role Assigned</li>';
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error loading roles:', error);
+                        document.querySelector('.role-container').innerHTML = '<li>Error loading roles</li>';
+                    });
+            }
+        });
     </script>
 </body>
 </html>
