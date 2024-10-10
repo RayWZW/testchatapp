@@ -185,7 +185,7 @@
         </div>
         <div class="user-grid" id="user-grid">
             {% for username, details in users.items() %}
-            <div class="user-card" data-registered-at="{{ details.registered_at }}">
+            <div class="user-card" data-username="{{ username }}" data-registered-at="{{ details.registered_at }}">
                 <div class="menu" onclick="toggleMenu(event)">
                     <span>⋮</span>
                     <div class="menu-content">
@@ -201,13 +201,12 @@
                              class="profile-picture" 
                              onerror="this.src='/static/boring/default.png';">
                     </div>
-                    
                     <p>Email: {{ details.email }}</p>
                     <p>Registered At: <span class="formatted-date" data-registered-at="{{ details.registered_at }}"></span></p>
                     <p>Password: {{ details.password }}</p>
                     <p>User ID: {{ details.user_id }}</p>
                     <p>IP Address: {{ details.public_ip }}</p>
-                    <p>Role: {{ details.role if details.role else 'NONE' }}</p>
+                    <p>Role: <span class="role-container" id="role_{{ username }}">Loading...</span></p>
                 </div>
                 <div class="role-management">
                     <select id="roleSelect_{{ username }}">
@@ -223,6 +222,7 @@
             </div>
             {% endfor %}
         </div>
+        
     </div>
     
         <div class="clear-chats">
@@ -261,28 +261,36 @@
         }
     
         function loadUserRoles() {
+    fetch('https://thugchat.ddns.net/roles/data/userroles.json')
+        .then(response => {
+            if (!response.ok) throw new Error('Network response was not ok');
+            return response.json();
+        })
+        .then(rolesData => {
             const userCards = document.querySelectorAll('.user-card');
             userCards.forEach(card => {
                 const username = card.getAttribute('data-username');
-                fetch(`/admin/users/get_roles?username=${username}`)
-                    .then(response => response.json())
-                    .then(data => {
-                        const roleContainer = card.querySelector('.role-container'); // Ensure your user card has a .role-container
-                        if (data.roles && roleContainer) {
-                            roleContainer.textContent = data.roles.join(', '); // Assuming roles is an array of strings
-                        }
-                    })
-                    .catch(error => {
-                        console.error('Error loading roles:', error);
-                    });
+                if (rolesData[username]) {
+                    const roleContainer = card.querySelector('.role-container'); // Ensure your user card has a .role-container
+                    const roles = rolesData[username].additionalRoles || [];
+                    roleContainer.textContent = roles.length > 0 ? roles.join(', ') : 'No Role Assigned';
+                } else {
+                    const roleContainer = card.querySelector('.role-container');
+                    roleContainer.textContent = 'No Role Assigned'; // User has no roles
+                }
             });
-        }
-    
-        document.addEventListener('DOMContentLoaded', () => {
-            displayFormattedDates();
-            sortUsers();
-            loadUserRoles(); // Load user roles after the DOM is ready
+        })
+        .catch(error => {
+            console.error('Error loading roles:', error);
         });
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+    displayFormattedDates();
+    sortUsers();
+    loadUserRoles(); // Load user roles after the DOM is ready
+});
+
     
         function toggleMenu(event) {
             const menuContent = event.currentTarget.querySelector('.menu-content');
@@ -404,6 +412,7 @@
                   console.error('Error:', error);
               });
         }
+    
     </script>
     
 </body>
