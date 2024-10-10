@@ -594,6 +594,15 @@ button {
         padding: 5px;
     }
 
+    .username {
+    transition: transform 0.2s ease; /* Smooth transition for scaling */
+}
+
+.username:hover {
+    transform: scale(1.1); /* Scale the username up slightly on hover */
+}
+
+
     #chat-container {
         margin-left: 0;
         margin-top: 10px;
@@ -1384,11 +1393,11 @@ function createMessageElement(msg) {
     const div = document.createElement('div');
     div.className = 'message';
     const formattedTime = formatTimestamp(msg.timestamp);
-const username = msg.username.toLowerCase();
-const profilePictureUrlPng = `/static/pfps/${username}.png`;
-const defaultProfilePictureUrl = '/static/boring/default.png'; // Corrected here
+    const username = msg.username.toLowerCase();
+    const profilePictureUrlPng = `/static/pfps/${username}.png`;
+    const defaultProfilePictureUrl = '/static/boring/default.png';
 
-const img = new Image();
+    const img = new Image();
 
     img.src = profilePictureUrlPng;
 
@@ -1432,7 +1441,7 @@ const img = new Image();
                         <div style="display: flex; align-items: center;">
                             <img src="${img.src}" alt="${msg.username}'s profile picture" class="profile-picture" style="margin-right: 8px;">
                             <div>
-                                <span class="username" style="${usernameStyle}; cursor: pointer;" data-username="${msg.username}">${msg.username}:</span>
+                                <span class="username" style="${usernameStyle}; cursor: pointer; display: inline-block; transition: transform 0.2s ease;" data-username="${msg.username}">${msg.username}:</span>
                                 ${wrappedMessage}
                             </div>
                         </div>
@@ -1440,8 +1449,16 @@ const img = new Image();
                     </div>
                 `;
 
-                // Add click event to the username
                 const usernameElement = div.querySelector('.username');
+
+                usernameElement.addEventListener('mouseenter', () => {
+                    usernameElement.style.transform = 'scale(1.02)';
+                });
+
+                usernameElement.addEventListener('mouseleave', () => {
+                    usernameElement.style.transform = 'scale(1.0)';
+                });
+
                 usernameElement.addEventListener('click', () => {
                     openUsernameModal(msg.username);
                 });
@@ -1452,6 +1469,8 @@ const img = new Image();
     return div;
 }
 
+
+
 function openUsernameModal(username) {
     const modal = document.createElement('div');
     modal.className = 'modal';
@@ -1460,7 +1479,7 @@ function openUsernameModal(username) {
     modal.style.left = '0';
     modal.style.width = '100%';
     modal.style.height = '100%';
-    modal.style.backgroundColor = 'rgba(0, 0, 0, 0.7)';
+    modal.style.backgroundColor = 'rgba(0, 0, 0, 0.8)';
     modal.style.display = 'flex';
     modal.style.alignItems = 'center';
     modal.style.justifyContent = 'center';
@@ -1469,29 +1488,28 @@ function openUsernameModal(username) {
 
     const modalContent = document.createElement('div');
     modalContent.className = 'modal-content';
-    modalContent.style.backgroundColor = '#2c2f33';
-    modalContent.style.padding = '40px';
+    modalContent.style.backgroundColor = '#36393f';
+    modalContent.style.padding = '30px';
     modalContent.style.borderRadius = '12px';
     modalContent.style.boxShadow = '0 4px 40px rgba(0, 0, 0, 0.5)';
     modalContent.style.transition = 'transform 0.3s ease';
     modalContent.style.transform = 'scale(0.9)';
-    modalContent.style.maxWidth = '800px';
+    modalContent.style.maxWidth = '600px';
     modalContent.style.width = '90%';
+    modalContent.style.position = 'relative';
 
     const profilePictureUrl = `/static/pfps/${username.toLowerCase()}.png`;
+    
+    const header = createHeader(username, profilePictureUrl);
+    const rolesSection = createRolesSection();
+    const bioSection = createBioSection();
 
-    modalContent.innerHTML = `
-        <div style="display: flex; align-items: center;">
-            <img src="${profilePictureUrl}" alt="${username}'s profile picture" style="border-radius: 50%; width: 120px; height: 120px; margin-right: 20px;">
-            <div style="color: #ffffff;">
-                <h2 style="margin: 0; font-size: 28px;">${username}</h2>
-                <p class="roles" style="margin: 0; font-size: 16px; color: #b9bbbe;">Roles: Loading...</p>
-                <p class="bio" style="margin-top: 10px; font-size: 16px; color: #b9bbbe;">Bio: Loading...</p>
-            </div>
-        </div>
-        <button id="downloadPfp" style="margin-top: 20px; background-color: #43b581; color: #ffffff; border: none; padding: 12px 20px; border-radius: 6px; cursor: pointer; font-size: 16px; margin-right: 15px;">Download PFP</button>
-        <button id="closeModal" style="margin-top: 20px; background-color: #7289da; color: #ffffff; border: none; padding: 12px 20px; border-radius: 6px; cursor: pointer; font-size: 16px;">Close</button>
-    `;
+    const downloadButton = createDownloadButton(username);
+
+    modalContent.appendChild(downloadButton);
+    modalContent.appendChild(header);
+    modalContent.appendChild(rolesSection);
+    modalContent.appendChild(bioSection);
 
     modal.appendChild(modalContent);
     document.body.appendChild(modal);
@@ -1501,16 +1519,113 @@ function openUsernameModal(username) {
         modalContent.style.transform = 'scale(1)';
     }, 10);
 
-    const closeModalButton = modalContent.querySelector('#closeModal');
-    closeModalButton.addEventListener('click', () => {
+    modal.addEventListener('click', (event) => {
+        if (event.target === modal) {
+            closeModal();
+        }
+    });
+
+    function closeModal() {
         modal.style.opacity = '0';
         setTimeout(() => {
             document.body.removeChild(modal);
         }, 300);
-    });
+    }
 
-    const downloadPfpButton = modalContent.querySelector('#downloadPfp');
-    downloadPfpButton.addEventListener('click', () => {
+    loadUserRoles(username, rolesSection);
+    loadUserBio(username, bioSection);
+}
+
+function createHeader(username, profilePictureUrl) {
+    const headerDiv = document.createElement('div');
+    headerDiv.style.display = 'flex';
+    headerDiv.style.alignItems = 'center';
+    headerDiv.style.marginBottom = '20px';
+
+    const profilePicture = document.createElement('img');
+    profilePicture.src = profilePictureUrl;
+    profilePicture.alt = `${username}'s profile picture`;
+    profilePicture.style.borderRadius = '50%';
+    profilePicture.style.width = '100px';
+    profilePicture.style.height = '100px';
+    profilePicture.style.marginRight = '15px';
+    profilePicture.style.border = '2px solid #7289da';
+
+    const usernameElement = document.createElement('h2');
+    usernameElement.style.margin = '0';
+    usernameElement.style.fontSize = '24px';
+    usernameElement.style.color = '#ffffff';
+    usernameElement.textContent = username;
+
+    headerDiv.appendChild(profilePicture);
+    headerDiv.appendChild(usernameElement);
+    return headerDiv;
+}
+
+function createRolesSection() {
+    const rolesDiv = document.createElement('div');
+    rolesDiv.style.marginTop = '20px';
+    rolesDiv.style.color = '#b9bbbe';
+
+    const rolesHeader = document.createElement('h3');
+    rolesHeader.textContent = 'Roles';
+    rolesHeader.style.marginBottom = '10px';
+    rolesHeader.style.color = '#ffffff';
+
+    const rolesList = document.createElement('p');
+    rolesList.className = 'roles';
+    rolesList.textContent = 'Loading...';
+
+    rolesDiv.appendChild(rolesHeader);
+    rolesDiv.appendChild(rolesList);
+
+    const separator = document.createElement('hr');
+    separator.style.border = '1px solid #444';
+    separator.style.margin = '15px 0';
+    rolesDiv.appendChild(separator);
+
+    return rolesDiv;
+}
+
+function createBioSection() {
+    const bioDiv = document.createElement('div');
+    bioDiv.style.color = '#b9bbbe';
+
+    const bioHeader = document.createElement('h3');
+    bioHeader.textContent = 'Bio';
+    bioHeader.style.marginBottom = '10px';
+    bioHeader.style.color = '#ffffff';
+
+    const bioParagraph = document.createElement('p');
+    bioParagraph.className = 'bio';
+    bioParagraph.textContent = 'Loading...';
+
+    bioDiv.appendChild(bioHeader);
+    bioDiv.appendChild(bioParagraph);
+
+    return bioDiv;
+}
+
+function createDownloadButton(username) {
+    const button = document.createElement('button');
+    button.style.position = 'absolute';
+    button.style.top = '15px';
+    button.style.right = '15px';
+    button.style.backgroundColor = 'transparent';
+    button.style.border = 'none';
+    button.style.cursor = 'pointer';
+    button.style.zIndex = '10';
+
+    const downloadIcon = document.createElement('img');
+    downloadIcon.src = 'https://thugchat.ddns.net/static/downloadicon.png';
+    downloadIcon.alt = 'Download Profile Picture';
+    downloadIcon.style.width = '32px';
+    downloadIcon.style.height = '32px';
+
+    button.appendChild(downloadIcon);
+    button.addEventListener('click', (event) => {
+        event.stopPropagation();
+        const profilePictureUrl = `/static/pfps/${username.toLowerCase()}.png`;
         const link = document.createElement('a');
         link.href = profilePictureUrl;
         link.download = `${username.toLowerCase()}_pfp.png`;
@@ -1519,8 +1634,7 @@ function openUsernameModal(username) {
         document.body.removeChild(link);
     });
 
-    loadUserRoles(username, modalContent);
-    loadUserBio(username, modalContent);
+    return button;
 }
 
 function loadUserRoles(username, modalContent) {
