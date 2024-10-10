@@ -1387,7 +1387,7 @@ function createMessageElement(msg) {
             let formattedMessage = formatLinks(msg.message);
             formattedMessage = coloredText(formattedMessage);
             formattedMessage = formatCodeBlocks(formattedMessage);
-            const wrappedMessage = wrapLongMessage(formattedMessage, 85);
+            const wrappedMessage = wrapLongMessage(formattedMessage, 850);
 
             updateRoles(msg.username).then(usernameColor => {
                 const usernameStyle = `color: ${usernameColor}; font-weight: bold;`;
