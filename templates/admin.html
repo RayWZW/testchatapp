@@ -450,7 +450,17 @@ document.addEventListener('DOMContentLoaded', () => {
             card.style.display = "none";
         }
     });
+
+    localStorage.setItem("searchInputValue", filter); // Save the current input value
 }
+
+document.addEventListener('DOMContentLoaded', () => {
+    const savedInputValue = localStorage.getItem("searchInputValue") || ""; // Load saved input value
+    const input = document.getElementById("searchInput");
+    input.value = savedInputValue; // Set the input value to the saved value
+    filterUsers(); // Call filter function to filter users based on the saved input
+});
+
  
     
     </script>
