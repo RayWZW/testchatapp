@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>THUG-CHAT</title>
-    <link rel="icon" href="static/websiteicon.png" type="image/png"> <!-- Adding website icon -->
+    <link rel="icon" href="static/websiteicon.ico" type="image/png"> <!-- Adding website icon -->
     <style>
 body {
     background-color: #36393e;
@@ -530,7 +530,7 @@ button {
     align-items: center; 
     justify-content: center; 
     top: 5px; 
-    right: calc(5% + 290px); /* Move left slightly using calc */
+    right: calc(5% + 220px); /* Move left slightly using calc */
     text-transform: uppercase; 
     font-weight: bold; 
     box-shadow: 0 2px 5px rgba(0, 0, 0, 0.4); 
@@ -563,7 +563,7 @@ button {
     align-items: center;
     justify-content: center;
     top: 5px; /* Set y-coordinate */
-    right: calc(5% + 130px); /* Adjusted right position based on button width */
+    right: calc(5% + 30px); /* Adjusted right position based on button width */
     box-shadow: 0 2px 5px rgba(0, 0, 0, 0.4); /* Updated box shadow */
     transition: background-color 0.3s, transform 0.2s; /* Smooth transitions */
 }
@@ -757,11 +757,14 @@ button {
 
 
 
+
+
+
 </style>
 
 </head>
 <body>
-    <button class="open-commands-button" onclick="window.open('/commands', '_blank')">Open Commands Console</button>
+    
     <div id="sidebar">        
         <h3>TRUE THUGS</h3>
         <ul id="user-list"></ul>
@@ -778,7 +781,7 @@ button {
  <button id="adminButton" class="open-commands-button">ADMIN PANEL</button>
 
     </div>
-    <button id="change-pfp-button" class="open-commands-button" onclick="window.open('/account_settings', '_blank');">Change PFP</button>
+    <button id="change-pfp-button" class="open-commands-button" onclick="window.open('/account_settings', '_blank');">EDIT YOUR ACCOUNT</button>
 
     <button id="reload-button" class="open-commands-button">Reload</button>
         <div id="chat-container">
@@ -1380,21 +1383,21 @@ async function updateRoles(username) {
 function createMessageElement(msg) {
     const div = document.createElement('div');
     div.className = 'message';
-
     const formattedTime = formatTimestamp(msg.timestamp);
-    const username = msg.username.toLowerCase();
-    const profilePictureUrlPng = `/static/pfps/${username}.png`;
-    const defaultProfilePictureUrl = '/static/boring/default.png';
+const username = msg.username.toLowerCase();
+const profilePictureUrlPng = `/static/pfps/${username}.png`;
+const defaultProfilePictureUrl = '/static/boring/default.png'; // Corrected here
 
-    const img = new Image();
+const img = new Image();
+
     img.src = profilePictureUrlPng;
 
-    img.onload = function() {
+    img.onload = function () {
         console.log(`Loaded PNG: ${img.src}`);
         renderMessage();
     };
 
-    img.onerror = function() {
+    img.onerror = function () {
         img.src = defaultProfilePictureUrl;
         console.log(`Loaded Default: ${img.src}`);
         renderMessage();
@@ -1411,19 +1414,15 @@ function createMessageElement(msg) {
             div.appendChild(mediaElement);
         } else {
             let formattedMessage = formatLinks(msg.message);
-formattedMessage = coloredText(formattedMessage);
-formattedMessage = formatCodeBlocks(formattedMessage);
+            formattedMessage = coloredText(formattedMessage);
+            formattedMessage = formatCodeBlocks(formattedMessage);
 
-// Embed video, shorts, or Discord invite if applicable
-const videoEmbed = embedYouTubeVideo(formattedMessage);
-const shortsEmbed = embedYouTubeShorts(formattedMessage);
-const inviteEmbed = embedDiscordInvite(formattedMessage);
+            const videoEmbed = embedYouTubeVideo(formattedMessage);
+            const shortsEmbed = embedYouTubeShorts(formattedMessage);
+            const inviteEmbed = embedDiscordInvite(formattedMessage);
 
-// Determine the final message to display, prioritizing embedded content
-const embeddedMessage = videoEmbed || shortsEmbed || inviteEmbed || formattedMessage;
-const wrappedMessage = wrapLongMessage(embeddedMessage, 850);
-
-    
+            const embeddedMessage = videoEmbed || shortsEmbed || inviteEmbed || formattedMessage;
+            const wrappedMessage = wrapLongMessage(embeddedMessage, 850);
 
             updateRoles(msg.username).then(usernameColor => {
                 const usernameStyle = `color: ${usernameColor}; font-weight: bold;`;
@@ -1433,19 +1432,140 @@ const wrappedMessage = wrapLongMessage(embeddedMessage, 850);
                         <div style="display: flex; align-items: center;">
                             <img src="${img.src}" alt="${msg.username}'s profile picture" class="profile-picture" style="margin-right: 8px;">
                             <div>
-                                <span class="username" style="${usernameStyle}">${msg.username}:</span>
+                                <span class="username" style="${usernameStyle}; cursor: pointer;" data-username="${msg.username}">${msg.username}:</span>
                                 ${wrappedMessage}
                             </div>
                         </div>
                         <span class="timestamp">${formattedTime}</span>
                     </div>
                 `;
+
+                // Add click event to the username
+                const usernameElement = div.querySelector('.username');
+                usernameElement.addEventListener('click', () => {
+                    openUsernameModal(msg.username);
+                });
             });
         }
     }
 
     return div;
 }
+
+function openUsernameModal(username) {
+    const modal = document.createElement('div');
+    modal.className = 'modal';
+    modal.style.position = 'fixed';
+    modal.style.top = '0';
+    modal.style.left = '0';
+    modal.style.width = '100%';
+    modal.style.height = '100%';
+    modal.style.backgroundColor = 'rgba(0, 0, 0, 0.7)';
+    modal.style.display = 'flex';
+    modal.style.alignItems = 'center';
+    modal.style.justifyContent = 'center';
+    modal.style.opacity = '0';
+    modal.style.transition = 'opacity 0.3s ease';
+
+    const modalContent = document.createElement('div');
+    modalContent.className = 'modal-content';
+    modalContent.style.backgroundColor = '#2c2f33';
+    modalContent.style.padding = '40px';
+    modalContent.style.borderRadius = '12px';
+    modalContent.style.boxShadow = '0 4px 40px rgba(0, 0, 0, 0.5)';
+    modalContent.style.transition = 'transform 0.3s ease';
+    modalContent.style.transform = 'scale(0.9)';
+    modalContent.style.maxWidth = '800px';
+    modalContent.style.width = '90%';
+
+    const profilePictureUrl = `/static/pfps/${username.toLowerCase()}.png`;
+
+    modalContent.innerHTML = `
+        <div style="display: flex; align-items: center;">
+            <img src="${profilePictureUrl}" alt="${username}'s profile picture" style="border-radius: 50%; width: 120px; height: 120px; margin-right: 20px;">
+            <div style="color: #ffffff;">
+                <h2 style="margin: 0; font-size: 28px;">${username}</h2>
+                <p class="roles" style="margin: 0; font-size: 16px; color: #b9bbbe;">Roles: Loading...</p>
+                <p class="bio" style="margin-top: 10px; font-size: 16px; color: #b9bbbe;">Bio: Loading...</p>
+            </div>
+        </div>
+        <button id="downloadPfp" style="margin-top: 20px; background-color: #43b581; color: #ffffff; border: none; padding: 12px 20px; border-radius: 6px; cursor: pointer; font-size: 16px; margin-right: 15px;">Download PFP</button>
+        <button id="closeModal" style="margin-top: 20px; background-color: #7289da; color: #ffffff; border: none; padding: 12px 20px; border-radius: 6px; cursor: pointer; font-size: 16px;">Close</button>
+    `;
+
+    modal.appendChild(modalContent);
+    document.body.appendChild(modal);
+
+    setTimeout(() => {
+        modal.style.opacity = '1';
+        modalContent.style.transform = 'scale(1)';
+    }, 10);
+
+    const closeModalButton = modalContent.querySelector('#closeModal');
+    closeModalButton.addEventListener('click', () => {
+        modal.style.opacity = '0';
+        setTimeout(() => {
+            document.body.removeChild(modal);
+        }, 300);
+    });
+
+    const downloadPfpButton = modalContent.querySelector('#downloadPfp');
+    downloadPfpButton.addEventListener('click', () => {
+        const link = document.createElement('a');
+        link.href = profilePictureUrl;
+        link.download = `${username.toLowerCase()}_pfp.png`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    });
+
+    loadUserRoles(username, modalContent);
+    loadUserBio(username, modalContent);
+}
+
+function loadUserRoles(username, modalContent) {
+    fetch('https://thugchat.ddns.net/roles/data/userroles.json')
+        .then(response => {
+            if (!response.ok) throw new Error('Network response was not ok');
+            return response.json();
+        })
+        .then(rolesData => {
+            const rolesParagraph = modalContent.querySelector('.roles');
+            if (rolesData[username]) {
+                const roles = rolesData[username].additionalRoles || [];
+                rolesParagraph.textContent = `Roles: ${roles.length > 0 ? roles.join(', ') : 'No Role Assigned'}`;
+            } else {
+                rolesParagraph.textContent = 'Roles: No Role Assigned';
+            }
+        })
+        .catch(error => {
+            console.error('Error loading roles:', error);
+            modalContent.querySelector('.roles').textContent = 'Roles: Error loading roles';
+        });
+}
+
+function loadUserBio(username, modalContent) {
+    fetch('data/bios.json')
+        .then(response => {
+            if (!response.ok) throw new Error('Network response was not ok');
+            return response.json();
+        })
+        .then(bioData => {
+            const bioParagraph = modalContent.querySelector('.bio');
+            if (bioData[username]) {
+                bioParagraph.textContent = `Bio: ${bioData[username].bio || 'No Bio Available'}`;
+            } else {
+                bioParagraph.textContent = 'Bio: No Bio Available';
+            }
+        })
+        .catch(error => {
+            console.error('Error loading bio:', error);
+            modalContent.querySelector('.bio').textContent = 'Bio: Error loading bio';
+        });
+}
+
+
+
 
 
 
@@ -1499,6 +1619,7 @@ function handleWebSocketMessages(event) {
 
     return mediaMessage;
 }
+
 
         });
     </script>
