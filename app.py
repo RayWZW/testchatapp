@@ -25,6 +25,8 @@ from utils.roles import roles_bp
 from utils.chatlog_updater import start_chatlog_watcher
 from commands.usercount import usercount_bp
 from commands.help import help_bp
+from commands.purge import purge_bp
+from utils.syncer import syncer_bp
 
 app = Flask(__name__, static_folder='static')
 app.secret_key = '98ew5-e9e5-ef545ew-we15ew15ew'  # Change this to a secure key in production
@@ -45,6 +47,8 @@ app.register_blueprint(logout_bp)
 app.register_blueprint(roles_bp, url_prefix='/roles')
 app.register_blueprint(usercount_bp)
 app.register_blueprint(help_bp)
+app.register_blueprint(purge_bp)
+app.register_blueprint(syncer_bp)
 
 import threading
 watcher_thread = threading.Thread(target=start_chatlog_watcher, args=(socketio,))
@@ -228,4 +232,4 @@ ssl_context = (
 )
 
 if __name__ == '__main__':
-    socketio.run(app, host='0.0.0.0', debug=True, port=443, ssl_context=ssl_context)  
+    socketio.run(app, host='0.0.0.0', debug=True, port=443, ssl_context=ssl_context)
