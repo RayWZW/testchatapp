@@ -11,7 +11,6 @@ from utils.utils import load_json_file, save_json_file, require_verification, is
 from utils.register import register_bp
 from utils.message import handle_message, delete_message, handle_typing  # Adjusted import
 from utils.admin import admin_bp
-from utils.commands import commands_bp
 from utils.forgot_password import password_reset_bp
 from utils.files import files_bp
 from routes.useraccounts import useraccounts_bp
@@ -27,6 +26,7 @@ from commands.usercount import usercount_bp
 from commands.help import help_bp
 from commands.purge import purge_bp
 from commands.downloaduserpfp import download_pfp_bp
+from utils.bios import UserBioManager
 
 
 app = Flask(__name__, static_folder='static')
@@ -34,8 +34,7 @@ app.secret_key = '98ew5-e9e5-ef545ew-we15ew15ew'  # Change this to a secure key 
 socketio = SocketIO(app)
 
 app.register_blueprint(register_bp)
-app.register_blueprint(admin_bp, url_prefix='/admin') 
-app.register_blueprint(commands_bp)
+app.register_blueprint(admin_bp, url_prefix='/admin')  
 app.register_blueprint(password_reset_bp)
 app.register_blueprint(files_bp)
 app.register_blueprint(useraccounts_bp)
@@ -77,6 +76,7 @@ ADMIN_PASSWORD_FILE = paths["ADMIN_PASSWORD_FILE"]
 CODES_FILE = paths["CODES_FILE"]
 TEMP_USER_ACCOUNTS_FILE = paths["TEMP_USER_ACCOUNTS_FILE"]
 PFP_FOLDER = paths["PFP_FOLDER"]
+BIOS_FILE = 'data/bios.json'
 app.config['PFP_FOLDER'] = PFP_FOLDER
 
 @app.before_request
@@ -87,6 +87,44 @@ def block_requests():
     if request.path in blocked_paths:
         return render_template('getclowned.html'), 403  # Render the blocked page with a 403 status code
 
+@app.route('/data/bios.json', methods=['GET'])
+def get_bios():
+    try:
+        with open(BIOS_FILE, 'r') as file:
+            bios = json.load(file)
+        return jsonify(bios)
+    except Exception as e:
+        return jsonify({"error": "Unable to load bios."}), 500
+
+
+
+
+@app.route('/update_bio', methods=['POST'])
+def update_bio():
+    data = request.get_json()
+    username = session.get('username')
+    bio = data.get('bio')
+
+    if not username or not bio:
+        return jsonify({"error": "Username or bio is missing."}), 400
+
+    manager = UserBioManager()
+    manager.update_bio(username, bio)
+
+    return jsonify({"message": "Bio updated successfully."})
+
+class UserBioManager:
+    def update_bio(self, username, bio):
+        with open(BIOS_FILE, 'r+') as file:
+            try:
+                data = json.load(file)
+            except json.JSONDecodeError:
+                data = {}
+
+            data[username] = {"bio": bio}
+            file.seek(0)
+            json.dump(data, file, indent=4)
+            file.truncate()
 
 
 @socketio.on('send_message')
@@ -156,6 +194,7 @@ def tos():
 def get_user_accounts():
     users = load_json_file(USER_ACCOUNTS_FILE)
     return jsonify(list(users.keys()))
+
 
 
 @app.route('/get_messages')
