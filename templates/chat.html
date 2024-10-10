@@ -1138,6 +1138,21 @@ function embedYouTubeShorts(url) {
     return null; 
 }
 
+
+
+
+
+function embedVidlii(url) {
+    const vidliiPattern = /https?:\/\/(www\.)?vidlii\.com\/watch\?v=([a-zA-Z0-9_-]+)/;
+    const match = url.match(vidliiPattern);
+
+    if (match) {
+        const videoId = match[2];
+        return `<iframe allowfullscreen src="https://www.vidlii.com/embed?v=${videoId}&a=0" frameborder="0" width="640" height="360"></iframe>`;
+    }
+    return null; // Return null if the URL doesn't match
+}
+
 function embedDiscordInvite(url) {
     const discordInvitePattern = /^(https?:\/\/)?(www\.)?(discord\.gg|discord\.com\/invite)\/[a-zA-Z0-9]+$/;
     const match = url.match(discordInvitePattern);
@@ -1149,22 +1164,32 @@ function embedDiscordInvite(url) {
                 <img src="static/discordinvite.png" style="width: 200px; height: 400px; border-radius: 8px;"/>
             </a>`;
     }
-    return '';
+    return ''; // Return empty string if the URL doesn't match
 }
-
-
 
 function formatLinks(message) {
     const urlPattern = /(?<!\S)(https?:\/\/[^\s]+)/g;
 
     return message.replace(urlPattern, function(url) {
-        const embedVideo = embedYouTubeVideo(url);
-        const embedShorts = embedYouTubeShorts(url);
-        const embedInvite = embedDiscordInvite(url);
+        const embedFunctions = [
+            embedYouTubeVideo,
+            embedYouTubeShorts,
+            embedDiscordInvite,
+            embedVidlii
+        ];
 
-        return embedVideo || embedShorts || embedInvite || `<a href="${url}" class="link" target="_blank" rel="noopener noreferrer">${url}</a>`;
+        for (let embedFunction of embedFunctions) {
+            const embed = embedFunction(url);
+            if (embed) {
+                return embed; // Return the first embed that matches
+            }
+        }
+
+        // If no embeds were matched, return the original URL wrapped in an anchor tag
+        return `<a href="${url}" class="link" target="_blank" rel="noopener noreferrer">${url}</a>`;
     });
 }
+
 
 function formatCodeBlocks(message) {
     // Check if the message starts and ends with "```"
@@ -1385,9 +1410,19 @@ function createMessageElement(msg) {
             div.appendChild(mediaElement);
         } else {
             let formattedMessage = formatLinks(msg.message);
-            formattedMessage = coloredText(formattedMessage);
-            formattedMessage = formatCodeBlocks(formattedMessage);
-            const wrappedMessage = wrapLongMessage(formattedMessage, 850);
+formattedMessage = coloredText(formattedMessage);
+formattedMessage = formatCodeBlocks(formattedMessage);
+
+// Embed video, shorts, or Discord invite if applicable
+const videoEmbed = embedYouTubeVideo(formattedMessage);
+const shortsEmbed = embedYouTubeShorts(formattedMessage);
+const inviteEmbed = embedDiscordInvite(formattedMessage);
+
+// Determine the final message to display, prioritizing embedded content
+const embeddedMessage = videoEmbed || shortsEmbed || inviteEmbed || formattedMessage;
+const wrappedMessage = wrapLongMessage(embeddedMessage, 850);
+
+    
 
             updateRoles(msg.username).then(usernameColor => {
                 const usernameStyle = `color: ${usernameColor}; font-weight: bold;`;
