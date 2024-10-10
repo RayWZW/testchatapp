@@ -11,21 +11,14 @@ CHAT_LOGS_FILE = 'data/chatlogs.json'
 message_times = {}
 cooldown_users = {}
 
-MALICIOUS_ATTRIBUTES = [
-    'onerror', 'onclick', 'onmouseover', 'onmouseout',
-    'onsubmit', 'onfocus', 'onblur', 'onchange', 'onkeydown', 'onkeyup',
-    'window.onload'
-]
+# Regex patterns to identify potentially harmful JavaScript code
+MALICIOUS_JAVASCRIPT = re.compile(r'(javascript:|on\w+=|<script.*?>|<\/script>|eval\(|alert\(|document\.)', re.IGNORECASE)
 
-BLOCKED_HTML_TAGS = re.compile(r'<html|<head|<body', re.IGNORECASE)
+def contains_javascript_code(message):
+    return bool(MALICIOUS_JAVASCRIPT.search(message))
 
-def remove_malicious_attributes(message):
-    for attr in MALICIOUS_ATTRIBUTES:
-        message = re.sub(rf'\s*{attr}=["\'][^"\']*["\']', '', message, flags=re.IGNORECASE)
-    return message
-
-def contains_complete_html(message):
-    return bool(BLOCKED_HTML_TAGS.search(message))
+def remove_javascript_code(message):
+    return re.sub(MALICIOUS_JAVASCRIPT, '', message)
 
 def handle_message(message):
     username = session.get('username')
@@ -50,19 +43,17 @@ def handle_message(message):
             'file_type': message['file_type']
         }
     elif isinstance(original_message, str):
-        if contains_complete_html(original_message):
-            emit('error', {'error': 'Your message contains complete HTML and is not allowed.'}, room=request.sid)
+        if contains_javascript_code(original_message):
+            emit('error', {'error': 'Your message contains harmful JavaScript and is not allowed.'}, room=request.sid)
             return
 
-        sanitized_message = remove_malicious_attributes(original_message)
-        if sanitized_message != original_message:
-            emit('error', {'error': 'Your message contained malicious attributes and has been sanitized.'}, room=request.sid)
-            original_message = sanitized_message
+        # Remove any harmful JavaScript code
+        sanitized_message = remove_javascript_code(original_message)
 
         formatted_message = {
             'timestamp': datetime.now().strftime('%Y-%m-%d %H:%M:%S.%f')[:-3],
             'username': username,
-            'message': original_message
+            'message': sanitized_message  # Store the sanitized message
         }
     else:
         return
