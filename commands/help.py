@@ -25,20 +25,20 @@ def create_system_message(last_timestamp):
         "timestamp": response_timestamp.isoformat(),
         "username": "SYSTEM",
         "message": (
-            "<div style='border: 2px solid #4CAF50; border-radius: 10px; padding: 10px; background-color: #f9f9f9;'>"
-            "<h2 style='text-align: center; color: #4CAF50;'>SYSTEM COMMANDS</h2>"
-            "<hr style='border: 1px solid #4CAF50;'>"
-            "<p>Welcome! Here are the commands you can use:</p>"
-            "<ul style='list-style-type: none; padding: 0;'>"
-            "<li>.help - Displays this list of available commands.</li>"
-            "<li>.purge [number] - Removes the last [number] messages from the chat.</li>"
-            "<li>.usercount - Shows the current number of active users in the chat.</li>"
-            "<li>.clear - Clears all chat messages for a fresh start.</li>"
-            "</ul>"
-            "<p>Please use these commands responsibly and enjoy your chat experience!</p>"
-            "</div>"
+            "```\n"
+            "SYSTEM COMMANDS\n"
+            "-------------------\n"
+            "Welcome! Here are the commands you can use:\n"
+            "\n"
+            "🆕 .help - Displays this list of available commands.\n"
+            "🗑️ .purge [number] - Removes the last [number] messages from the chat.\n"
+            "👥 .usercount - Shows the current number of active users in the chat.\n"
+            "🧹 .clear - Clears all chat messages for a fresh start.\n"
+            "🖼️ .downloadpfp {username} - Downloads the profile picture of the specified user.\n"
+            "```"
         )
     }
+
 
 
 
