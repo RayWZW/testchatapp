@@ -5,7 +5,7 @@ import time
 from flask import Blueprint
 
 CHAT_LOGS_FILE = "data/chatlogs.json"
-USER_ACCOUNTS_FILE = "data/useraccounts.json"
+USER_ROLES_FILE = "data/userroles.json"
 
 purge_bp = Blueprint('purge', __name__)
 
@@ -22,20 +22,22 @@ def create_system_message(last_timestamp, message):
         "message": message
     }
 
-def load_user_accounts():
-    """Load user accounts from JSON file."""
-    if os.path.exists(USER_ACCOUNTS_FILE):
-        with open(USER_ACCOUNTS_FILE, 'r') as f:
+def load_user_roles():
+    """Load user roles from JSON file."""
+    if os.path.exists(USER_ROLES_FILE):
+        with open(USER_ROLES_FILE, 'r') as f:
             return json.load(f)
     return {}
 
 def user_has_roles(username):
     """Check if a user has any of the allowed roles."""
     allowed_roles = {"moderator", "admin", "owner", "developer"}
-    user_accounts = load_user_accounts()
-    user_info = user_accounts.get(username, {})
-    user_roles = set(user_info.get("roles", []))  # Assuming roles are stored in a list
-    return not user_roles.isdisjoint(allowed_roles)
+    user_roles = load_user_roles()
+
+    # Check if the user has roles in userroles.json
+    user_info = user_roles.get(username, {})
+    user_roles_set = set(user_info.get("additionalRoles", []))  # Assuming roles are stored in a list
+    return not user_roles_set.isdisjoint(allowed_roles)
 
 def purge_chat_logs(n):
     if os.path.exists(CHAT_LOGS_FILE):
