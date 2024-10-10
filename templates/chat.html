@@ -1142,16 +1142,17 @@ function embedYouTubeShorts(url) {
 
 
 
-function embedVidlii(url) {
-    const vidliiPattern = /https?:\/\/(www\.)?vidlii\.com\/watch\?v=([a-zA-Z0-9_-]+)/;
-    const match = url.match(vidliiPattern);
+function embedVimeo(url) {
+    const vimeoPattern = /https?:\/\/(www\.)?vimeo\.com\/([0-9]+)/;
+    const match = url.match(vimeoPattern);
 
     if (match) {
         const videoId = match[2];
-        return `<iframe allowfullscreen src="https://www.vidlii.com/embed?v=${videoId}&a=0" frameborder="0" width="640" height="360"></iframe>`;
+        return `<iframe allowfullscreen src="https://player.vimeo.com/video/${videoId}" frameborder="0" width="640" height="360"></iframe>`;
     }
     return null; // Return null if the URL doesn't match
 }
+ 
 
 function embedDiscordInvite(url) {
     const discordInvitePattern = /^(https?:\/\/)?(www\.)?(discord\.gg|discord\.com\/invite)\/[a-zA-Z0-9]+$/;
@@ -1175,7 +1176,7 @@ function formatLinks(message) {
             embedYouTubeVideo,
             embedYouTubeShorts,
             embedDiscordInvite,
-            embedVidlii
+            embedVimeo
         ];
 
         for (let embedFunction of embedFunctions) {
