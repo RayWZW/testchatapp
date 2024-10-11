@@ -1021,13 +1021,13 @@ function fetchMessages() {
 socket.on('chat_logs_update', function(chatLogs) {
     console.log("Received chat logs update:", chatLogs); // Debugging line
     fetchMessages().then(() => {
-        setTimeout(() => {
-            // Scroll to the bottom after a 100 ms delay
+        setTimeout(() => {             
             chatBox.scrollTop = chatBox.scrollHeight;
         }, 100);
     });
 });
 
+setInterval(fetchMessages, 20 * 60 * 1); // i put this here so that the chat updates and doesnt have issues where u have to reload after having it open for a while
 
 
 
