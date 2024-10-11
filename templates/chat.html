@@ -985,31 +985,39 @@ function fetchMessages() {
 
             const fragment = document.createDocumentFragment();
             const currentChildren = Array.from(chatBox.children);
+            const existingElementsMap = new Map();
 
             currentChildren.forEach(child => {
-                const messageId = child.dataset.timestamp;
-                if (!messages.some(msg => msg.timestamp === messageId)) {
-                    chatBox.removeChild(child);
-                }
+                existingElementsMap.set(child.dataset.timestamp, child);
             });
 
             messages.forEach(msg => {
                 const messageId = msg.timestamp;
-                const existingElement = currentChildren.find(child => child.dataset.timestamp === messageId);
+                const existingElement = existingElementsMap.get(messageId);
 
                 if (!existingElement) {
                     fragment.appendChild(createMessageElement(msg));
                 } else if (existingElement.innerHTML !== createMessageElement(msg).innerHTML) {
-                    existingElement.innerHTML = createMessageElement(msg).innerHTML;
+                    requestAnimationFrame(() => {
+                        existingElement.innerHTML = createMessageElement(msg).innerHTML;
+                    });
                 }
             });
 
-            chatBox.appendChild(fragment);
-            previousMessages = messages;
+            requestAnimationFrame(() => {
+                currentChildren.forEach(child => {
+                    if (!messages.some(msg => msg.timestamp === child.dataset.timestamp)) {
+                        chatBox.removeChild(child);
+                    }
+                });
 
-            setTimeout(() => {
-                chatBox.scrollTop = chatBox.scrollHeight; // Scroll down after 100 ms
-            }, 100);
+                chatBox.appendChild(fragment);
+                previousMessages = messages;
+
+                setTimeout(() => {
+                    chatBox.scrollTop = chatBox.scrollHeight;
+                }, 100);
+            });
         })
         .catch(error => {
             chatBox.innerHTML = 'Error loading messages. Please try again later.';
@@ -1027,7 +1035,7 @@ socket.on('chat_logs_update', function(chatLogs) {
     });
 });
 
-setInterval(fetchMessages, 20 * 60 * 1); // i put this here so that the chat updates and doesnt have issues where u have to reload after having it open for a while
+setInterval(fetchMessages, 5 * 60 * 1); // i put this here so that the chat updates and doesnt have issues where u have to reload after having it open for a while
 
 
 
