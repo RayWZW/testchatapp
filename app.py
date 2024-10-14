@@ -86,6 +86,14 @@ def block_requests():
     
     if request.path in blocked_paths:
         return render_template('getclowned.html'), 403  # Render the blocked page with a 403 status code
+    
+
+@app.before_request
+def before_request():
+    if not request.is_secure:
+        # Redirect all non-HTTPS requests to HTTPS
+        return redirect(request.url.replace("http://", "https://"), code=301)
+
 
 @app.route('/data/bios.json', methods=['GET'])
 def get_bios():
@@ -95,8 +103,6 @@ def get_bios():
         return jsonify(bios)
     except Exception as e:
         return jsonify({"error": "Unable to load bios."}), 500
-
-
 
 
 @app.route('/update_bio', methods=['POST'])
