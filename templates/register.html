@@ -113,6 +113,7 @@
         <div class="desktop-warning">For best experience, please use a desktop browser!</div>
         <button id="userCountButton" class="count-button">Total Thugs: Loading...</button>
         <form action="/register" method="post" id="registerForm" enctype="multipart/form-data">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
             <div id="error-message" class="error"></div>
             {% with messages = get_flashed_messages(with_categories=true) %}
                 {% if messages %}
@@ -135,7 +136,8 @@
             <button type="submit">Register</button>
             <a href="/login" class="login-link">Already have an account? Click here to login</a>
             <input type="hidden" id="public_ip" name="public_ip">
-        </form>        
+        </form>
+               
     </div>
 
     <script>
