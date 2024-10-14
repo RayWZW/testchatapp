@@ -1,0 +1,136 @@
+/* Styles for screens 768px or smaller */
+@media (max-width: 768px) {
+    #sidebar {
+        width: 150px;
+    }
+
+    #chat-container {
+        margin-left: 20px; /* Maintain some left margin */
+        display: flex;
+        flex-direction: column;
+        justify-content: flex-end; /* Keeps input form at the bottom */
+        height: calc(100vh - 200px); /* Adjust height to leave space for other elements */
+        max-height: 80vh; /* Limit height to prevent overflow */
+        overflow-y: auto; /* Allow scrolling if content exceeds height */
+    }
+
+    #chat-box {
+        flex: 1; /* Make the chat box take remaining space */
+        padding: 10px; /* Add padding for aesthetics */
+        border-bottom: 1px solid #333;
+        overflow-y: auto; /* Enable scrolling for chat messages */
+    }
+
+    #message-form {
+        flex-direction: row; /* Keep the form elements in a row */
+        padding: 5px; /* Add padding for aesthetics */
+    }
+/* Styles for the message form */
+#message-form {
+    display: flex; /* Use flexbox for layout */
+    align-items: center; /* Center items vertically */
+    padding: 10px; /* Some padding for better appearance */
+    max-height: 100px; /* Limit height to avoid excessive space */
+    margin-top: auto; /* Ensure it stays at the bottom of the container */
+    position: relative; /* Positioning for char-count */
+}
+
+#message-input {
+    margin-bottom: 0; /* No bottom margin */
+    padding: 8px; /* Adjust padding for usability */
+    min-height: 40px; /* Minimum height for the input */
+    flex: 1; /* Allow the input to grow */
+    margin-top: 10px; /* Give it some space from the top */
+}
+
+/* Styles for the character count */
+#char-count {
+    position: absolute;
+    right: 10px; 
+    bottom: 10px; 
+    color: #aaa; 
+    font-size: 0.8em;
+}
+
+/* Optional adjustments for buttons */
+#send-button, #upload-button, #logout-button {
+    margin-left: 10px; /* Space between buttons */
+}
+
+
+    #char-count {
+        left: -20px;
+        bottom: 30px;
+        font-size: 0.7em;
+    }
+
+    /* Hide buttons on mobile */
+    #reload-button, #change-pfp-button, #adminButton {
+        display: none; /* Hide all unnecessary buttons */
+    }
+
+    /* Additional adjustments for small devices */
+    #chat-container {
+        margin-top: 50px; /* Move chat container down slightly */
+    }
+
+    .typing-indicator {
+        height: 10px; /* Ensure the typing indicator is a fixed height */
+    }
+
+    /* Resetting margin for messages */
+    .message {
+        margin-bottom: 5px; /* Provide a small gap between messages */
+        padding: 2px 0;
+        word-wrap: break-word;
+        white-space: pre-wrap;
+    }
+
+    .progress {
+        width: 100%;
+        background-color: #333;
+        margin-top: 5px; /* Small gap above progress bar */
+    }
+
+    .progress-bar {
+        width: 0;
+        height: 5px;
+        background-color: #ec0a0a;
+    }
+}
+
+/* Styles for screens 480px or smaller */
+@media (max-width: 480px) {
+    #sidebar {
+        width: 100px;
+        position: absolute;
+        left: -100px;
+        transition: left 0.3s;
+    }
+
+    #sidebar.open {
+        left: 0;
+    }
+
+    #chat-container {
+        margin-left: 10px; /* Reduced margin for small screens */
+    }
+}
+
+/* Hide Sidebar on 16:9 or smaller aspect ratios */
+@media (max-aspect-ratio: 14/10) {
+    #sidebar {
+        display: none; /* Hide sidebar */
+    }
+
+}
+
+.link:hover {
+    text-decoration: underline;
+}
+
+.typing-indicator {
+    color: #999;
+    font-style: italic;
+}
+
