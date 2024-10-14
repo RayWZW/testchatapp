@@ -24,7 +24,7 @@
    git clone https://github.com/RayWZW/testchatapp
 
 then install the requirements.txt then start the flask server and use loophole or some other reverse proxy to make it live.
-IF YOU WANNA SUPPORT MY PROJECT MAKE AN ACCOUNT AT https://thugchat.ddns.net
+IF YOU WANNA SUPPORT MY PROJECT MAKE AN ACCOUNT AT https://thugging.org
 
 
 ![ScreenShot](s.png)
