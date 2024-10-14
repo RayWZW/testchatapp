@@ -1035,7 +1035,7 @@ socket.on('chat_logs_update', function(chatLogs) {
     });
 });
 
-setInterval(fetchMessages, 5 * 60 * 1); // i put this here so that the chat updates and doesnt have issues where u have to reload after having it open for a while
+setInterval(fetchMessages, 1600 * 60 * 1); // i put this here so that the chat updates and doesnt have issues where u have to reload after having it open for a while
 
 
 
@@ -1348,7 +1348,7 @@ async function fetchUserRoles() {
     }
 
     try {
-        const response = await fetch('https://thugchat.ddns.net/roles/data/userroles.json');
+        const response = await fetch('https://thugging.org/roles/data/userroles.json');
         if (!response.ok) {
             throw new Error('Network response was not ok');
         }
@@ -1625,7 +1625,7 @@ function createDownloadButton(username) {
     button.style.zIndex = '10';
 
     const downloadIcon = document.createElement('img');
-    downloadIcon.src = 'https://thugchat.ddns.net/static/downloadicon.png';
+    downloadIcon.src = 'https://thugging.org/static/downloadicon.png';
     downloadIcon.alt = 'Download Profile Picture';
     downloadIcon.style.width = '32px';
     downloadIcon.style.height = '32px';
@@ -1646,7 +1646,7 @@ function createDownloadButton(username) {
 }
 
 function loadUserRoles(username, modalContent) {
-    fetch('https://thugchat.ddns.net/roles/data/userroles.json')
+    fetch('https://thugging.org/roles/data/userroles.json')
         .then(response => {
             if (!response.ok) throw new Error('Network response was not ok');
             return response.json();
