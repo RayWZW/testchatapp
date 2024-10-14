@@ -33,7 +33,6 @@
             width: 250px;
             display: inline-block;
             box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
-            margin-right: 50px;
         }
 
         h2 {
@@ -91,6 +90,7 @@
 </head>
 <body>
     <form action="/verify/{{ username }}" method="post">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"> <!-- Include CSRF token here -->
         <h2>Verify Your Email</h2>
         <div class="warning">Please check your email for the verification link.</div>
         <div class="warning">If you haven't received it, check your spam folder.</div>
@@ -106,5 +106,6 @@
         <input type="text" name="code" placeholder="Verification Code" required>
         <button type="submit">Verify</button>
     </form>
+    
 </body>
 </html>
