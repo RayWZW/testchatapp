@@ -142,6 +142,7 @@
     <div class="logo">THUG-CHAT</div>
     <div class="description">THE OFFICIAL CHATTING WEBSITE FOR TRUE THUGS!</div>
     <form action="/login" method="post">
+        {{ form.hidden_tag() }}
         {% with messages = get_flashed_messages(with_categories=true) %}
             {% if messages %}
                 <ul class="error">
@@ -161,7 +162,7 @@
 
         <button type="submit">Login</button>
         <a href="/register" class="register-link">No account? Click here to register</a>
-        <a href="/forgot-password" class="forgot-password">Forgot Password?</a> <!-- Added link -->
+        <a href="/forgot-password" class="forgot-password">Forgot Password?</a>
     </form>
 </body>
 </html>

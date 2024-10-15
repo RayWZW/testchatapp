@@ -1,9 +1,12 @@
 import random
 import smtplib
 from flask import Blueprint, session, flash, redirect, url_for, render_template, request
+from flask_wtf.csrf import CSRFProtect
 import json
+from .forms import LoginForm
 
 login_bp = Blueprint('login', __name__)
+csrf = CSRFProtect()
 
 failed_attempts = {}
 
@@ -17,16 +20,17 @@ USER_ACCOUNTS_FILE = load_user_accounts_file()
 
 @login_bp.route('/login', methods=['GET', 'POST'])
 def login():
-    if request.method == 'POST':
-        username = request.form.get('username')
-        password = request.form.get('password')
-
-        users = load_json_file(USER_ACCOUNTS_FILE)  # Ensure this function is defined elsewhere
+    form = LoginForm()
+    if form.validate_on_submit():
+        username = form.username.data
+        password = form.password.data
+        
+        users = load_json_file(USER_ACCOUNTS_FILE)
         user = users.get(username)
 
         if user is None:
             flash('User not found.')
-            return render_template('login.html')
+            return render_template('login.html', form=form)
 
         if user['password'] == password:
             session['username'] = username
@@ -34,8 +38,9 @@ def login():
             return redirect(url_for('index'))
 
         increment_failed_attempts(username)
+        flash('Incorrect password. Please try again.')
 
-    return render_template('login.html')
+    return render_template('login.html', form=form)  # Ensure form is passed here
 
 
 def increment_failed_attempts(username):

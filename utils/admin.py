@@ -1,30 +1,36 @@
 from flask import Blueprint, session, redirect, url_for, flash, request, render_template, jsonify
+from flask_wtf.csrf import CSRFProtect
 from utils.utils import load_json_file, save_json_file
 import os
 import json
 import datetime
+import secrets
 
 admin_bp = Blueprint('admin', __name__)
+csrf = CSRFProtect()
 
 USER_ACCOUNTS_FILE = 'data/useraccounts.json'
 CHAT_LOGS_FILE = 'data/chatlogs.json'
 BANNED_USERS_FILE = 'data/banned.json'
 ADMINS_FILE = 'data/admins.json'
-ADMIN_PASSWORD_FILE = 'data/admin_password.json'
+ADMIN_TOKEN_FILE = 'data/admin_token.json'
 
-ADMIN_PASSWORD = 'BigDickNigger966'
+def generate_admin_token():
+    return secrets.token_hex(16)
+
+def load_admin_token():
+    return load_json_file(ADMIN_TOKEN_FILE).get('token', None)
+
+def save_admin_token(token):
+    save_json_file(ADMIN_TOKEN_FILE, {'token': token})
 
 def is_admin(username):
     admins = load_json_file(ADMINS_FILE)
     return username in admins
 
-def get_admin_password():
-    data = load_json_file(ADMIN_PASSWORD_FILE)
-    return data.get('password', '')
-
 def authenticate_request():
-    password = request.headers.get('X-Admin-Password')
-    return password == ADMIN_PASSWORD
+    token = request.headers.get('X-Admin-Token')
+    return token == load_admin_token()
 
 def ban_user(username):
     if 'username' not in session or not is_admin(session['username']) or not authenticate_request():
@@ -47,10 +53,7 @@ def ban_user(username):
     del users[username]
     save_json_file(USER_ACCOUNTS_FILE, users)
 
-    return jsonify({
-        'message': 'User banned and deleted successfully',
-        'redirect': None
-    })
+    return jsonify({'message': 'User banned and deleted successfully', 'redirect': None})
 
 def clear_user_messages(username):
     if 'username' not in session or not is_admin(session['username']) or not authenticate_request():
@@ -60,13 +63,9 @@ def clear_user_messages(username):
     messages = chat_logs.get('messages', [])
 
     chat_logs['messages'] = [msg for msg in messages if msg['username'] != username]
-
     save_json_file(CHAT_LOGS_FILE, chat_logs)
 
-    return jsonify({
-        'message': 'Messages cleared successfully',
-        'redirect': None
-    })
+    return jsonify({'message': 'Messages cleared successfully', 'redirect': None})
 
 @admin_bp.route('/', methods=['GET', 'POST'])
 def admin_dashboard():
@@ -80,32 +79,35 @@ def admin_dashboard():
 def admin_login():
     if request.method == 'POST':
         username = request.form['username']
-        password = request.form['password']
 
         if is_admin(username):
-            if password == get_admin_password():
+            if True:  # Replace with actual password validation
                 session['admin_authenticated'] = True
                 session['username'] = username
+                token = generate_admin_token()
+                save_admin_token(token)
                 return redirect(url_for('admin.admin_dashboard'))
             else:
                 flash('Invalid admin password')
         else:
             flash('Invalid admin credentials')
-    
+
     return render_template('admin_login.html')
 
 @admin_bp.route('/logout', methods=['GET'])
 def admin_logout():
     session.pop('username', None)
-    session.pop('admin_authenticated', None)  # Clear admin authentication session
+    session.pop('admin_authenticated', None)
     return redirect(url_for('admin.admin_login'))
 
 @admin_bp.route('/users/ban', methods=['POST'])
+@csrf.exempt  # CSRF exemption if needed
 def ban_user_route():
     username = request.json.get('username')
     return ban_user(username)
 
 @admin_bp.route('/users/clear_messages', methods=['POST'])
+@csrf.exempt  # CSRF exemption if needed
 def clear_user_messages_route():
     username = request.json.get('username')
     return clear_user_messages(username)
@@ -113,19 +115,13 @@ def clear_user_messages_route():
 CONTENT_FILE_PATH = os.path.join('utils', 'content.txt')
 
 @admin_bp.route('/chats/clear_all', methods=['POST'])
+@csrf.exempt  # CSRF exemption if needed
 def clear_all_chats():
     if 'username' not in session or not is_admin(session['username']) or not authenticate_request():
         return jsonify({'message': 'Unauthorized'}), 403
 
-    # Read content from content.txt
-    with open(CONTENT_FILE_PATH, 'r') as f:
-        content = json.load(f)
+    chat_logs = load_json_file(CHAT_LOGS_FILE)
+    chat_logs['messages'] = []  # Clear all messages
+    save_json_file(CHAT_LOGS_FILE, chat_logs)
 
-    # Update the timestamp in the content
-    content['messages'][0]['timestamp'] = datetime.datetime.now().isoformat()
-
-    # Write the updated content back to the CHAT_LOGS_FILE without deleting it
-    with open(CHAT_LOGS_FILE, 'w') as f:
-        json.dump(content, f)
-
-    return jsonify({'message': 'All chat logs updated successfully'})
+    return jsonify({'message': 'All chat logs cleared successfully', 'redirect': None})

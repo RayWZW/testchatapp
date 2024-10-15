@@ -1,0 +1,181 @@
+body {
+    background: linear-gradient(135deg, #2d2d44, #535373);
+    color: #ffffff;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    margin: 0;
+    padding: 0;
+    overflow-x: hidden;
+}
+.container {
+    padding: 40px;
+    max-width: 1200px;
+    margin: auto;
+}
+.header {
+    text-align: center;
+    margin-bottom: 40px;
+}
+.header h1 {
+    margin: 0;
+    font-size: 3rem;
+    font-weight: bold;
+    text-shadow: 2px 2px 10px rgba(0, 0, 0, 0.7);
+}
+.user-count-card {
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 10px;
+    height: 100px;
+    padding: 20px;
+    color: #e0e0e0;
+    box-shadow: 0 6px 15px rgba(0, 0, 0, 0.5);
+    margin-bottom: 30px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    transition: transform 0.3s;
+}
+.user-count-card:hover {
+    transform: translateY(-5px);
+}
+.user-count-card h2 {
+    margin: 0;
+    font-size: 2rem;
+}
+.user-count {
+    font-size: 2.5rem;
+    color: #ffe600;
+    font-weight: bold;
+}
+.user-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+    gap: 30px;
+}
+.user-card {
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 10px;
+    padding: 20px;
+    position: relative;
+    color: #ffffff;
+    box-shadow: 0 6px 15px rgba(0, 0, 0, 0.5);
+    transition: transform 0.3s;
+}
+.user-card:hover {
+    transform: scale(1.05);
+}
+.user-card h2 {
+    margin-top: 0;
+    font-size: 1.6rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.3);
+    padding-bottom: 10px;
+}
+.user-card .details {
+    margin-top: 10px;
+    font-size: 0.9rem;
+    line-height: 1.5;
+}
+.user-card .menu {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    cursor: pointer;
+    font-size: 1.5rem;
+    color: #ffe600;
+    transition: color 0.3s;
+}
+.user-card .menu:hover {
+    color: #ff4d00;
+}
+.user-card .menu-content {
+    display: none;
+    position: absolute;
+    top: 30px;
+    right: 0;
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 5px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
+    padding: 10px;
+    z-index: 1000;
+}
+.user-card .menu-content button {
+    background: none;
+    border: none;
+    color: #e0e0e0;
+    cursor: pointer;
+    padding: 8px 15px;
+    text-align: left;
+    display: block;
+    width: 100%;
+    transition: background-color 0.3s;
+}
+.user-card .menu-content button:hover {
+    background-color: rgba(255, 255, 255, 0.2);
+}
+.role-management {
+    margin-top: 10px;
+    display: flex;
+    gap: 10px;
+}
+.role-management select,
+.role-management button {
+    padding: 5px;
+    border-radius: 5px;
+    border: none;
+    font-size: 0.9rem;
+    cursor: pointer;
+}
+.profile-picture-container {
+width: 50px;
+height: 50px;
+border-radius: 50%;
+overflow: hidden;
+margin-bottom: 10px; /* Adjusts the spacing between the picture and other elements */
+}
+
+.profile-picture {
+width: 100%;
+height: auto;
+border-radius: 50%;
+}
+
+.search-bar {
+margin-bottom: 30px;
+text-align: center;
+}
+.search-bar input {
+padding: 10px;
+width: 300px;
+border: none;
+border-radius: 5px;
+font-size: 1rem;
+box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
+}
+
+
+.clear-chats {
+    text-align: center;
+    margin-top: 40px;
+}
+.clear-chats button {
+    padding: 12px 25px;
+    background: linear-gradient(135deg, #6b5b95, #feb236);
+    border: none;
+    color: white;
+    border-radius: 5px;
+    font-size: 1.1rem;
+    font-weight: bold;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    transition: background-color 0.3s, transform 0.3s;
+}
+.clear-chats button:hover {
+    background: linear-gradient(135deg, #feb236, #6b5b95);
+    transform: translateY(-2px);
+}
+@keyframes bounce {
+    0%, 100% {
+        transform: translateY(0);
+    }
+    50% {
+        transform: translateY(-10px);
+    }
+}

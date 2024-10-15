@@ -79,15 +79,18 @@
         <div class="change-pfp-container">
             <h3>Change Profile Picture</h3>
             <form id="change-pfp-form" enctype="multipart/form-data">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                 <input type="file" id="pfp-input" accept="image/*" required>
                 <button type="submit">Upload</button>
             </form>
+            
             <img id="current-pfp" src="{{ url_for('static', filename='pfps/' + username + '.png') }}" alt="Current Profile Picture" class="profile-picture">
         </div>
 
         <div class="edit-bio-container">
             <h3>Edit Bio</h3>
             <form id="edit-bio-form">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                 <textarea id="bio-input" rows="4" placeholder="Enter your bio..." required></textarea>
                 <button type="submit">Save Bio</button>
             </form>
@@ -104,6 +107,9 @@
             if (file) {
                 const formData = new FormData();
                 formData.append('pfp', file);
+                
+                const csrfToken = document.querySelector('input[name="csrf_token"]').value;
+                formData.append('csrf_token', csrfToken);
 
                 fetch('/upload_pfp', {
                     method: 'POST',
@@ -134,6 +140,7 @@
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
+                    'X-CSRFToken': document.querySelector('input[name="csrf_token"]').value
                 },
                 body: JSON.stringify({ bio: bio }),
             })
