@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Forgot Password</title>
+    <title>Enter Reset Code</title>
     <style>
         :root {
             --background-light: linear-gradient(135deg, #6e7f80, #c9d6ff);
@@ -107,7 +107,7 @@
 </head>
 <body>
     <div class="container">
-        <h2>Forgot Password</h2>
+        <h2>Enter Reset Code</h2>
         {% with messages = get_flashed_messages() %}
             {% if messages %}
                 <ul>
@@ -117,11 +117,11 @@
                 </ul>
             {% endif %}
         {% endwith %}
-        <form id="resetForm" method="POST">
+        <form method="POST">
             <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
-            <label for="username">Username:</label>
-            <input type="text" id="username" name="username" required>
-            <button type="submit">Send Reset Code</button>
+            <label for="code">Reset Code:</label>
+            <input type="text" id="code" name="code" required>
+            <button type="submit">Validate Code</button>
         </form>
     </div>
     <script>

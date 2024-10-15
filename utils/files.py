@@ -31,33 +31,26 @@ def upload_file():
     original_filename = file.filename.lower()
     file_hash = generate_file_hash(file)
 
-    # Generate a filename using the hash
     existing_filename = f"{file_hash}{os.path.splitext(original_filename)[1]}"
     existing_file_path = os.path.join(UPLOAD_FOLDER, existing_filename)
 
     image_mime_types = ['image/jpeg', 'image/png', 'image/webp', 'image/gif']
     mime_type = mimetypes.guess_type(original_filename)[0]
 
-    # Check if the file already exists, if so, return the existing file URL without creating a new one
     if os.path.exists(existing_file_path):
         logging.info(f"File already exists: {existing_file_path}")
         file_url = url_for('files.download_file', filename=existing_filename)
         file_type = mimetypes.guess_type(existing_file_path)[0]
         return jsonify({'file_url': file_url, 'file_type': file_type})
 
-    # Process the file if it's an image and save it
     try:
-        # Handle image files
         if mime_type in image_mime_types:
-            # Skip processing if the file is a GIF
             if mime_type == 'image/gif':
-                file.save(existing_file_path)  # Save GIF directly without resizing
+                file.save(existing_file_path)
             else:
                 with Image.open(file) as img:
-                    img = img.resize((500, 500))  # Resize non-GIF images
+                    img = img.resize((500, 500))
                     img.save(existing_file_path)
-
-        # Save non-media files directly
         else:
             file.save(existing_file_path)
 
@@ -65,7 +58,6 @@ def upload_file():
         logging.error(f"Error processing file '{original_filename}': {str(e)}")
         return jsonify({'error': f'Failed to process file: {str(e)}'}), 500
 
-    # Return the URL of the newly uploaded file
     file_url = url_for('files.download_file', filename=existing_filename)
     file_type = mimetypes.guess_type(existing_file_path)[0]
     return jsonify({'file_url': file_url, 'file_type': file_type})

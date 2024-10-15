@@ -27,6 +27,8 @@ from commands.help import help_bp
 from commands.purge import purge_bp
 from commands.downloaduserpfp import download_pfp_bp
 from utils.bios import UserBioManager
+from flask_wtf.csrf import CSRFProtect
+from commands.clear import clear_bp
 
 
 app = Flask(__name__, static_folder='static')
@@ -49,6 +51,7 @@ app.register_blueprint(usercount_bp)
 app.register_blueprint(help_bp)
 app.register_blueprint(purge_bp)
 app.register_blueprint(download_pfp_bp)
+app.register_blueprint(clear_bp)
 
 import threading
 watcher_thread = threading.Thread(target=start_chatlog_watcher, args=(socketio,))
@@ -87,6 +90,10 @@ def block_requests():
     if request.path in blocked_paths:
         return render_template('getclowned.html'), 403  # Render the blocked page with a 403 status code
     
+@app.route('/assets/<path:filename>')
+def serve_assets(filename):
+    return send_from_directory('assets', filename)
+
 
 @app.before_request
 def before_request():
@@ -276,6 +283,6 @@ ssl_context = (
     os.path.join(base_dir, "certificate.crt"),  # Certificate file
     os.path.join(base_dir, "private.key"),       # Private key file
 )
-
+csrf = CSRFProtect(app)
 if __name__ == '__main__':
     socketio.run(app, host='0.0.0.0', debug=True, port=443, ssl_context=ssl_context)

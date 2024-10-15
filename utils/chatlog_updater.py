@@ -60,13 +60,7 @@ class ChatLogWatcher:
                     for message in current_chat_logs.get("messages", []):
                         username = message.get("username")
                         user_message = message.get("message")
-                        
-                        if isinstance(message, dict) and user_message == ".clear":
-                            if username in self.user_roles:
-                                roles = self.user_roles[username].get("additionalRoles", [])
-                                if "admin" in roles:
-                                    self.clear_all_chats()
-                                    break
+
 
             except FileNotFoundError:
                 time.sleep(0.09)

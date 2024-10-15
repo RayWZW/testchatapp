@@ -8,7 +8,7 @@
     <link rel="icon" href="static/websiteicon.ico" type="image/png">
 </head>
 <body>
-
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
     <div id="sidebar">        
         <h3>TRUE THUGS</h3>
         <ul id="user-list"></ul>
@@ -35,12 +35,12 @@
             <textarea id="message-input" placeholder="Type your message..." autofocus></textarea>
             <span id="char-count" style="position: absolute; right: 10px; bottom: 10px; color: #aaa; font-size: 0.8em;">0</span>
             <button id="send-button" type="button">>>>></button>
-            <button id="upload-button" type="button">Upload File</button>
+            <button id="upload-button" type="button" onclick="document.getElementById('file-input').click();">Upload File</button>
             <a id="logout-button" href="/logout">Logout</a>
         </form>
 
-        <input id="file-input" type="file" style="display: none;">
-        <div class="progress">
+        <input id="file-input" type="file" style="display: none;" onchange="handleFileUpload(this.files)">
+        <div class="progress" style="display: none;">
             <div class="progress-bar" id="progress-bar"></div>
         </div>
     </div>
