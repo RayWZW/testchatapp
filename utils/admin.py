@@ -94,6 +94,7 @@ def admin_login():
 
     return render_template('admin_login.html')
 
+
 @admin_bp.route('/logout', methods=['GET'])
 def admin_logout():
     session.pop('username', None)
